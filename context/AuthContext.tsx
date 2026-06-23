@@ -95,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: 'User login data unavailable' };
       } else {
         // Dev Sandbox Mock Authentication logic
+        console.warn('Supabase client is not initialized. Check your .env file and restart your dev server. Falling back to local mock authentication.');
         await new Promise((r) => setTimeout(r, 800)); // Simulate networking delay
         
         if (email === 'admin@tesca.com' && password === 'password') {
@@ -118,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(profile);
           return { success: true, role: 'student' as const };
         } else {
-          return { success: false, error: 'Invalid username or password. Please use admin@tesca.com or student@tesca.com.' };
+          return { success: false, error: 'Invalid username or password.' };
         }
       }
     } catch (error: any) {
