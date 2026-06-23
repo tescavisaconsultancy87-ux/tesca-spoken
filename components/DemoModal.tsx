@@ -60,11 +60,20 @@ export default function DemoModal({ onClose }: DemoModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    // Phone validation: must be exactly 10 digits
+    const cleanedPhone = form.phone.replace(/\D/g, '');
+    if (cleanedPhone.length !== 10) {
+      setError('Phone number must be exactly 10 digits.');
+      return;
+    }
+
     if (!form.time || !form.mode) {
       setError('Please select both a preferred time slot and learning mode.');
       return;
     }
-    setError('');
+    
     setLoading(true);
     // Simulate API call
     await new Promise((r) => setTimeout(r, 1200));

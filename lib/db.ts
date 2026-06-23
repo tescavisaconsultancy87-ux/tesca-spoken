@@ -355,6 +355,33 @@ export const db = {
     }
   },
 
+  getAdmins: async () => {
+    const mockAdmins = [
+      { id: 'dev-admin-id', name: 'Admin User', email: 'admin@tesca.com', joinedDate: 'May 10, 2026', status: 'active' }
+    ];
+    if (!supabase) return mockAdmins;
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'admin').order('created_at', { ascending: false });
+      if (error) {
+        if (isTableMissingError(error)) {
+          return mockAdmins;
+        }
+        throw error;
+      }
+      return data && data.length > 0 
+        ? data.map((p: any) => ({
+            id: p.id,
+            name: p.name || 'Admin User',
+            email: p.email,
+            joinedDate: new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+            status: 'active'
+          }))
+        : mockAdmins;
+    } catch {
+      return mockAdmins;
+    }
+  },
+
   createStudentProfile: async (student: any) => {
     if (!supabase) return student;
     try {

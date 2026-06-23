@@ -9,6 +9,7 @@ export default function StudentProfilePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'billing'>('profile');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   const [profileData, setProfileData] = useState({
     name: 'Aarav Patel',
@@ -45,6 +46,14 @@ export default function StudentProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    setValidationError('');
+    
+    // Validate phone: must be exactly 10 digits
+    const cleanedPhone = profileData.phone.replace(/\D/g, '');
+    if (cleanedPhone.length !== 10) {
+      setValidationError('Phone number must be exactly 10 digits.');
+      return;
+    }
     
     const success = await db.updateProfile(user.id, {
       name: profileData.name,
@@ -191,6 +200,10 @@ export default function StudentProfilePage() {
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
                       <CheckCircle className="h-4 w-4" />
                       Profile details saved successfully!
+                    </span>
+                  ) : validationError ? (
+                    <span className="text-xs font-semibold text-rose-600">
+                      {validationError}
                     </span>
                   ) : (
                     <span className="text-[11px] text-gray-400 font-medium">Fields are editable. Changes will be saved locally in this state.</span>
