@@ -21,7 +21,7 @@ export async function GET() {
     supabaseAnonKeyStatic: {
       exists: !!supabaseAnonKey,
       length: supabaseAnonKey.length,
-      prefix: supabaseAnonKey ? supabaseAnonKey.substring(0, 10) + '...' : '',
+      prefix: supabaseAnonKey ? supabaseAnonKey.substring(0, 45) + '...' : '',
     },
     supabaseUrlRuntime: {
       exists: !!runtimeUrl,
@@ -31,7 +31,7 @@ export async function GET() {
     supabaseAnonKeyRuntime: {
       exists: !!runtimeAnonKey,
       length: runtimeAnonKey.length,
-      prefix: runtimeAnonKey ? runtimeAnonKey.substring(0, 10) + '...' : '',
+      prefix: runtimeAnonKey ? runtimeAnonKey.substring(0, 45) + '...' : '',
     },
     envKeysPresentCount: envKeys.length,
     publicEnvKeysList: envKeys.filter(k => k.startsWith('NEXT_PUBLIC_') || k.startsWith('APP_')),

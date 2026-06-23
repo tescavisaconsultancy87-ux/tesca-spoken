@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 const getInitialClient = () => {
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
   const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
-  console.log('[Supabase Client] Static Init attempt:', { urlLength: url.length, keyLength: anonKey.length, urlPrefix: url.substring(0, 15) });
+  console.log('[Supabase Client] Static Init attempt:', { urlLength: url.length, keyLength: anonKey.length, urlPrefix: url.substring(0, 15), keyPrefix: anonKey.substring(0, 45) });
   if (url && anonKey) {
     try {
       return createClient(url, anonKey);
@@ -22,7 +22,7 @@ export let supabase = activeClient;
 export function initializeDynamicSupabase(url: string, anonKey: string) {
   const cleanUrl = (url || '').trim();
   const cleanKey = (anonKey || '').trim();
-  console.log('[Supabase Client] Dynamic Init attempt:', { urlLength: cleanUrl.length, keyLength: cleanKey.length, urlPrefix: cleanUrl.substring(0, 15) });
+  console.log('[Supabase Client] Dynamic Init attempt:', { urlLength: cleanUrl.length, keyLength: cleanKey.length, urlPrefix: cleanUrl.substring(0, 15), keyPrefix: cleanKey.substring(0, 45) });
   if (cleanUrl && cleanKey) {
     try {
       activeClient = createClient(cleanUrl, cleanKey);
