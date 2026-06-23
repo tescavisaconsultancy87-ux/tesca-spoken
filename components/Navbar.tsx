@@ -1,0 +1,171 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { Menu, X, CalendarCheck, LogIn } from 'lucide-react';
+import { NAV_LINKS, WHATSAPP_URL } from '@/lib/data/content';
+import { useDemoModal } from '@/context/DemoModalContext';
+import { motion } from 'framer-motion';
+
+export default function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const pathname = usePathname();
+  const { openModal } = useDemoModal();
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
+
+  return (
+    <header
+      className={`fixed inset-x-0 z-50 transition-all duration-500 ${
+        scrolled || menuOpen
+          ? 'bg-white border-b border-black/5 shadow-soft'
+          : 'bg-transparent'
+      }`}
+      style={{ top: 'var(--banner-height, 36px)' }}
+    >
+      <nav className="container-x flex h-14 items-center justify-between py-2 lg:h-16">
+        <Link href="/" className="group flex items-center gap-2" aria-label="TESCA home">
+          <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-8 lg:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]" />
+        </Link>
+
+        {/* Desktop nav */}
+        <ul 
+          className="hidden items-center gap-1 lg:flex"
+          onMouseLeave={() => setHoveredLink(null)}
+        >
+          {NAV_LINKS.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <li key={link.href} className="relative">
+                <Link
+                  href={link.href}
+                  onMouseEnter={() => setHoveredLink(link.href)}
+                  className={`group relative px-4 py-2 text-sm font-semibold transition-colors duration-300 ${
+                    isActive ? 'text-primary' : 'text-ink-soft hover:text-primary'
+                  }`}
+                >
+                  <span className="relative z-10">{link.label}</span>
+                  
+                  {hoveredLink === link.href && (
+                    <motion.span
+                      layoutId="nav-hover-backdrop"
+                      className="absolute inset-0 bg-primary-50 rounded-lg"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+
+                  {isActive && (
+                    <motion.span
+                      layoutId="nav-active-underline"
+                      className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary rounded-full"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+
+        <div className="hidden items-center gap-4 lg:flex">
+          <button onClick={openModal} className="btn-warm text-sm cursor-pointer">
+            <CalendarCheck className="h-4 w-4" />
+            Book Free Demo
+          </button>
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft transition-colors hover:text-primary"
+          >
+            <LogIn className="h-4 w-4" />
+            Login
+          </Link>
+        </div>
+
+        {/* Mobile toggle */}
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-ink transition-colors hover:bg-bg-soft lg:hidden"
+          aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={menuOpen}
+        >
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+      </nav>
+
+      {/* Mobile menu */}
+      <div
+        className={`overflow-hidden bg-white border-t border-black/5 transition-all duration-500 lg:hidden ${
+          menuOpen ? 'max-h-[480px]' : 'max-h-0'
+        }`}
+      >
+        <ul className="space-y-1 p-5">
+          {NAV_LINKS.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  onClick={() => setMenuOpen(false)}
+                  className={`block rounded-xl px-4 py-3 text-base font-medium transition-colors ${
+                    isActive
+                      ? 'bg-primary-50 text-primary'
+                      : 'text-ink-soft hover:bg-primary-50 hover:text-primary'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              </li>
+            );
+          })}
+          <li className="flex gap-3 pt-3">
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                openModal();
+              }}
+              className="btn-warm flex-1 cursor-pointer"
+            >
+              <CalendarCheck className="h-4 w-4" />
+              Demo
+            </button>
+            <Link
+              href="/login"
+              onClick={() => setMenuOpen(false)}
+              className="btn-secondary flex-1"
+            >
+              <LogIn className="h-4 w-4" />
+              Login
+            </Link>
+          </li>
+          <li>
+            <a
+              href={WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMenuOpen(false)}
+              className="btn-primary w-full"
+            >
+              WhatsApp Us
+            </a>
+          </li>
+        </ul>
+      </div>
+    </header>
+  );
+}
