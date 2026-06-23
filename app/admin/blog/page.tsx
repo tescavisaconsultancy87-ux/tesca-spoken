@@ -3,6 +3,17 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Eye, EyeOff, Edit, X } from 'lucide-react';
 import { db } from '@/lib/db';
+import {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogClose,
+} from '@/components/animate-ui/primitives/base/alert-dialog';
 
 interface BlogPost {
   id: string;
@@ -18,6 +29,7 @@ export default function AdminBlogPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   const loadPosts = async () => {
     try {
@@ -64,9 +76,8 @@ export default function AdminBlogPage() {
     loadPosts();
   };
 
-  const handleDelete = async (id: string) => {
-    await db.deleteBlogPost(id);
-    loadPosts();
+  const handleDelete = (id: string) => {
+    setDeletePostId(id);
   };
 
   const handleToggleStatus = async (id: string, currentStatus: 'published' | 'draft') => {
@@ -251,6 +262,49 @@ export default function AdminBlogPage() {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={deletePostId !== null} onOpenChange={(open) => { if (!open) setDeletePostId(null); }}>
+        <AlertDialogPortal>
+          <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+          <AlertDialogPopup
+            from="bottom"
+            className="sm:max-w-md fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 border bg-white rounded-3xl p-6 shadow-2xl"
+          >
+            <AlertDialogHeader>
+              <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-lg font-bold text-center text-gray-800">
+                Delete Article?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-center text-gray-500 mt-2">
+                Are you absolutely sure you want to delete this article? This action cannot be undone and the post will be permanently removed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter className="mt-6 flex justify-end gap-3 w-full">
+              <AlertDialogClose className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-200">
+                Cancel
+              </AlertDialogClose>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (deletePostId) {
+                    await db.deleteBlogPost(deletePostId);
+                    loadPosts();
+                    setDeletePostId(null);
+                  }
+                }}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft"
+              >
+                Delete Post
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialogPortal>
+      </AlertDialog>
     </div>
   );
 }
+

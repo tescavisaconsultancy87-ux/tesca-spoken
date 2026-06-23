@@ -3,6 +3,18 @@
 import { useState, useEffect } from 'react';
 import { Search, UserPlus, Filter, MoreVertical, Edit2, Trash2, ShieldAlert, Check, X } from 'lucide-react';
 import { db } from '@/lib/db';
+import { CopyButton } from '@/components/animate-ui/components/buttons/copy';
+import {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogClose,
+} from '@/components/animate-ui/primitives/base/alert-dialog';
 
 interface Student {
   id: string;
@@ -47,6 +59,7 @@ export default function AdminStudentsPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [successCredentials, setSuccessCredentials] = useState<{ email: string; password: string; warning?: string } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; role: 'student' | 'admin' } | null>(null);
 
   const [newForm, setNewForm] = useState({
     name: '',
@@ -151,16 +164,8 @@ export default function AdminStudentsPage() {
     }
   };
 
-  const handleDeleteUser = async (id: string, role: 'student' | 'admin') => {
-    const confirmed = window.confirm(`Are you sure you want to delete this ${role}?`);
-    if (!confirmed) return;
-
-    await db.deleteStudentProfile(id); // Deletes user profile from profiles table in Supabase
-    if (role === 'student') {
-      setStudents(students.filter(s => s.id !== id));
-    } else {
-      setAdmins(admins.filter(a => a.id !== id));
-    }
+  const handleDeleteUser = (id: string, role: 'student' | 'admin') => {
+    setDeleteConfirm({ id, role });
   };
 
   const handleToggleStatus = (id: string, role: 'student' | 'admin', status: 'active' | 'suspended') => {
@@ -365,20 +370,15 @@ export default function AdminStudentsPage() {
               </div>
             )}
 
-            <div className="mt-5 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-left space-y-2">
-              <p className="text-xs text-gray-500"><strong>Email:</strong> <span className="font-mono text-gray-800">{successCredentials.email}</span></p>
-              <p className="text-xs text-gray-500 flex items-center justify-between">
+            <div className="mt-5 p-4 bg-gray-50 border border-gray-100 rounded-2xl text-left space-y-3">
+              <div className="text-xs text-gray-500 flex items-center justify-between">
+                <span><strong>Email:</strong> <span className="font-mono text-gray-800 select-all bg-white px-2 py-0.5 rounded border border-gray-150">{successCredentials.email}</span></span>
+                <CopyButton variant="ghost" size="sm" content={successCredentials.email} />
+              </div>
+              <div className="text-xs text-gray-500 flex items-center justify-between">
                 <span><strong>Password:</strong> <span className="font-mono text-gray-800 font-bold select-all bg-white px-2 py-0.5 rounded border border-gray-150">{successCredentials.password}</span></span>
-                <button 
-                  onClick={() => {
-                    navigator.clipboard.writeText(successCredentials.password);
-                    alert('Password copied to clipboard!');
-                  }}
-                  className="text-[10px] text-primary font-bold hover:underline cursor-pointer"
-                >
-                  Copy
-                </button>
-              </p>
+                <CopyButton variant="ghost" size="sm" content={successCredentials.password} />
+              </div>
             </div>
 
             <button
@@ -559,6 +559,53 @@ export default function AdminStudentsPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+        <AlertDialogPortal>
+          <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+          <AlertDialogPopup
+            from="bottom"
+            className="sm:max-w-md fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 border bg-white rounded-3xl p-6 shadow-2xl"
+          >
+            <AlertDialogHeader>
+              <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-lg font-bold text-center text-gray-800">
+                Delete {deleteConfirm?.role === 'admin' ? 'Administrator' : 'Student'}?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-center text-gray-500 mt-2">
+                Are you absolutely sure you want to delete this {deleteConfirm?.role}? This action will permanently remove their profile data from the system and cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter className="mt-6 flex justify-end gap-3 w-full">
+              <AlertDialogClose className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-200">
+                Cancel
+              </AlertDialogClose>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (deleteConfirm) {
+                    await db.deleteStudentProfile(deleteConfirm.id);
+                    if (deleteConfirm.role === 'student') {
+                      setStudents(students.filter(s => s.id !== deleteConfirm.id));
+                    } else {
+                      setAdmins(admins.filter(a => a.id !== deleteConfirm.id));
+                    }
+                    setDeleteConfirm(null);
+                  }
+                }}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft"
+              >
+                Delete Account
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialogPortal>
+      </AlertDialog>
     </div>
   );
 }
+

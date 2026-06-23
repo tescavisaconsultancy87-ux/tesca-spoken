@@ -9,7 +9,7 @@ export default function AdminSettingsPage() {
     schoolName: 'TESCA Spoken English',
     contactEmail: 'contact@tesca.com',
     supportPhone: '+91 98765 43210',
-    currency: 'USD ($)',
+    currency: 'INR (₹)',
     enableRegistrations: true,
     maintenanceMode: false,
     enableFreeTest: true,

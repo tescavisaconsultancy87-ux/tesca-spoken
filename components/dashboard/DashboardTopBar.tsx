@@ -1,7 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Bell, Menu } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from '@/components/animate-ui/primitives/radix/dropdown-menu';
 
 interface TopBarProps {
   role: 'student' | 'admin';
@@ -9,34 +14,34 @@ interface TopBarProps {
 }
 
 export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
-  const [notifOpen, setNotifOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [notifications, setNotifications] = useState<Array<{ id: string; text: string; time: string; unread: boolean }>>([]);
 
-  // Close dropdown on click outside
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setNotifOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    setNotifications(
+      role === 'admin'
+        ? [
+            { id: 'n1', text: 'New student enrolled today.', time: '10 mins ago', unread: true },
+            { id: 'n2', text: 'Subscription payment of ₹2,499.00 received.', time: '45 mins ago', unread: true },
+            { id: 'n3', text: 'Vikram Singh registered as a new lead.', time: '2 hours ago', unread: false },
+          ]
+        : [
+            { id: 'n1', text: 'Live Class: "Fluency Practice" starts soon.', time: '15 mins', unread: true },
+            { id: 'n2', text: 'Lesson 5 study material has been unlocked.', time: '2 hours ago', unread: true },
+            { id: 'n3', text: 'Welcome to TESCA Spoken English!', time: '1 day ago', unread: false },
+          ]
+    );
+  }, [role]);
 
-  // Contextual mock notifications based on role
-  const notifications = role === 'admin' 
-    ? [
-        { id: 'n1', text: 'New student enrolled today.', time: '10 mins ago', unread: true },
-        { id: 'n2', text: 'Subscription payment of ₹2,499.00 received.', time: '45 mins ago', unread: true },
-        { id: 'n3', text: 'Vikram Singh registered as a new lead.', time: '2 hours ago', unread: false },
-      ]
-    : [
-        { id: 'n1', text: 'Live Class: "Fluency Practice" starts soon.', time: '15 mins', unread: true },
-        { id: 'n2', text: 'Lesson 5 study material has been unlocked.', time: '2 hours ago', unread: true },
-        { id: 'n3', text: 'Welcome to TESCA Spoken English!', time: '1 day ago', unread: false },
-      ];
+  const unreadCount = notifications.filter((n) => n.unread).length;
 
-  const unreadCount = notifications.filter(n => n.unread).length;
+  const handleMarkAllRead = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
+  };
+
+  const handleMarkSingleRead = (id: string) => {
+    setNotifications(notifications.map((n) => (n.id === id ? { ...n, unread: false } : n)));
+  };
 
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100">
@@ -71,30 +76,48 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
           </button>
 
           {/* Notifications Dropdown */}
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={() => setNotifOpen(!notifOpen)}
-              className="relative p-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer"
-            >
-              <Bell className="h-[18px] w-[18px]" />
-              {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-secondary ring-2 ring-white" />
-              )}
-            </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <div className="relative p-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors cursor-pointer flex items-center justify-center">
+                <Bell className="h-[18px] w-[18px]" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-secondary ring-2 ring-white" />
+                )}
+              </div>
+            </DropdownMenuTrigger>
 
-            {notifOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-100 rounded-2xl shadow-soft-xl py-2 z-50 animate-fade-in">
-                <div className="px-4 py-2 border-b border-gray-50 flex items-center justify-between">
-                  <h4 className="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Notifications</h4>
+            <DropdownMenuContent align="end" className="w-80 bg-white border border-gray-100 rounded-2xl shadow-soft-xl py-2 z-50">
+              <div className="px-4 py-2 border-b border-gray-50 flex items-center justify-between">
+                <h4 className="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Notifications</h4>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllRead}
+                      className="text-[10px] font-bold text-primary hover:text-primary-600 transition-colors cursor-pointer mr-1"
+                    >
+                      Mark all read
+                    </button>
+                  )}
                   {unreadCount > 0 && (
                     <span className="text-[10px] font-bold text-secondary bg-secondary-50 px-2 py-0.5 rounded">
                       {unreadCount} New
                     </span>
                   )}
                 </div>
-                <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
-                  {notifications.map((notif) => (
-                    <div key={notif.id} className="px-4 py-3 hover:bg-gray-50/50 transition-colors text-left">
+              </div>
+              <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
+                {notifications.length === 0 ? (
+                  <div className="px-4 py-6 text-center text-xs text-gray-400">
+                    No notifications
+                  </div>
+                ) : (
+                  notifications.map((notif) => (
+                    <button
+                      key={notif.id}
+                      onClick={() => handleMarkSingleRead(notif.id)}
+                      className="w-full px-4 py-3 hover:bg-gray-50/50 transition-colors text-left block cursor-pointer focus:outline-none"
+                    >
                       <div className="flex justify-between items-start gap-2">
                         <p className={`text-xs ${notif.unread ? 'font-bold text-gray-800' : 'text-gray-600'}`}>
                           {notif.text}
@@ -104,12 +127,12 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
                         )}
                       </div>
                       <span className="text-[10px] text-gray-400 font-medium mt-1 block">{notif.time}</span>
-                    </div>
-                  ))}
-                </div>
+                    </button>
+                  ))
+                )}
               </div>
-            )}
-          </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Divider */}
           <div className="hidden sm:block w-px h-8 bg-gray-100 mx-1" />

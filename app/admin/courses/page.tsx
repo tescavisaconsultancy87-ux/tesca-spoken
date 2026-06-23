@@ -3,6 +3,17 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Filter, Edit2, Trash2, Users, DollarSign, BookOpen, X, Award } from 'lucide-react';
 import { db } from '@/lib/db';
+import {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogClose,
+} from '@/components/animate-ui/primitives/base/alert-dialog';
 
 interface Course {
   id: string;
@@ -19,6 +30,7 @@ export default function AdminCoursesPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -74,9 +86,8 @@ export default function AdminCoursesPage() {
     setIsAdding(false);
   };
 
-  const handleDeleteCourse = async (id: string) => {
-    await db.deleteCourse(id);
-    setCourses(courses.filter((c) => c.id !== id));
+  const handleDeleteCourse = (id: string) => {
+    setDeleteCourseId(id);
   };
 
   const filteredCourses = courses.filter((c) =>
@@ -165,7 +176,7 @@ export default function AdminCoursesPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Price (USD)</label>
+                  <label className="text-xs font-bold text-gray-500">Price (INR)</label>
                   <input
                     type="number"
                     value={newCourse.price}
@@ -220,7 +231,7 @@ export default function AdminCoursesPage() {
                 <span className="bg-primary-50 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
                   {course.category}
                 </span>
-                <span className="text-base font-extrabold text-gray-800">${course.price.toFixed(2)}</span>
+                <span className="text-base font-extrabold text-gray-800">₹{course.price.toLocaleString('en-IN')}</span>
               </div>
               <h3 className="text-base font-bold text-gray-800 leading-snug">{course.title}</h3>
               <p className="text-xs text-gray-400 font-semibold">Lead Trainer: {course.trainer}</p>
@@ -252,6 +263,49 @@ export default function AdminCoursesPage() {
           </div>
         ))}
       </div>
+
+      {/* Delete Course Confirmation Alert Dialog */}
+      <AlertDialog open={deleteCourseId !== null} onOpenChange={(open) => { if (!open) setDeleteCourseId(null); }}>
+        <AlertDialogPortal>
+          <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+          <AlertDialogPopup
+            from="bottom"
+            className="sm:max-w-md fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 border bg-white rounded-3xl p-6 shadow-2xl"
+          >
+            <AlertDialogHeader>
+              <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-lg font-bold text-center text-gray-800">
+                Delete Course?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-center text-gray-500 mt-2">
+                Are you absolutely sure you want to delete this course? This action cannot be undone and will affect any student registrations associated with this course.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter className="mt-6 flex justify-end gap-3 w-full">
+              <AlertDialogClose className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-200">
+                Cancel
+              </AlertDialogClose>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (deleteCourseId) {
+                    await db.deleteCourse(deleteCourseId);
+                    setCourses(courses.filter((c) => c.id !== deleteCourseId));
+                    setDeleteCourseId(null);
+                  }
+                }}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft"
+              >
+                Delete Course
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialogPortal>
+      </AlertDialog>
     </div>
   );
 }
+

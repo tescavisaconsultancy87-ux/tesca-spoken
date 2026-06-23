@@ -3,6 +3,17 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, ShieldAlert, Star, CheckCircle, EyeOff, X } from 'lucide-react';
 import { db } from '@/lib/db';
+import {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogClose,
+} from '@/components/animate-ui/primitives/base/alert-dialog';
 
 interface Testimonial {
   id: string;
@@ -19,6 +30,7 @@ export default function AdminTestimonialsPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteTestimonialId, setDeleteTestimonialId] = useState<string | null>(null);
 
   const loadTestimonials = async () => {
     try {
@@ -60,9 +72,8 @@ export default function AdminTestimonialsPage() {
     loadTestimonials();
   };
 
-  const handleDelete = async (id: string) => {
-    await db.deleteTestimonial(id);
-    loadTestimonials();
+  const handleDelete = (id: string) => {
+    setDeleteTestimonialId(id);
   };
 
   const handleToggleStatus = async (id: string, currentStatus: 'approved' | 'hidden') => {
@@ -254,6 +265,49 @@ export default function AdminTestimonialsPage() {
           </div>
         ))}
       </div>
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={deleteTestimonialId !== null} onOpenChange={(open) => { if (!open) setDeleteTestimonialId(null); }}>
+        <AlertDialogPortal>
+          <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+          <AlertDialogPopup
+            from="bottom"
+            className="sm:max-w-md fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 border bg-white rounded-3xl p-6 shadow-2xl"
+          >
+            <AlertDialogHeader>
+              <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-lg font-bold text-center text-gray-800">
+                Delete Review?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-center text-gray-500 mt-2">
+                Are you absolutely sure you want to delete this testimonial review? This action cannot be undone and it will be permanently removed.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter className="mt-6 flex justify-end gap-3 w-full">
+              <AlertDialogClose className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-200">
+                Cancel
+              </AlertDialogClose>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (deleteTestimonialId) {
+                    await db.deleteTestimonial(deleteTestimonialId);
+                    loadTestimonials();
+                    setDeleteTestimonialId(null);
+                  }
+                }}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft"
+              >
+                Delete Review
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialogPortal>
+      </AlertDialog>
     </div>
   );
 }
+
