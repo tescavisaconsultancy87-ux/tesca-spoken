@@ -75,10 +75,36 @@ export default function DemoModal({ onClose }: DemoModalProps) {
     }
     
     setLoading(true);
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'demo',
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          timeSlot: form.time,
+          learningMode: form.mode,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit demo class request.');
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error('Demo submit error:', err);
+      setError(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

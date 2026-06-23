@@ -81,13 +81,41 @@ export default function ContactPage() {
   });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setLoading(false);
-    setSubmitted(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'contact',
+          name: form.name,
+          email: form.email,
+          topic: form.type,
+          message: form.message,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit feedback.');
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error('Contact submit error:', err);
+      setError(err.message || 'An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -257,6 +285,7 @@ export default function ContactPage() {
                         onClick={() => {
                           setSubmitted(false);
                           setForm({ name: '', email: '', type: 'Suggestion', message: '' });
+                          setError('');
                         }}
                         className="btn-warm mt-8"
                       >
@@ -273,6 +302,12 @@ export default function ContactPage() {
                           We review every suggestion to improve your learning experience.
                         </p>
                       </div>
+
+                      {error && (
+                        <div className="rounded-xl bg-red-950/50 border border-red-500/30 p-3.5 text-xs font-semibold text-red-200">
+                          {error}
+                        </div>
+                      )}
 
                       <div className="space-y-4">
                         {/* Name */}

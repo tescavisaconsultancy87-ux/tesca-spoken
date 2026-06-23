@@ -12,5 +12,9 @@
   },
   "compatibility_flags": [
     "nodejs_compat"
-  ]
+  ],
+  "vars": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://sdkiidhjvauoxbgojnxe.supabase.co",
+    "APP_NAME": "tesca-spoken"
+  }
 }

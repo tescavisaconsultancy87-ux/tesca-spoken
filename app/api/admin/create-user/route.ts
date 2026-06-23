@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import { sendEmail } from '@/lib/gmail';
 import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 // Helper to generate a random password (minimum 8 characters)
 function generateRandomPassword(length = 8): string {
@@ -36,15 +37,77 @@ export async function POST(request: NextRequest) {
 
     const password = generateRandomPassword(8);
     const appName = process.env.APP_NAME || 'tesca-spoken';
-    const emailUser = process.env.EMAIL_USER || 'tescavisaconsultancy87@gmail.com';
-    const emailPass = process.env.APP_PASSWORD || '';
 
     let databaseSaved = false;
     let authUserId = `mock-id-${Date.now()}`;
 
+    // Initialize admin client if service role key is present
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const adminSupabase = (supabaseUrl && serviceRoleKey)
+      ? createClient(supabaseUrl, serviceRoleKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        })
+      : null;
+
     // If Supabase is configured, create the user
-    if (supabase) {
-      // 1. Sign up the user in Supabase auth (creates user in auth.users)
+    if (adminSupabase) {
+      console.log('[Create User] Using Supabase Admin Client (Service Role)...');
+      // 1. Create the user in Supabase auth (pre-confirmed, bypasses client session login)
+      const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          name,
+          role,
+          phone,
+        },
+      });
+
+      if (authError) {
+        return NextResponse.json({ error: authError.message }, { status: 400 });
+      }
+
+      if (authData?.user) {
+        authUserId = authData.user.id;
+
+        // 2. Insert user profile into the profiles table (RLS is bypassed via service role key)
+        const { error: profileError } = await adminSupabase.from('profiles').insert({
+          id: authUserId,
+          email,
+          role,
+          name,
+          phone,
+          level: role === 'student' ? 'Intermediate (B1)' : 'Expert',
+        });
+
+        if (profileError) {
+          console.error('[Create User] Profile insertion failed:', profileError.message);
+          return NextResponse.json({ error: `Failed to insert user profile: ${profileError.message}` }, { status: 400 });
+        }
+
+        databaseSaved = true;
+
+        // 3. If student, enroll them in the course
+        if (role === 'student' && course) {
+          const courseId = course.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+          const { error: enrollError } = await adminSupabase.from('enrollments').insert({
+            student_id: authUserId,
+            course_id: courseId,
+            status: 'active',
+          });
+          if (enrollError) {
+            console.error('[Create User] Enrollment failed:', enrollError.message);
+          }
+        }
+      }
+    } else if (supabase) {
+      console.log('[Create User] Falling back to standard Supabase Client (Anon Key)...');
+      // 1. Sign up the user (sends confirmation email if enabled, logs out admin)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -64,7 +127,7 @@ export async function POST(request: NextRequest) {
       if (authData?.user) {
         authUserId = authData.user.id;
 
-        // 2. Insert user profile into the profiles table
+        // 2. Insert profile
         const { error: profileError } = await supabase.from('profiles').insert({
           id: authUserId,
           email,
@@ -75,15 +138,16 @@ export async function POST(request: NextRequest) {
         });
 
         if (profileError) {
-          // If profile table insert fails, log but continue (or we can return error)
-          console.error('Failed to create profile record:', profileError.message);
-        } else {
-          databaseSaved = true;
+          console.error('[Create User] Profile insertion failed:', profileError.message);
+          return NextResponse.json({
+            error: `User was registered in auth, but saving profile failed: ${profileError.message}. To resolve this, configure SUPABASE_SERVICE_ROLE_KEY in .env, or add an INSERT policy to public.profiles in your Supabase dashboard.`
+          }, { status: 400 });
         }
 
-        // 3. If student, we can optionally enroll them in the course
+        databaseSaved = true;
+
+        // 3. Enroll course
         if (role === 'student' && course) {
-          // Find or match course ID
           const courseId = course.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           const { error: enrollError } = await supabase.from('enrollments').insert({
             student_id: authUserId,
@@ -91,7 +155,7 @@ export async function POST(request: NextRequest) {
             status: 'active',
           });
           if (enrollError) {
-            console.error('Failed to create enrollment:', enrollError.message);
+            console.error('[Create User] Enrollment failed:', enrollError.message);
           }
         }
       }
@@ -101,8 +165,7 @@ export async function POST(request: NextRequest) {
       databaseSaved = true;
     }
 
-    // 4. Send email using Resend API (HTTP fetch - Cloudflare Worker compatible) or Nodemailer SMTP
-    const resendApiKey = process.env.RESEND_API_KEY;
+    // 4. Send email using Nodemailer Gmail SMTP
     const origin = request.nextUrl.origin || 'http://localhost:3000';
     const loginUrl = `${origin}/login`;
 
@@ -157,76 +220,33 @@ export async function POST(request: NextRequest) {
     let emailSent = false;
     let emailErrorMsg = '';
 
-    // First attempt: Resend HTTP API (safe for Cloudflare edge Workers)
-    if (resendApiKey) {
-      try {
-        const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-        const resendResponse = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${resendApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            from: `"${appName.toUpperCase()}" <${fromEmail}>`,
-            to: email,
-            subject: `Welcome to ${appName.toUpperCase()} - Your Account Credentials`,
-            html: htmlContent,
-          }),
-        });
+    const hasGmailConfig = !!process.env.GMAIL_REFRESH_TOKEN;
 
-        if (resendResponse.ok) {
-          console.log(`Credential email successfully sent to ${email} via Resend API`);
-          emailSent = true;
-        } else {
-          const errText = await resendResponse.text();
-          console.error('Resend API failed to send email:', errText);
-          emailErrorMsg = `Resend API failed: ${errText}`;
-        }
-      } catch (resendError: any) {
-        console.error('Resend API call error:', resendError);
-        emailErrorMsg = `Resend API error: ${resendError.message || resendError}`;
-      }
-    }
+    if (hasGmailConfig) {
+      const emailResult = await sendEmail(
+        email,
+        `Welcome to ${appName.toUpperCase()} - Your Account Credentials`,
+        htmlContent
+      );
 
-    // Second attempt: Fallback to Nodemailer SMTP (perfect for local development where ports are open)
-    if (!emailSent && emailPass) {
-      try {
-        const transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: emailUser,
-            pass: emailPass,
-          },
-        });
-
-        await transporter.sendMail({
-          from: `"${appName.toUpperCase()}" <${emailUser}>`,
-          to: email,
-          subject: `Welcome to ${appName.toUpperCase()} - Your Account Credentials`,
-          html: htmlContent,
-        });
-
-        console.log(`Credential email successfully sent to ${email} via Nodemailer`);
+      if (emailResult.success) {
+        console.log(`Credential email successfully sent to ${email} via Gmail REST API`);
         emailSent = true;
-        emailErrorMsg = ''; // Reset error on successful fallback
-      } catch (mailError: any) {
-        console.error('Nodemailer SMTP fallback failed:', mailError);
-        emailErrorMsg = `SMTP failed: ${mailError.message || mailError}`;
+      } else {
+        console.error('Gmail API send failed:', emailResult.error);
+        emailErrorMsg = `Gmail API failed: ${emailResult.error}`;
       }
+    } else {
+      emailErrorMsg = 'GMAIL_REFRESH_TOKEN is missing in env. Skipping email dispatch.';
     }
 
     if (!emailSent) {
-      const finalWarning = emailErrorMsg 
-        ? `User created in database, but credentials email failed. Details: ${emailErrorMsg}`
-        : 'User created in database, but credentials email could not be sent (missing both RESEND_API_KEY and APP_PASSWORD in environment).';
-      
       return NextResponse.json({
         success: true,
         userId: authUserId,
         password,
         emailSent: false,
-        warning: finalWarning
+        warning: `User created in database, but credentials email failed. Details: ${emailErrorMsg}`
       });
     }
 
