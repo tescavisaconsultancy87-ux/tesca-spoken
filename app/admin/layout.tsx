@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
   Users,
@@ -13,6 +15,7 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
+import { useAuth } from '@/context/AuthContext';
 
 const adminNavGroups: NavGroup[] = [
   {
@@ -37,6 +40,28 @@ const adminNavGroups: NavGroup[] = [
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || user.role !== 'admin')) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f6fa]">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary/20 border-t-primary" />
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-3">Verifying session...</p>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
+
   return (
     <DashboardLayout role="admin" navGroups={adminNavGroups}>
       {children}

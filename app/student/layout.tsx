@@ -1,8 +1,11 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { LayoutDashboard, BookOpen, Video, FileText, User, Home } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
+import { useAuth } from '@/context/AuthContext';
 
 const studentNavGroups: NavGroup[] = [
   {
@@ -24,6 +27,28 @@ const studentNavGroups: NavGroup[] = [
 ];
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && (!user || user.role !== 'student')) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f6fa]">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary/20 border-t-primary" />
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-3">Verifying session...</p>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'student') {
+    return null;
+  }
+
   return (
     <DashboardLayout role="student" navGroups={studentNavGroups}>
       {children}

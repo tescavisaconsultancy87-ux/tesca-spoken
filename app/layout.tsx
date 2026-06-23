@@ -4,6 +4,7 @@ import './globals.css';
 import OfferBanner from '@/components/OfferBanner';
 import AlertOverlay from '@/components/AlertOverlay';
 import { DemoModalProvider } from '@/context/DemoModalContext';
+import { AuthProvider } from '@/context/AuthContext';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -60,12 +61,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="font-body text-ink antialiased overflow-x-hidden">
-        <DemoModalProvider>
-          {/* Offer banner sits above everything, including the navbar */}
-          <OfferBanner />
-          <AlertOverlay />
-          {children}
-        </DemoModalProvider>
+        <AuthProvider>
+          <DemoModalProvider>
+            {/* Offer banner sits above everything, including the navbar */}
+            <OfferBanner />
+            <AlertOverlay />
+            {children}
+          </DemoModalProvider>
+        </AuthProvider>
       </body>
     </html>
   );

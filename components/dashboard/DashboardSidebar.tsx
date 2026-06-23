@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { X } from 'lucide-react';
+import { X, LogOut } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export interface NavItem {
   label: string;
@@ -26,6 +27,7 @@ interface SidebarProps {
 
 export default function DashboardSidebar({ groups, role, open, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   const isActive = (href: string) => {
     if (href === `/${role}`) return pathname === `/${role}`;
@@ -112,16 +114,23 @@ export default function DashboardSidebar({ groups, role, open, onClose }: Sideba
         <div className="border-t border-gray-100 px-4 py-4">
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50">
             <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-              {role === 'admin' ? 'A' : 'S'}
+              {(user?.name || (role === 'admin' ? 'A' : 'S'))[0]}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-gray-800 truncate">
-                {role === 'admin' ? 'Admin User' : 'Student User'}
+                {user?.name || (role === 'admin' ? 'Admin User' : 'Student User')}
               </p>
-              <p className="text-[11px] text-gray-400 truncate">
-                {role === 'admin' ? 'admin@tesca.com' : 'student@tesca.com'}
+              <p className="text-[11px] text-gray-450 truncate">
+                {user?.email || (role === 'admin' ? 'admin@tesca.com' : 'student@tesca.com')}
               </p>
             </div>
+            <button
+              onClick={logout}
+              className="p-1.5 rounded-lg text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </aside>

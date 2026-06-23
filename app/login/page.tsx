@@ -2,9 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
+  const { login } = useAuth();
+  const router = useRouter();
+
   const [form, setForm] = useState({
     username: '',
     password: '',
@@ -16,9 +21,19 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError('');
-    await new Promise((r) => setTimeout(r, 1200));
+    
+    const result = await login(form.username, form.password);
     setLoading(false);
-    setError('Invalid username or password. Please try again.');
+    
+    if (result.success) {
+      if (result.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/student');
+      }
+    } else {
+      setError(result.error || 'Invalid credentials. Please try again.');
+    }
   };
 
   return (
