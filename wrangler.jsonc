@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "tesca-spoken",
+  "compatibility_date": "2026-06-23",
+  "observability": {
+    "enabled": true
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  // Self-reference binding must match the "name" above
+  "services": [
+    {
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "tesca-spoken"
+    }
+  ]
+}
