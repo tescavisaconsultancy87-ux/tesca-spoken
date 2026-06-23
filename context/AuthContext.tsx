@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 
 interface UserProfile {
   id: string;
@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     async function loadSession() {
       try {
+        await ensureSupabaseClient();
         if (supabase) {
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
@@ -77,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
+      await ensureSupabaseClient();
       if (supabase) {
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
