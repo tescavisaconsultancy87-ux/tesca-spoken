@@ -2,10 +2,15 @@ import { createClient } from '@supabase/supabase-js';
 
 // Helper to get client dynamically (especially for server-side where process.env is populated at runtime)
 const getInitialClient = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+  const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
+  console.log('[Supabase Client] Static Init attempt:', { urlLength: url.length, keyLength: anonKey.length, urlPrefix: url.substring(0, 15) });
   if (url && anonKey) {
-    return createClient(url, anonKey);
+    try {
+      return createClient(url, anonKey);
+    } catch (e: any) {
+      console.error('[Supabase Client] Static Init Error:', e);
+    }
   }
   return null;
 };
@@ -15,10 +20,17 @@ let activeClient = getInitialClient();
 export let supabase = activeClient;
 
 export function initializeDynamicSupabase(url: string, anonKey: string) {
-  if (url && anonKey) {
-    activeClient = createClient(url, anonKey);
-    supabase = activeClient;
-    return activeClient;
+  const cleanUrl = (url || '').trim();
+  const cleanKey = (anonKey || '').trim();
+  console.log('[Supabase Client] Dynamic Init attempt:', { urlLength: cleanUrl.length, keyLength: cleanKey.length, urlPrefix: cleanUrl.substring(0, 15) });
+  if (cleanUrl && cleanKey) {
+    try {
+      activeClient = createClient(cleanUrl, cleanKey);
+      supabase = activeClient;
+      return activeClient;
+    } catch (e: any) {
+      console.error('[Supabase Client] Dynamic Init Error:', e);
+    }
   }
   return null;
 }
