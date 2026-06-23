@@ -4,12 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:cf": "npx opennextjs-cloudflare build",
+    "build": "next build && opennextjs-cloudflare build --skipNextBuild",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "npm run build:cf && npx wrangler deploy",
-    "preview": "npm run build:cf && npx wrangler dev"
+    "deploy": "npm run build && npx wrangler deploy",
+    "preview": "npm run build && npx wrangler dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.108.2",
