@@ -36,7 +36,16 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return course;
     try {
-      const { data, error } = await supabase.from('courses').insert(course).select().single();
+      const dbCourse = {
+        id: course.id,
+        title: course.title,
+        trainer: course.trainer,
+        category: course.category,
+        price: course.price,
+        lessons_count: course.lessons_count,
+        students_count: course.students_count,
+      };
+      const { data, error } = await supabase.from('courses').insert(dbCourse).select().single();
       if (error) {
         logError('courses', error);
         return course;
@@ -64,6 +73,30 @@ export const db = {
     }
   },
 
+  updateCourse: async (id: string, updates: any) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const dbUpdates: any = {};
+      if (updates.title !== undefined) dbUpdates.title = updates.title;
+      if (updates.trainer !== undefined) dbUpdates.trainer = updates.trainer;
+      if (updates.category !== undefined) dbUpdates.category = updates.category;
+      if (updates.price !== undefined) dbUpdates.price = updates.price;
+      if (updates.lessons_count !== undefined) dbUpdates.lessons_count = updates.lessons_count;
+      if (updates.students_count !== undefined) dbUpdates.students_count = updates.students_count;
+
+      const { error } = await supabase.from('courses').update(dbUpdates).eq('id', id);
+      if (error) {
+        logError('courses', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('updateCourse failed:', err);
+      return false;
+    }
+  },
+
   // ─── Live Classes ───
   getLiveClasses: async () => {
     await ensureSupabaseClient();
@@ -81,6 +114,54 @@ export const db = {
     }
   },
 
+  createLiveClass: async (lc: any) => {
+    await ensureSupabaseClient();
+    if (!supabase) return lc;
+    try {
+      const { data, error } = await supabase.from('live_classes').insert(lc).select().single();
+      if (error) {
+        logError('live_classes', error);
+        return lc;
+      }
+      return data;
+    } catch (err) {
+      console.error('createLiveClass failed:', err);
+      return lc;
+    }
+  },
+
+  updateLiveClass: async (id: string, updates: any) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from('live_classes').update(updates).eq('id', id);
+      if (error) {
+        logError('live_classes', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('updateLiveClass failed:', err);
+      return false;
+    }
+  },
+
+  deleteLiveClass: async (id: string) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from('live_classes').delete().eq('id', id);
+      if (error) {
+        logError('live_classes', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('deleteLiveClass failed:', err);
+      return false;
+    }
+  },
+
   // ─── Study Materials ───
   getStudyMaterials: async () => {
     await ensureSupabaseClient();
@@ -95,6 +176,54 @@ export const db = {
     } catch (err) {
       console.error('getStudyMaterials failed:', err);
       return [];
+    }
+  },
+
+  createStudyMaterial: async (mat: any) => {
+    await ensureSupabaseClient();
+    if (!supabase) return mat;
+    try {
+      const { data, error } = await supabase.from('study_materials').insert(mat).select().single();
+      if (error) {
+        logError('study_materials', error);
+        return mat;
+      }
+      return data;
+    } catch (err) {
+      console.error('createStudyMaterial failed:', err);
+      return mat;
+    }
+  },
+
+  updateStudyMaterial: async (id: string, updates: any) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from('study_materials').update(updates).eq('id', id);
+      if (error) {
+        logError('study_materials', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('updateStudyMaterial failed:', err);
+      return false;
+    }
+  },
+
+  deleteStudyMaterial: async (id: string) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from('study_materials').delete().eq('id', id);
+      if (error) {
+        logError('study_materials', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('deleteStudyMaterial failed:', err);
+      return false;
     }
   },
 
@@ -213,70 +342,6 @@ export const db = {
     }
   },
 
-  // ─── Blog Posts ───
-  getBlogPosts: async () => {
-    await ensureSupabaseClient();
-    if (!supabase) return [];
-    try {
-      const { data, error } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
-      if (error) {
-        logError('blog_posts', error);
-        return [];
-      }
-      return data || [];
-    } catch (err) {
-      console.error('getBlogPosts failed:', err);
-      return [];
-    }
-  },
-
-  createBlogPost: async (post: any) => {
-    await ensureSupabaseClient();
-    if (!supabase) return post;
-    try {
-      const { data, error } = await supabase.from('blog_posts').insert(post).select().single();
-      if (error) {
-        logError('blog_posts', error);
-        return post;
-      }
-      return data;
-    } catch (err) {
-      console.error('createBlogPost failed:', err);
-      return post;
-    }
-  },
-
-  updateBlogPostStatus: async (id: string, status: string) => {
-    await ensureSupabaseClient();
-    if (!supabase) return false;
-    try {
-      const { error } = await supabase.from('blog_posts').update({ status }).eq('id', id);
-      if (error) {
-        logError('blog_posts', error);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.error('updateBlogPostStatus failed:', err);
-      return false;
-    }
-  },
-
-  deleteBlogPost: async (id: string) => {
-    await ensureSupabaseClient();
-    if (!supabase) return false;
-    try {
-      const { error } = await supabase.from('blog_posts').delete().eq('id', id);
-      if (error) {
-        logError('blog_posts', error);
-        return false;
-      }
-      return true;
-    } catch (err) {
-      console.error('deleteBlogPost failed:', err);
-      return false;
-    }
-  },
 
   // ─── Students Profiles ───
   getStudents: async () => {
@@ -320,6 +385,28 @@ export const db = {
       }));
     } catch (err) {
       console.error('getAdmins failed:', err);
+      return [];
+    }
+  },
+
+  getTutors: async () => {
+    await ensureSupabaseClient();
+    if (!supabase) return [];
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'tutor').order('created_at', { ascending: false });
+      if (error) {
+        logError('profiles', error);
+        return [];
+      }
+      return (data || []).map((p: any) => ({
+        id: p.id,
+        name: p.name || 'Tutor User',
+        email: p.email,
+        joinedDate: new Date(p.created_at).toLocaleDateString('en-IN', { month: 'short', day: '2-digit', year: 'numeric' }),
+        status: 'active'
+      }));
+    } catch (err) {
+      console.error('getTutors failed:', err);
       return [];
     }
   },
@@ -378,6 +465,18 @@ export const db = {
       console.error('getProfile failed:', err);
       return null;
     }
+  },
+
+  // ─── Status computation ───
+  computeStatus: (dateTime: string, duration: string): 'upcoming' | 'live' | 'completed' => {
+    const start = new Date(dateTime);
+    if (isNaN(start.getTime())) return 'upcoming';
+    const now = new Date();
+    const mins = parseInt(duration) || 0;
+    const end = new Date(start.getTime() + mins * 60000);
+    if (now < start) return 'upcoming';
+    if (now >= start && now <= end) return 'live';
+    return 'completed';
   },
 
   updateProfile: async (id: string, updates: any) => {

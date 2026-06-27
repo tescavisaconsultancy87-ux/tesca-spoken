@@ -26,41 +26,17 @@ export default function StudentCoursesPage() {
   useEffect(() => {
     async function load() {
       const data = await db.getCourses();
-      const mapped = data.map((c: any) => {
-        let progress = 0;
-        let completed = 0;
-        let lastActive = 'Never';
-        
-        if (c.id === 'spoken-english-intermediate') {
-          progress = 77;
-          completed = 14;
-          lastActive = '2 hours ago';
-        } else if (c.id === 'business-communication') {
-          progress = 30;
-          completed = 6;
-          lastActive = '3 days ago';
-        } else if (c.id === 'vocabulary-accelerator') {
-          progress = 100;
-          completed = c.lessons_count || 12;
-          lastActive = 'Completed on May 12, 2026';
-        } else {
-          progress = 0;
-          completed = 0;
-          lastActive = 'New Enrollment';
-        }
-
-        return {
-          id: c.id,
-          title: c.title,
-          trainer: c.trainer,
-          image: c.image || '/course-english.jpg',
-          progress,
-          totalLessons: c.lessons_count || 12,
-          completedLessons: completed,
-          category: c.category,
-          lastActive,
-        };
-      });
+      const mapped = data.map((c: any) => ({
+        id: c.id,
+        title: c.title,
+        trainer: c.trainer,
+        image: c.image || '/course-english.jpg',
+        progress: 0,
+        totalLessons: c.lessons_count || 12,
+        completedLessons: 0,
+        category: c.category,
+        lastActive: 'New Enrollment',
+      }));
       setCourses(mapped);
       setLoading(false);
     }

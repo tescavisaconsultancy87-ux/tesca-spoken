@@ -1,46 +1,130 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Search, Bell, Menu } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuHighlight,
+  DropdownMenuHighlightItem,
+  DropdownMenuItem,
 } from '@/components/animate-ui/primitives/radix/dropdown-menu';
 
 interface TopBarProps {
-  role: 'student' | 'admin';
+  role: 'student' | 'admin' | 'tutor';
   onMenuToggle: () => void;
 }
 
 export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
+  const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState<Array<{ id: string; text: string; time: string; unread: boolean }>>([]);
 
   useEffect(() => {
-    setNotifications(
-      role === 'admin'
-        ? [
-            { id: 'n1', text: 'New student enrolled today.', time: '10 mins ago', unread: true },
-            { id: 'n2', text: 'Subscription payment of ₹2,499.00 received.', time: '45 mins ago', unread: true },
-            { id: 'n3', text: 'Vikram Singh registered as a new lead.', time: '2 hours ago', unread: false },
-          ]
-        : [
-            { id: 'n1', text: 'Live Class: "Fluency Practice" starts soon.', time: '15 mins', unread: true },
-            { id: 'n2', text: 'Lesson 5 study material has been unlocked.', time: '2 hours ago', unread: true },
-            { id: 'n3', text: 'Welcome to TESCA Spoken English!', time: '1 day ago', unread: false },
-          ]
-    );
+    async function fetchNotifications() {
+      let loadedNotifications: any[] = [];
+      try {
+        await ensureSupabaseClient();
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            const res = await fetch('/api/notifications', {
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`
+              }
+            });
+            if (res.ok) {
+              loadedNotifications = await res.json();
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to fetch from notifications API:', err);
+      }
+
+      // Fallback if API returned nothing or error
+      if (!loadedNotifications || loadedNotifications.length === 0) {
+        const readIds: string[] = JSON.parse(localStorage.getItem('read_notifications') || '[]');
+        const initialList = role === 'admin'
+            ? [
+                { id: 'n1', text: 'New student enrolled today.', time: '10 mins ago', unread: true },
+                { id: 'n2', text: 'Subscription payment of ₹2,499.00 received.', time: '45 mins ago', unread: true },
+                { id: 'n3', text: 'Vikram Singh registered as a new lead.', time: '2 hours ago', unread: false },
+              ]
+            : [
+                { id: 'n1', text: 'Live Class: "Fluency Practice" starts soon.', time: '15 mins', unread: true },
+                { id: 'n2', text: 'Lesson 5 study material has been unlocked.', time: '2 hours ago', unread: true },
+                { id: 'n3', text: 'Welcome to TESCA Spoken English!', time: '1 day ago', unread: false },
+              ];
+
+        loadedNotifications = initialList.map(n => ({
+          ...n,
+          unread: readIds.includes(n.id) ? false : n.unread
+        }));
+      }
+
+      setNotifications(loadedNotifications);
+    }
+
+    fetchNotifications();
   }, [role]);
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
-  const handleMarkAllRead = (e: React.MouseEvent) => {
+  const handleMarkAllRead = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setNotifications(notifications.map((n) => ({ ...n, unread: false })));
+    const updated = notifications.map((n) => ({ ...n, unread: false }));
+    setNotifications(updated);
+    const readIds = updated.filter(n => !n.unread).map(n => n.id);
+    localStorage.setItem('read_notifications', JSON.stringify(readIds));
+
+    try {
+      await ensureSupabaseClient();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await fetch('/api/notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ markAllRead: true })
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to post markAllRead:', err);
+    }
   };
 
-  const handleMarkSingleRead = (id: string) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, unread: false } : n)));
+  const handleMarkSingleRead = async (id: string) => {
+    const updated = notifications.map((n) => (n.id === id ? { ...n, unread: false } : n));
+    setNotifications(updated);
+    const readIds = updated.filter(n => !n.unread).map(n => n.id);
+    localStorage.setItem('read_notifications', JSON.stringify(readIds));
+
+    try {
+      await ensureSupabaseClient();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await fetch('/api/notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ notificationId: id })
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to post single markRead:', err);
+    }
   };
 
   return (
@@ -59,7 +143,7 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
             <Search className="h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder={role === 'admin' ? 'Search students, courses...' : 'Search courses, lessons...'}
+              placeholder={role === 'admin' ? 'Search students, courses...' : role === 'tutor' ? 'Search courses, materials...' : 'Search courses, lessons...'}
               className="flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 outline-none"
             />
             <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded-md border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-gray-400">
@@ -112,9 +196,9 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
                     No notifications
                   </div>
                 ) : (
-                  notifications.map((notif) => (
+                  notifications.map((notif, index) => (
                     <button
-                      key={notif.id}
+                      key={notif.id || index}
                       onClick={() => handleMarkSingleRead(notif.id)}
                       className="w-full px-4 py-3 hover:bg-gray-50/50 transition-colors text-left block cursor-pointer focus:outline-none"
                     >
@@ -137,20 +221,60 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
           {/* Divider */}
           <div className="hidden sm:block w-px h-8 bg-gray-100 mx-1" />
 
-          {/* Profile */}
-          <button className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl hover:bg-gray-50 transition-colors">
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-semibold text-gray-800 leading-tight">
-                {role === 'admin' ? 'Admin User' : 'Student User'}
-              </p>
-              <p className="text-[11px] text-gray-400 leading-tight">
-                {role === 'admin' ? 'admin@tesca.com' : 'student@tesca.com'}
-              </p>
-            </div>
-            <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">
-              {role === 'admin' ? 'A' : 'S'}
-            </div>
-          </button>
+          {/* Profile Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <div className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl hover:bg-gray-55 transition-colors cursor-pointer">
+                <div className="hidden sm:block text-right">
+                  <p className="text-sm font-semibold text-gray-800 leading-tight">
+                    {user?.name || (role === 'admin' ? 'Admin User' : role === 'tutor' ? 'Tutor User' : 'Student User')}
+                  </p>
+                  <p className="text-[11px] text-gray-450 leading-tight">
+                    {user?.email || (role === 'admin' ? 'admin@tesca.com' : role === 'tutor' ? 'tutor@tesca.com' : 'student@tesca.com')}
+                  </p>
+                </div>
+                <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-white text-sm font-bold">
+                  {user?.name ? user.name[0].toUpperCase() : (role === 'admin' ? 'A' : role === 'tutor' ? 'T' : 'S')}
+                </div>
+              </div>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-48 bg-white border border-gray-100 rounded-2xl shadow-soft-xl py-2.5 z-50">
+              <DropdownMenuHighlight>
+                <DropdownMenuHighlightItem>
+                  <Link href={role === 'admin' ? '/admin' : role === 'tutor' ? '/tutor' : '/student'}>
+                    <DropdownMenuItem>
+                      View Dashboard
+                    </DropdownMenuItem>
+                  </Link>
+                </DropdownMenuHighlightItem>
+                {role === 'student' && (
+                  <DropdownMenuHighlightItem>
+                    <Link href="/student/profile">
+                      <DropdownMenuItem>
+                        My Profile
+                      </DropdownMenuItem>
+                    </Link>
+                  </DropdownMenuHighlightItem>
+                )}
+                {role === 'admin' && (
+                  <DropdownMenuHighlightItem>
+                    <Link href="/admin/settings">
+                      <DropdownMenuItem>
+                        Portal Settings
+                      </DropdownMenuItem>
+                    </Link>
+                  </DropdownMenuHighlightItem>
+                )}
+                <div className="my-1.5 h-px bg-black/5" />
+                <DropdownMenuHighlightItem>
+                  <DropdownMenuItem onClick={logout} className="text-rose-600 hover:text-rose-600">
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuHighlightItem>
+              </DropdownMenuHighlight>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

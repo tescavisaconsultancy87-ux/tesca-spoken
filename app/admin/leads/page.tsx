@@ -10,7 +10,7 @@ interface Lead {
   phone: string;
   email: string;
   notes: string;
-  status: 'new' | 'contacted' | 'converted';
+  status: 'new' | 'contacted' | 'processing' | 'followup' | 'converted' | 'rejected';
   dateAdded: string;
 }
 
@@ -37,7 +37,7 @@ export default function AdminLeadsPage() {
     load();
   }, []);
 
-  const handleUpdateStatus = async (id: string, status: 'contacted' | 'converted') => {
+  const handleUpdateStatus = async (id: string, status: 'processing' | 'followup' | 'converted' | 'rejected') => {
     await db.updateLeadStatus(id, status);
     setLeads(leads.map((l) => (l.id === id ? { ...l, status } : l)));
   };
@@ -69,11 +69,19 @@ export default function AdminLeadsPage() {
 
       {/* Leads list cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredLeads.map((lead) => (
+        {filteredLeads.map((lead, index) => (
           <div
-            key={lead.id}
+            key={lead.id || index}
             className={`bg-white border rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col justify-between space-y-4 ${
-              lead.status === 'new' ? 'border-l-4 border-l-secondary' : 'border-gray-100/80'
+              lead.status === 'processing'
+                ? 'border-l-4 border-l-blue-500'
+                : lead.status === 'followup'
+                ? 'border-l-4 border-l-amber-500'
+                : lead.status === 'converted'
+                ? 'border-l-4 border-l-emerald-500'
+                : lead.status === 'rejected'
+                ? 'border-l-4 border-l-rose-500'
+                : 'border-l-4 border-l-secondary'
             }`}
           >
             <div className="space-y-3">
@@ -84,11 +92,17 @@ export default function AdminLeadsPage() {
                 </div>
                 <span
                   className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
-                    lead.status === 'new'
-                      ? 'bg-amber-50 text-amber-600'
-                      : lead.status === 'contacted'
+                    lead.status === 'processing'
                       ? 'bg-blue-50 text-blue-600'
-                      : 'bg-emerald-50 text-emerald-600'
+                      : lead.status === 'followup'
+                      ? 'bg-amber-50 text-amber-600'
+                      : lead.status === 'converted'
+                      ? 'bg-emerald-50 text-emerald-600'
+                      : lead.status === 'rejected'
+                      ? 'bg-rose-50 text-rose-600'
+                      : lead.status === 'contacted'
+                      ? 'bg-indigo-50 text-indigo-600'
+                      : 'bg-gray-105 text-gray-500 border border-gray-200' // 'new'
                   }`}
                 >
                   {lead.status}
@@ -107,25 +121,50 @@ export default function AdminLeadsPage() {
             </div>
 
             {/* CTAs */}
-            <div className="pt-3 border-t border-gray-50 flex items-center justify-end gap-2 text-xs font-bold">
-              {lead.status === 'new' && (
+            <div className="pt-3 border-t border-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-bold">
+              <span className="text-[10px] text-gray-450 uppercase tracking-wider">Pipeline Stage:</span>
+              <div className="flex flex-wrap gap-1.5">
                 <button
-                  onClick={() => handleUpdateStatus(lead.id, 'contacted')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gray-50 border border-gray-150 hover:bg-gray-100 text-gray-600 transition-colors"
+                  onClick={() => handleUpdateStatus(lead.id, 'processing')}
+                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
+                    lead.status === 'processing'
+                      ? 'bg-blue-50 text-blue-600 border-blue-200'
+                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
+                  }`}
                 >
-                  <PhoneCall className="h-3.5 w-3.5" />
-                  Mark Contacted
+                  Processing
                 </button>
-              )}
-              {lead.status !== 'converted' && (
+                <button
+                  onClick={() => handleUpdateStatus(lead.id, 'followup')}
+                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
+                    lead.status === 'followup'
+                      ? 'bg-amber-50 text-amber-600 border-amber-200'
+                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  Follow-up
+                </button>
                 <button
                   onClick={() => handleUpdateStatus(lead.id, 'converted')}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary-600 transition-colors shadow-soft"
+                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
+                    lead.status === 'converted'
+                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
+                  }`}
                 >
-                  <CheckCircle className="h-3.5 w-3.5" />
-                  Mark Converted
+                  Converted
                 </button>
-              )}
+                <button
+                  onClick={() => handleUpdateStatus(lead.id, 'rejected')}
+                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
+                    lead.status === 'rejected'
+                      ? 'bg-rose-50 text-rose-600 border-rose-200'
+                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
+                  }`}
+                >
+                  Rejected
+                </button>
+              </div>
             </div>
           </div>
         ))}

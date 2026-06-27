@@ -78,8 +78,15 @@ export const AlertDialogPortal = ({ children }: { children: React.ReactNode }) =
   if (!mounted) return null;
 
   return createPortal(
-    <AnimatePresence mode="wait">
-      {context.open && children}
+    <AnimatePresence>
+      {context.open && React.Children.map(children, (child, idx) => {
+        if (React.isValidElement(child)) {
+          return React.cloneElement(child, {
+            key: child.key || `alert-child-${idx}`
+          } as any);
+        }
+        return child;
+      })}
     </AnimatePresence>,
     document.body
   );
@@ -104,6 +111,7 @@ export const AlertDialogBackdrop = ({
 
   return (
     <motion.div
+      key="backdrop"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -147,21 +155,22 @@ export const AlertDialogPopup = ({
   const getExitPosition = () => {
     switch (from) {
       case 'top':
-        return { y: '-100vh', opacity: 0 };
+        return { y: '-100vh', x: '-50%', opacity: 0 };
       case 'bottom':
-        return { y: '100vh', opacity: 0 };
+        return { y: '100vh', x: '-50%', opacity: 0 };
       case 'left':
-        return { x: '-100vw', opacity: 0 };
+        return { x: '-100vw', y: '-50%', opacity: 0 };
       case 'right':
-        return { x: '100vw', opacity: 0 };
+        return { x: '100vw', y: '-50%', opacity: 0 };
       case 'center':
       default:
-        return { scale: 0.9, opacity: 0 };
+        return { scale: 0.9, opacity: 0, x: '-50%', y: '-50%' };
     }
   };
 
   return (
     <motion.div
+      key="popup"
       initial={getInitialPosition()}
       animate={{
         x: '-50%',
@@ -175,7 +184,7 @@ export const AlertDialogPopup = ({
         damping: 26,
         stiffness: 240,
       }}
-      className={className}
+      className={`fixed left-1/2 top-1/2 z-50 ${className}`}
       onClick={(e) => e.stopPropagation()}
       {...props}
     >

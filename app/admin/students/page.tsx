@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, UserPlus, Filter, MoreVertical, Edit2, Trash2, ShieldAlert, Check, X } from 'lucide-react';
+import { Search, UserPlus, Filter, ShieldAlert, Check, X, Trash2 } from 'lucide-react';
 import { db } from '@/lib/db';
+import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { CopyButton } from '@/components/animate-ui/components/buttons/copy';
 import {
   AlertDialog,
@@ -26,6 +27,15 @@ interface Student {
   status: 'active' | 'suspended' | 'pending';
 }
 
+interface TutorUser {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  joinedDate: string;
+  status: 'active' | 'suspended' | 'pending';
+}
+
 interface AdminUser {
   id: string;
   name: string;
@@ -36,11 +46,12 @@ interface AdminUser {
 }
 
 export default function AdminStudentsPage() {
-  const [activeTab, setActiveTab] = useState<'students' | 'admins'>('students');
+  const [activeTab, setActiveTab] = useState<'students' | 'tutors' | 'admins'>('students');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended' | 'pending'>('all');
   
   const [students, setStudents] = useState<Student[]>([]);
+  const [tutors, setTutors] = useState<TutorUser[]>([]);
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -48,9 +59,11 @@ export default function AdminStudentsPage() {
   useEffect(() => {
     async function load() {
       const studentsData = await db.getStudents();
-      const adminsData = await (db as any).getAdmins();
+      const adminsData = await db.getAdmins();
+      const tutorsData = await db.getTutors();
       setStudents(studentsData as any);
       setAdmins(adminsData as any);
+      setTutors(tutorsData as any);
       setLoading(false);
     }
     load();
@@ -59,12 +72,12 @@ export default function AdminStudentsPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [validationError, setValidationError] = useState('');
   const [successCredentials, setSuccessCredentials] = useState<{ email: string; password: string; warning?: string } | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; role: 'student' | 'admin' } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; role: 'student' | 'tutor' | 'admin' } | null>(null);
 
   const [newForm, setNewForm] = useState({
     name: '',
     email: '',
-    role: 'student' as 'student' | 'admin',
+    role: 'student' as 'student' | 'tutor' | 'admin',
     phone: '',
     course: 'Spoken English Mastery'
   });
@@ -74,6 +87,13 @@ export default function AdminStudentsPage() {
     const matchesQuery = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           s.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || s.status === statusFilter;
+    return matchesQuery && matchesStatus;
+  });
+
+  const filteredTutors = tutors.filter((t) => {
+    const matchesQuery = t.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          t.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
     return matchesQuery && matchesStatus;
   });
 
@@ -98,9 +118,18 @@ export default function AdminStudentsPage() {
     }
 
     try {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
       const response = await fetch('/api/admin/create-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: newForm.name,
           email: newForm.email,
@@ -129,6 +158,16 @@ export default function AdminStudentsPage() {
           status: 'active'
         };
         setStudents([newStudentObj, ...students]);
+      } else if (newForm.role === 'tutor') {
+        const newTutorObj: TutorUser = {
+          id: result.userId || `tutor-${Date.now()}`,
+          name: newForm.name,
+          email: newForm.email,
+          phone: newForm.phone,
+          joinedDate: dateString,
+          status: 'active'
+        };
+        setTutors([newTutorObj, ...tutors]);
       } else {
         const newAdminObj: AdminUser = {
           id: result.userId || `admin-${Date.now()}`,
@@ -164,13 +203,15 @@ export default function AdminStudentsPage() {
     }
   };
 
-  const handleDeleteUser = (id: string, role: 'student' | 'admin') => {
+  const handleDeleteUser = (id: string, role: 'student' | 'tutor' | 'admin') => {
     setDeleteConfirm({ id, role });
   };
 
-  const handleToggleStatus = (id: string, role: 'student' | 'admin', status: 'active' | 'suspended') => {
+  const handleToggleStatus = (id: string, role: 'student' | 'tutor' | 'admin', status: 'active' | 'suspended') => {
     if (role === 'student') {
       setStudents(students.map(s => s.id === id ? { ...s, status } : s));
+    } else if (role === 'tutor') {
+      setTutors(tutors.map(t => t.id === id ? { ...t, status } : t));
     } else {
       setAdmins(admins.map(a => a.id === id ? { ...a, status } : a));
     }
@@ -182,7 +223,7 @@ export default function AdminStudentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">User Directories</h1>
-          <p className="text-xs text-gray-400 font-semibold mt-0.5">Manage and track student and administrator accounts</p>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Manage and track student, tutor, and administrator accounts</p>
         </div>
 
         <button
@@ -190,7 +231,7 @@ export default function AdminStudentsPage() {
           className="inline-flex items-center justify-center gap-1.5 px-5 py-3 bg-primary hover:bg-primary-600 text-white rounded-xl text-xs font-bold transition-all shadow-soft self-start sm:self-auto cursor-pointer"
         >
           <UserPlus className="h-4 w-4" />
-          Add User / Admin
+          Add User Account
         </button>
       </div>
 
@@ -205,6 +246,16 @@ export default function AdminStudentsPage() {
           }`}
         >
           Students ({students.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('tutors')}
+          className={`px-5 py-3 text-xs font-bold border-b-2 transition-all cursor-pointer ${
+            activeTab === 'tutors'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          Tutors ({tutors.length})
         </button>
         <button
           onClick={() => setActiveTab('admins')}
@@ -224,7 +275,7 @@ export default function AdminStudentsPage() {
           <Search className="h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder={`Search ${activeTab === 'students' ? 'students' : 'admins'} by name or email...`}
+            placeholder={`Search ${activeTab === 'students' ? 'students' : activeTab === 'tutors' ? 'tutors' : 'admins'} by name or email...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 bg-transparent text-xs text-gray-700 outline-none placeholder:text-gray-400"
@@ -240,7 +291,7 @@ export default function AdminStudentsPage() {
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider cursor-pointer ${
                 statusFilter === status
                   ? 'bg-primary-50 text-primary border border-primary-200'
-                  : 'bg-white border border-gray-100 text-gray-500 hover:bg-gray-50'
+                  : 'bg-white border border-gray-100 text-gray-500 hover:bg-gray-55'
               }`}
             >
               {status}
@@ -255,7 +306,7 @@ export default function AdminStudentsPage() {
           <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
             <div className="flex justify-between items-center pb-4 border-b border-gray-50">
               <h3 className="text-base font-bold text-gray-800">Add New User</h3>
-              <button onClick={() => { setIsAdding(false); setValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-50 cursor-pointer">
+              <button onClick={() => { setIsAdding(false); setValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -274,6 +325,7 @@ export default function AdminStudentsPage() {
                   className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                 >
                   <option value="student">Student (User)</option>
+                  <option value="tutor">Tutor (Instructor)</option>
                   <option value="admin">Administrator (Admin)</option>
                 </select>
               </div>
@@ -333,11 +385,11 @@ export default function AdminStudentsPage() {
                 </div>
               )}
 
-              <div className="flex gap-3 justify-end pt-4 border-t border-gray-50">
+              <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
                 <button
                   type="button"
                   onClick={() => { setIsAdding(false); setValidationError(''); }}
-                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-50 cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -413,8 +465,8 @@ export default function AdminStudentsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredStudents.map((s) => (
-                    <tr key={s.id} className="hover:bg-gray-50/30 transition-colors">
+                  filteredStudents.map((s, index) => (
+                    <tr key={s.id || index} className="hover:bg-gray-50/30 transition-colors">
                       <td className="p-4 sm:p-5">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-full bg-primary-50 text-primary flex items-center justify-center font-bold">
@@ -447,7 +499,7 @@ export default function AdminStudentsPage() {
                           {s.status === 'active' ? (
                             <button
                               onClick={() => handleToggleStatus(s.id, 'student', 'suspended')}
-                              className="p-1.5 rounded-lg border border-gray-100 text-amber-600 hover:bg-amber-50 cursor-pointer"
+                              className="p-1.5 rounded-lg border border-gray-100 text-amber-600 hover:bg-amber-55 cursor-pointer"
                               title="Suspend Student"
                             >
                               <ShieldAlert className="h-3.5 w-3.5" />
@@ -463,8 +515,89 @@ export default function AdminStudentsPage() {
                           )}
                           <button
                             onClick={() => handleDeleteUser(s.id, 'student')}
-                            className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-50 cursor-pointer"
+                            className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-55 cursor-pointer"
                             title="Delete Student"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          ) : activeTab === 'tutors' ? (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-gray-50 bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="p-4 sm:p-5">Tutor Info</th>
+                  <th className="p-4 sm:p-5">Role</th>
+                  <th className="p-4 sm:p-5">Joined Date</th>
+                  <th className="p-4 sm:p-5">Status</th>
+                  <th className="p-4 sm:p-5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 text-xs font-medium text-gray-700">
+                {filteredTutors.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="p-12 text-center text-gray-400 font-medium">
+                      No matching tutor records found.
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTutors.map((t, index) => (
+                    <tr key={t.id || index} className="hover:bg-gray-50/30 transition-colors">
+                      <td className="p-4 sm:p-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-full bg-primary-50 text-primary flex items-center justify-center font-bold">
+                            {t.name[0]}
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">{t.name}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5">{t.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 sm:p-5 text-gray-550">Tutor / Instructor</td>
+                      <td className="p-4 sm:p-5 text-gray-400">{t.joinedDate}</td>
+                      <td className="p-4 sm:p-5">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            t.status === 'active'
+                              ? 'bg-emerald-50 text-emerald-600'
+                              : t.status === 'pending'
+                              ? 'bg-amber-50 text-amber-600'
+                              : 'bg-rose-50 text-rose-600'
+                          }`}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {t.status}
+                        </span>
+                      </td>
+                      <td className="p-4 sm:p-5 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          {t.status === 'active' ? (
+                            <button
+                              onClick={() => handleToggleStatus(t.id, 'tutor', 'suspended')}
+                              className="p-1.5 rounded-lg border border-gray-100 text-amber-600 hover:bg-amber-55 cursor-pointer"
+                              title="Suspend Tutor"
+                            >
+                              <ShieldAlert className="h-3.5 w-3.5" />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleToggleStatus(t.id, 'tutor', 'active')}
+                              className="p-1.5 rounded-lg border border-gray-100 text-emerald-600 hover:bg-emerald-55 cursor-pointer"
+                              title="Activate Tutor"
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleDeleteUser(t.id, 'tutor')}
+                            className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-50 cursor-pointer"
+                            title="Delete Tutor"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -494,8 +627,8 @@ export default function AdminStudentsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredAdmins.map((a) => (
-                    <tr key={a.id} className="hover:bg-gray-50/30 transition-colors">
+                  filteredAdmins.map((a, index) => (
+                    <tr key={a.id || index} className="hover:bg-gray-50/30 transition-colors">
                       <td className="p-4 sm:p-5">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-full bg-primary-50 text-primary flex items-center justify-center font-bold">
@@ -528,7 +661,7 @@ export default function AdminStudentsPage() {
                           {a.status === 'active' ? (
                             <button
                               onClick={() => handleToggleStatus(a.id, 'admin', 'suspended')}
-                              className="p-1.5 rounded-lg border border-gray-100 text-amber-600 hover:bg-amber-50 cursor-pointer"
+                              className="p-1.5 rounded-lg border border-gray-100 text-amber-600 hover:bg-amber-55 cursor-pointer"
                               title="Suspend Admin"
                             >
                               <ShieldAlert className="h-3.5 w-3.5" />
@@ -566,14 +699,14 @@ export default function AdminStudentsPage() {
           <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
           <AlertDialogPopup
             from="bottom"
-            className="sm:max-w-md fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 border bg-white rounded-3xl p-6 shadow-2xl"
+            className="sm:max-w-md border bg-white rounded-3xl p-6 shadow-2xl"
           >
             <AlertDialogHeader>
               <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">
                 <Trash2 className="h-6 w-6" />
               </div>
               <AlertDialogTitle className="text-lg font-bold text-center text-gray-800">
-                Delete {deleteConfirm?.role === 'admin' ? 'Administrator' : 'Student'}?
+                Delete {deleteConfirm?.role === 'admin' ? 'Administrator' : deleteConfirm?.role === 'tutor' ? 'Tutor' : 'Student'}?
               </AlertDialogTitle>
               <AlertDialogDescription className="text-sm text-center text-gray-500 mt-2">
                 Are you absolutely sure you want to delete this {deleteConfirm?.role}? This action will permanently remove their profile data from the system and cannot be undone.
@@ -591,6 +724,8 @@ export default function AdminStudentsPage() {
                     await db.deleteStudentProfile(deleteConfirm.id);
                     if (deleteConfirm.role === 'student') {
                       setStudents(students.filter(s => s.id !== deleteConfirm.id));
+                    } else if (deleteConfirm.role === 'tutor') {
+                      setTutors(tutors.filter(t => t.id !== deleteConfirm.id));
                     } else {
                       setAdmins(admins.filter(a => a.id !== deleteConfirm.id));
                     }
@@ -608,4 +743,3 @@ export default function AdminStudentsPage() {
     </div>
   );
 }
-

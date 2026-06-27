@@ -5,13 +5,20 @@ CREATE TYPE user_role AS ENUM ('student', 'admin');
 CREATE TABLE IF NOT EXISTS profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
   email TEXT NOT NULL UNIQUE,
-  role user_role NOT NULL DEFAULT 'student',
+  role TEXT NOT NULL DEFAULT 'student',
   name TEXT,
   level TEXT DEFAULT 'Intermediate (B1)',
   phone TEXT,
   location TEXT,
+  needs_password_change BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+-- Ensure the column is added if table already existed
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS needs_password_change BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Ensure 'tutor' is added to the user_role enum
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'tutor';
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -21,6 +28,9 @@ CREATE POLICY "Allow public read access to profiles" ON profiles
 
 CREATE POLICY "Allow individual write access to own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Allow individual insert access to own profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- 3. Create Courses Table
 CREATE TABLE IF NOT EXISTS courses (
@@ -70,9 +80,7 @@ CREATE TABLE IF NOT EXISTS live_classes (
   trainer TEXT NOT NULL,
   date_time TEXT NOT NULL,
   duration TEXT NOT NULL,
-  status TEXT NOT NULL, -- 'live', 'upcoming', 'completed'
   join_url TEXT,
-  recording_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -152,23 +160,6 @@ CREATE POLICY "Allow admins full access to testimonials" ON testimonials FOR ALL
   EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
 );
 
--- 10. Create Blog Posts Table
-CREATE TABLE IF NOT EXISTS blog_posts (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  category TEXT NOT NULL,
-  author TEXT NOT NULL,
-  publish_date TEXT NOT NULL,
-  status TEXT NOT NULL, -- 'published', 'draft'
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
-);
-
-ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read access to published posts" ON blog_posts FOR SELECT USING (status = 'published');
-CREATE POLICY "Allow admins full access to blog posts" ON blog_posts FOR ALL USING (
-  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
-);
-
 -- ═══════════════════════════════════════════════════════════
 -- Seed Initial Data
 -- ═══════════════════════════════════════════════════════════
@@ -179,12 +170,12 @@ INSERT INTO courses (id, title, trainer, category, price, lessons_count, student
 ('vocabulary-accelerator', 'Vocabulary & Idioms Accelerator', 'Emma Watson', 'Vocabulary', 19.00, 12, 384)
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO live_classes (id, topic, trainer, date_time, duration, status, join_url, recording_url) VALUES
-('lc-1', 'Vocabulary Blast: Idioms for Social Gatherings', 'Sarah Jenkins', 'Today, 4:00 PM (IST)', '60 mins', 'live', 'https://meet.google.com/abc-defg-hij', NULL),
-('lc-2', 'Speaking Challenge: Group Discussion Practice', 'David Vance', 'Tomorrow, 11:30 AM (IST)', '45 mins', 'upcoming', 'https://meet.google.com/abc-defg-hij', NULL),
-('lc-3', 'Grammar Essentials: Perfecting the Past Tense', 'Emma Watson', 'June 25, 2:00 PM (IST)', '60 mins', 'upcoming', NULL, NULL),
-('lc-4', 'Pronunciation Lab: Hard & Soft Consonant Sounds', 'Sarah Jenkins', 'June 21, 4:00 PM (IST)', '60 mins', 'completed', NULL, '#'),
-('lc-5', 'Introductory Speaking Session: Ice Breaking', 'Emma Watson', 'June 18, 10:00 AM (IST)', '45 mins', 'completed', NULL, '#')
+INSERT INTO live_classes (id, topic, trainer, date_time, duration, join_url) VALUES
+('lc-1', 'Vocabulary Blast: Idioms for Social Gatherings', 'Sarah Jenkins', '2026-06-24T16:00', '60 mins', 'https://meet.google.com/abc-defg-hij'),
+('lc-2', 'Speaking Challenge: Group Discussion Practice', 'David Vance', '2026-06-25T11:30', '45 mins', 'https://meet.google.com/abc-defg-hij'),
+('lc-3', 'Grammar Essentials: Perfecting the Past Tense', 'Emma Watson', '2026-06-25T14:00', '60 mins', NULL),
+('lc-4', 'Pronunciation Lab: Hard & Soft Consonant Sounds', 'Sarah Jenkins', '2026-06-22T16:00', '60 mins', NULL),
+('lc-5', 'Introductory Speaking Session: Ice Breaking', 'Emma Watson', '2026-06-20T10:00', '45 mins', NULL)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO study_materials (id, name, category, format, size, download_url, added_date) VALUES
@@ -216,8 +207,24 @@ INSERT INTO testimonials (id, name, course, rating, message, status, date) VALUE
 ('test-3', 'Amit Verma', 'Vocabulary Accelerator', 4, 'Great course materials and worksheets. My vocabulary improved significantly.', 'hidden', 'June 10, 2026')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO blog_posts (id, title, category, author, publish_date, status) VALUES
-('post-1', '5 Common Grammar Mistakes Spoken English Learners Make', 'Grammar Tips', 'Sarah Jenkins', 'June 20, 2026', 'published'),
-('post-2', 'How to Crack Your Next Job Interview: Ultimate Guide', 'Career Growth', 'David Vance', 'June 15, 2026', 'published'),
-('post-3', '10 Idioms that Will Make You Sound Like a Native Speaker', 'Vocabulary', 'Emma Watson', 'June 10, 2026', 'draft')
-ON CONFLICT (id) DO NOTHING;
+-- 10. Create Notifications Table
+CREATE TABLE IF NOT EXISTS public.notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  text TEXT NOT NULL,
+  type TEXT,
+  unread BOOLEAN DEFAULT true NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow users to view own notifications" ON public.notifications
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Allow users to update own notifications" ON public.notifications
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Allow service role full control on notifications" ON public.notifications
+  FOR ALL USING (true);
+

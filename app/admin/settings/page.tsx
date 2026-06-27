@@ -19,7 +19,17 @@ export default function AdminSettingsPage() {
     const saved = localStorage.getItem('tesca_school_settings');
     if (saved) {
       try {
-        setSchoolSettings(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        // Only load general settings keys
+        setSchoolSettings((prev) => ({
+          schoolName: parsed.schoolName || prev.schoolName,
+          contactEmail: parsed.contactEmail || prev.contactEmail,
+          supportPhone: parsed.supportPhone || prev.supportPhone,
+          currency: parsed.currency || prev.currency,
+          enableRegistrations: parsed.enableRegistrations !== false,
+          maintenanceMode: !!parsed.maintenanceMode,
+          enableFreeTest: parsed.enableFreeTest !== false,
+        }));
       } catch (err) {
         console.error('Failed to parse saved settings', err);
       }
@@ -28,7 +38,15 @@ export default function AdminSettingsPage() {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    localStorage.setItem('tesca_school_settings', JSON.stringify(schoolSettings));
+    const saved = localStorage.getItem('tesca_school_settings');
+    let original = {};
+    if (saved) {
+      try {
+        original = JSON.parse(saved);
+      } catch (err) {}
+    }
+    const merged = { ...original, ...schoolSettings };
+    localStorage.setItem('tesca_school_settings', JSON.stringify(merged));
     setSaveSuccess(true);
     setTimeout(() => {
       setSaveSuccess(false);

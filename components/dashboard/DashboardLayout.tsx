@@ -7,7 +7,7 @@ import type { NavGroup } from './DashboardSidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  role: 'student' | 'admin';
+  role: 'student' | 'admin' | 'tutor';
   navGroups: NavGroup[];
 }
 

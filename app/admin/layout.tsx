@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
@@ -9,45 +9,72 @@ import {
   CreditCard,
   PhoneCall,
   MessageSquare,
-  PenTool,
   Settings as SettingsIcon,
   Home,
+  Video,
+  FileText,
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
 import { useAuth } from '@/context/AuthContext';
-
-const adminNavGroups: NavGroup[] = [
-  {
-    title: 'Management',
-    items: [
-      { label: 'Overview', href: '/admin', icon: LayoutDashboard },
-      { label: 'Students', href: '/admin/students', icon: Users, badge: 142 },
-      { label: 'Courses', href: '/admin/courses', icon: BookOpen },
-      { label: 'Payments', href: '/admin/payments', icon: CreditCard },
-      { label: 'Leads & Inquiries', href: '/admin/leads', icon: PhoneCall, badge: 8 },
-    ],
-  },
-  {
-    title: 'Content & Settings',
-    items: [
-      { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
-      { label: 'Blog Posts', href: '/admin/blog', icon: PenTool },
-      { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
-      { label: 'Back to Home', href: '/', icon: Home },
-    ],
-  },
-];
+import { db } from '@/lib/db';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [navGroups, setNavGroups] = useState<NavGroup[]>([]);
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'admin')) {
-      router.push('/login');
+    if (!loading) {
+      if (!user || user.role !== 'admin') {
+        router.push('/login');
+      } else if (user.needsPasswordChange) {
+        router.push('/change-password');
+      }
     }
   }, [user, loading, router]);
+
+  useEffect(() => {
+    async function loadCounts() {
+      try {
+        const studentsList = await db.getStudents();
+        const leadsList = await db.getLeads();
+        
+        const studentCount = studentsList.length;
+        const pendingLeadsCount = leadsList.filter((l: any) => l.status !== 'converted' && l.status !== 'rejected').length;
+
+        const updatedGroups: NavGroup[] = [
+          {
+            title: 'Management',
+            items: [
+              { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+              { label: 'Users & Directory', href: '/admin/students', icon: Users, badge: studentCount },
+              { label: 'Courses', href: '/admin/courses', icon: BookOpen },
+              { label: 'Payments', href: '/admin/payments', icon: CreditCard },
+              { label: 'Leads & Inquiries', href: '/admin/leads', icon: PhoneCall, badge: pendingLeadsCount },
+            ],
+          },
+          {
+            title: 'Content & Settings',
+            items: [
+              { label: 'Live Classes', href: '/admin/live-classes', icon: Video },
+              { label: 'Study Materials', href: '/admin/materials', icon: FileText },
+              { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
+              { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
+              { label: 'Back to Home', href: '/', icon: Home },
+            ],
+          },
+        ];
+        setNavGroups(updatedGroups);
+      } catch (err) {
+        console.error('Failed to load nav badge counts:', err);
+      }
+    }
+    
+    if (user && user.role === 'admin') {
+      loadCounts();
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -62,8 +89,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return null;
   }
 
+  const displayGroups = navGroups.length > 0 ? navGroups : [
+    {
+      title: 'Management',
+      items: [
+        { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+        { label: 'Users & Directory', href: '/admin/students', icon: Users, badge: 0 },
+        { label: 'Courses', href: '/admin/courses', icon: BookOpen },
+        { label: 'Payments', href: '/admin/payments', icon: CreditCard },
+        { label: 'Leads & Inquiries', href: '/admin/leads', icon: PhoneCall, badge: 0 },
+      ],
+    },
+    {
+      title: 'Content & Settings',
+      items: [
+        { label: 'Live Classes', href: '/admin/live-classes', icon: Video },
+        { label: 'Study Materials', href: '/admin/materials', icon: FileText },
+        { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
+        { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
+        { label: 'Back to Home', href: '/', icon: Home },
+      ],
+    },
+  ];
+
   return (
-    <DashboardLayout role="admin" navGroups={adminNavGroups}>
+    <DashboardLayout role="admin" navGroups={displayGroups}>
       {children}
     </DashboardLayout>
   );

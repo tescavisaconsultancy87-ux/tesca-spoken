@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/gmail';
+import { checkRateLimit, formatFriendlyError } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. Rate Limiting check (Max 5 leads/min)
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rateCheck = checkRateLimit(ip, 5, 60000);
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { error: 'Too many submissions. Please wait a minute before submitting again.' },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { type, name, email, phone, topic, message, timeSlot, learningMode } = body;
 
@@ -292,7 +303,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating lead:', error);
     return NextResponse.json(
-      { error: error.message || 'An error occurred during lead processing.' },
+      { error: formatFriendlyError(error) },
       { status: 500 }
     );
   }

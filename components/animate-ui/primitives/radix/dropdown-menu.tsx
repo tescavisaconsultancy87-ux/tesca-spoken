@@ -132,6 +132,30 @@ export function DropdownMenuContent({
     return classes;
   };
 
+  // Get scale origin for Framer Motion to match placement
+  const getTransformOrigin = () => {
+    let originX = 0.5;
+    let originY = 0;
+    
+    if (side === 'bottom') {
+      originY = 0;
+      if (align === 'start') originX = 0;
+      else if (align === 'end') originX = 1;
+    } else if (side === 'top') {
+      originY = 1;
+      if (align === 'start') originX = 0;
+      else if (align === 'end') originX = 1;
+    } else if (side === 'left') {
+      originX = 1;
+      originY = 0.5;
+    } else if (side === 'right') {
+      originX = 0;
+      originY = 0.5;
+    }
+    
+    return { originX, originY };
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -141,6 +165,7 @@ export function DropdownMenuContent({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: side === 'bottom' ? -4 : 4 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
+          style={{ ...getTransformOrigin() }}
           className={`${getPositionClasses()} min-w-[8rem] overflow-hidden rounded-2xl border border-black/8 bg-white p-1.5 shadow-soft-xl ${className}`}
         >
           {children}

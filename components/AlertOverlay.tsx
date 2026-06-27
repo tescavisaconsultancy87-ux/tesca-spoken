@@ -39,7 +39,7 @@ export default function AlertOverlay() {
         <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
         <AlertDialogPopup
           from="center"
-          className="sm:max-w-[380px] fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 border bg-white rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center"
+          className="sm:max-w-[380px] border bg-white rounded-3xl p-6 shadow-2xl flex flex-col items-center text-center"
         >
           <AlertDialogHeader className="flex flex-col items-center text-center w-full">
             {/* Animated Sparkles Icon Container */}

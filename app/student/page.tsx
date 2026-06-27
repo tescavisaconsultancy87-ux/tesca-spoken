@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { BookOpen, Clock, Award, Calendar, Video, ArrowRight, Play } from 'lucide-react';
+import { BookOpen, Clock, Award, Calendar, ArrowRight, Play, Video, FileText } from 'lucide-react';
 import StatCard from '@/components/dashboard/StatCard';
 import AnalyticsChart from '@/components/dashboard/AnalyticsChart';
 import ProgressRing from '@/components/dashboard/ProgressRing';
@@ -35,49 +35,15 @@ export default function StudentDashboardHome() {
   }, []);
 
   // Find next class from liveClasses
-  const nextClass = liveClasses.find(
-    (lc) => lc.status === 'live' || lc.status === 'upcoming'
-  );
+  const nextClass = liveClasses.find((lc) => {
+    const st = db.computeStatus(lc.date_time, lc.duration);
+    return st === 'live' || st === 'upcoming';
+  });
 
   const currentCourse = courses[0];
 
-  // Mock Data
-  const weeklyStudyHours = [
-    { label: 'Mon', value: 1.5, secondaryValue: 2.0 },
-    { label: 'Tue', value: 2.5, secondaryValue: 2.0 },
-    { label: 'Wed', value: 3.0, secondaryValue: 2.0 },
-    { label: 'Thu', value: 1.0, secondaryValue: 2.0 },
-    { label: 'Fri', value: 2.0, secondaryValue: 2.0 },
-    { label: 'Sat', value: 4.5, secondaryValue: 3.0 },
-    { label: 'Sun', value: 3.5, secondaryValue: 3.0 },
-  ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      title: 'Completed Lesson 4: Present Perfect Tense',
-      description: 'Scored 90% in the post-lesson quiz.',
-      time: '2 hours ago',
-      icon: Award,
-      status: 'success' as const,
-    },
-    {
-      id: 2,
-      title: 'Joined Live Class: Fluency Practice',
-      description: 'Attended session with Trainer Sarah.',
-      time: 'Yesterday',
-      icon: Video,
-      status: 'info' as const,
-    },
-    {
-      id: 3,
-      title: 'Downloaded Study Material',
-      description: 'PDF: "100 Common Idioms for Daily Conversation".',
-      time: '2 days ago',
-      icon: BookOpen,
-      status: 'warning' as const,
-    },
-  ];
+  const enrolledCount = courses.length;
+  const totalLessons = courses.reduce((sum, c) => sum + (c.lessons_count || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -85,11 +51,9 @@ export default function StudentDashboardHome() {
       <div className="relative overflow-hidden bg-gradient-to-r from-primary to-primary-600 rounded-3xl p-6 sm:p-8 text-white shadow-soft">
         <div className="absolute top-0 right-0 -mt-6 -mr-6 w-48 h-48 rounded-full bg-white/10 blur-xl pointer-events-none" />
         <div className="relative z-10 max-w-xl space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold">
-            🔥 12 Day Study Streak!
-          </div>
+
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-            Welcome back, {user?.name || 'Aarav'}!
+            Welcome back, {user?.name || 'Student'}!
           </h1>
           <p className="text-sm text-primary-100 font-medium">
             You're making amazing progress. {nextClass ? `Your next class "${nextClass.topic}" is scheduled soon!` : 'No live classes scheduled for today. Keep it up!'}
@@ -100,26 +64,26 @@ export default function StudentDashboardHome() {
       {/* Quick stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
-          label="Course Progress"
-          value="78%"
-          trend={{ value: 4, isPositive: true }}
-          description="from last week"
+          label="Enrolled Courses"
+          value={String(enrolledCount)}
+          trend={enrolledCount > 0 ? { value: enrolledCount, isPositive: true } : undefined}
+          description={enrolledCount > 0 ? 'active enrollments' : 'browse catalog'}
           icon={BookOpen}
           color="primary"
         />
         <StatCard
-          label="Study Hours"
-          value="18.5 hrs"
-          trend={{ value: 12, isPositive: true }}
-          description="this week"
+          label="Live Classes"
+          value={String(liveClasses.length)}
+          trend={liveClasses.length > 0 ? { value: liveClasses.length, isPositive: true } : undefined}
+          description={liveClasses.length > 0 ? 'total sessions' : 'no sessions yet'}
           icon={Clock}
           color="secondary"
         />
         <StatCard
-          label="Completed Tasks"
-          value="24 / 30"
-          trend={{ value: 2, isPositive: true }}
-          description="assignments done"
+          label="Total Lessons"
+          value={String(totalLessons)}
+          trend={totalLessons > 0 ? { value: totalLessons, isPositive: true } : undefined}
+          description="across all courses"
           icon={Award}
           color="indigo"
         />
@@ -136,15 +100,20 @@ export default function StudentDashboardHome() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left/Middle: Chart and Current Course Card */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Study Hours Line Chart */}
-          <AnalyticsChart
-            title="Weekly Study Hours"
-            subtitle="Comparison of actual study time vs. daily target (2.0 hours)"
-            data={weeklyStudyHours}
-            type="line"
-            valueSuffix="h"
-            color="primary"
-          />
+          {/* Study Hours Line Chart — no study tracking data yet */}
+          {courses.length > 0 && (
+            <AnalyticsChart
+              title="Your Courses"
+              subtitle="Track your progress across enrolled courses"
+              data={courses.map((c: any, i: number) => ({
+                label: c.title?.substring(0, 12) || `Course ${i + 1}`,
+                value: c.lessons_count || 0,
+              }))}
+              type="bar"
+              valueSuffix=" lessons"
+              color="primary"
+            />
+          )}
 
           {/* Current Course Spotlight */}
           {currentCourse ? (
@@ -162,15 +131,15 @@ export default function StudentDashboardHome() {
                 </p>
                 
                 {/* Progress bar */}
-                <div className="space-y-1.5">
-                  <div className="flex justify-between text-xs font-semibold text-gray-500">
-                    <span>Progress</span>
-                    <span>14 of 18 lessons</span>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-semibold text-gray-500">
+                      <span>Progress</span>
+                      <span>{currentCourse.lessons_count || '?'} lessons</span>
+                    </div>
+                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: '0%' }} />
+                    </div>
                   </div>
-                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: '77%' }} />
-                  </div>
-                </div>
               </div>
               <Link
                 href="/student/courses"
@@ -191,6 +160,29 @@ export default function StudentDashboardHome() {
               </div>
             </div>
           )}
+
+          {/* Quick Access to Live Classes and Study Materials */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-6">
+            <Link href="/student/live-classes" className="group bg-white border border-gray-100 rounded-3xl p-6 shadow-soft hover:shadow-lg transition-all duration-300 flex items-center gap-5 cursor-pointer">
+              <div className="h-14 w-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <Video className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-800 group-hover:text-indigo-600 transition-colors">Live Classes</h3>
+                <p className="text-xs text-gray-400 font-medium mt-1">Join scheduled interactive sessions with your trainer.</p>
+              </div>
+            </Link>
+
+            <Link href="/student/materials" className="group bg-white border border-gray-100 rounded-3xl p-6 shadow-soft hover:shadow-lg transition-all duration-300 flex items-center gap-5 cursor-pointer">
+              <div className="h-14 w-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 flex-shrink-0">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-gray-800 group-hover:text-emerald-600 transition-colors">Study Materials</h3>
+                <p className="text-xs text-gray-400 font-medium mt-1">Access PDFs, worksheets, and course resources.</p>
+              </div>
+            </Link>
+          </div>
         </div>
 
         {/* Right side: Progress Ring & Recent Activities */}
@@ -198,21 +190,21 @@ export default function StudentDashboardHome() {
           {/* Target completion progress ring */}
           <div className="grid grid-cols-2 gap-4">
             <ProgressRing
-              title="Attendance"
-              percentage={92}
-              subtitle="Classes"
+              title="Courses"
+              percentage={Math.min(Math.round((enrolledCount / Math.max(enrolledCount, 1)) * 100), 100)}
+              subtitle="Enrolled"
               color="primary"
             />
             <ProgressRing
-              title="Quiz Score"
-              percentage={85}
-              subtitle="Average"
+              title="Classes"
+              percentage={liveClasses.filter((lc) => db.computeStatus(lc.date_time, lc.duration) === 'completed').length > 0 ? 100 : 0}
+              subtitle="Completed"
               color="secondary"
             />
           </div>
 
-          {/* Activity list */}
-          <ActivityList title="Recent Activity" activities={recentActivities} />
+          {/* Activity list — no activity tracking yet */}
+          <ActivityList title="Recent Activity" activities={[]} />
         </div>
       </div>
     </div>

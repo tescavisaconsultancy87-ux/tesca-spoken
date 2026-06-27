@@ -272,7 +272,7 @@ export default function AdminTestimonialsPage() {
           <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
           <AlertDialogPopup
             from="bottom"
-            className="sm:max-w-md fixed left-[50%] top-[50%] translate-x-[-50%] translate-y-[-50%] z-50 border bg-white rounded-3xl p-6 shadow-2xl"
+            className="sm:max-w-md border bg-white rounded-3xl p-6 shadow-2xl"
           >
             <AlertDialogHeader>
               <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">

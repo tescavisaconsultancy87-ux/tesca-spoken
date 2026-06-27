@@ -83,28 +83,46 @@ const ADD_ONS = [
   { name: 'One-on-One Coaching (10 hrs)', price: '₹4,999', description: 'Personalized training sessions' },
 ];
 
-function CountdownTimer() {
+function CountdownTimer({ expiryType, fixedExpiry }: { expiryType: string; fixedExpiry: string }) {
   const getTimeLeft = () => {
     const now = new Date();
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-    const diff = endOfDay.getTime() - now.getTime();
+    let end = new Date();
+    if (expiryType === 'fixed' && fixedExpiry) {
+      const parsedEnd = new Date(fixedExpiry);
+      if (!isNaN(parsedEnd.getTime())) {
+        end = parsedEnd;
+      } else {
+        end.setHours(23, 59, 59, 999);
+      }
+    } else {
+      end.setHours(23, 59, 59, 999);
+    }
+    const diff = Math.max(0, end.getTime() - now.getTime());
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    return { hours, minutes, seconds };
+    return { hours, minutes, seconds, isExpired: diff <= 0 };
   };
 
   const [time, setTime] = useState(getTimeLeft());
 
   useEffect(() => {
+    setTime(getTimeLeft());
     const interval = setInterval(() => {
       setTime(getTimeLeft());
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [expiryType, fixedExpiry]);
 
   const pad = (n: number) => String(n).padStart(2, '0');
+
+  if (expiryType === 'fixed' && time.isExpired) {
+    return (
+      <span className="text-xs font-bold text-rose-300 uppercase tracking-widest py-2">
+        Offer Expired
+      </span>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2">
@@ -130,6 +148,27 @@ function CountdownTimer() {
 export default function PricingPage() {
   const { openModal } = useDemoModal();
   const [billing, setBilling] = useState<'monthly' | 'full'>('full');
+  const [settings, setSettings] = useState({
+    showOfferBanner: true,
+    showTimer: true,
+    timerExpiryType: 'rolling',
+    timerFixedExpiry: '',
+    showProgressBar: true,
+    claimedPercentage: 85,
+    progressBarText: '🔥 [percentage]% of promotional seats claimed',
+  });
+
+  useEffect(() => {
+    const saved = localStorage.getItem('tesca_school_settings');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setSettings((prev) => ({ ...prev, ...parsed }));
+      } catch (err) {
+        console.error('Failed to parse settings in PricingPage', err);
+      }
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -204,6 +243,48 @@ export default function PricingPage() {
         {/* ── Pricing Cards ── */}
         <section className="pb-20 lg:pb-28">
           <div className="container-x">
+            {/* Countdown Promo Card */}
+            {(settings.showOfferBanner && (settings.showTimer || settings.showProgressBar)) && (
+              <div className="mb-10 relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#062426] to-[#0c4447] border border-primary/20 px-6 py-6 sm:px-10 text-white shadow-soft-lg flex flex-col md:flex-row items-center justify-between gap-6">
+                {/* Background glows */}
+                <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                  <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-secondary/15 blur-2xl" />
+                  <div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-primary/20 blur-2xl" />
+                </div>
+                
+                <div className="relative z-10 flex-1 space-y-3 text-center md:text-left">
+                  <span className="inline-flex items-center gap-1 bg-secondary/25 border border-secondary/40 text-secondary text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                    ⚡ Limited Time Promotion
+                  </span>
+                  <h3 className="text-xl font-bold font-heading">
+                    Enroll Today & Save!
+                  </h3>
+                  {settings.showProgressBar && (
+                    <div className="space-y-1.5 max-w-md mx-auto md:mx-0">
+                      <p className="text-xs text-primary-100 font-semibold">
+                        {settings.progressBarText.replace('[percentage]', String(settings.claimedPercentage))}
+                      </p>
+                      <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden border border-white/5 p-[1px]">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-secondary to-amber-400 transition-all duration-1000 ease-out"
+                          style={{ width: `${settings.claimedPercentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {settings.showTimer && (
+                  <div className="relative z-10 flex flex-col items-center gap-1.5 shrink-0 bg-white/5 border border-white/10 p-4 rounded-2xl shadow-soft w-full md:w-auto">
+                    <span className="text-[10px] text-primary-200 font-bold uppercase tracking-widest flex items-center gap-1">
+                      Offer Ends In:
+                    </span>
+                    <CountdownTimer expiryType={settings.timerExpiryType} fixedExpiry={settings.timerFixedExpiry} />
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="grid gap-8 lg:grid-cols-3 items-stretch">
               {PLANS.map((plan) => {
                 const displayPrice =
@@ -342,7 +423,7 @@ export default function PricingPage() {
                     >
                       <button
                         onClick={openModal}
-                        className={`block w-full text-center cursor-pointer ${
+                        className={`flex w-full items-center justify-center cursor-pointer ${
                           plan.popular
                             ? 'btn-warm'
                             : plan.color === 'ink'

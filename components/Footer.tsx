@@ -52,7 +52,7 @@ const QUICK_LINKS = [
   { label: 'Courses', href: '#courses' },
   { label: 'Success Stories', href: '#success' },
   { label: 'Free English Test', href: '#start-test' },
-  { label: 'Blog', href: '#blog' },
+
 ];
 
 const COURSE_LINKS = [

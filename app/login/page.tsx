@@ -26,8 +26,12 @@ export default function LoginPage() {
     setLoading(false);
     
     if (result.success) {
-      if (result.role === 'admin') {
+      if (result.needsPasswordChange) {
+        router.push('/change-password');
+      } else if (result.role === 'admin') {
         router.push('/admin');
+      } else if (result.role === 'tutor') {
+        router.push('/tutor');
       } else {
         router.push('/student');
       }
@@ -129,9 +133,9 @@ export default function LoginPage() {
                   <label htmlFor="password" className="block text-xs font-semibold text-primary-200">
                     Password
                   </label>
-                  <a href="#" className="text-[10px] font-semibold text-secondary hover:underline">
+                  <Link href="/forgot-password" className="text-[10px] font-semibold text-secondary hover:underline">
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">

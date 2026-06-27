@@ -42,6 +42,10 @@ export default function AdminPaymentsPage() {
     t.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const successTxns = transactions.filter((t) => t.status === 'success');
+  const failedTxns = transactions.filter((t) => t.status === 'failed');
+  const totalSales = successTxns.reduce((sum, t) => sum + t.amount, 0);
+
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'success':
@@ -76,7 +80,9 @@ export default function AdminPaymentsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Sales (MTD)</p>
-            <h3 className="text-xl font-extrabold text-gray-800 mt-0.5">₹8,24,000.00</h3>
+            <h3 className="text-xl font-extrabold text-gray-800 mt-0.5">
+              ₹{totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+            </h3>
           </div>
         </div>
         <div className="bg-white border border-gray-100/80 rounded-2xl p-5 shadow-soft flex items-center gap-4">
@@ -85,7 +91,9 @@ export default function AdminPaymentsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Successful Invoices</p>
-            <h3 className="text-xl font-extrabold text-gray-800 mt-0.5">284 Txns</h3>
+            <h3 className="text-xl font-extrabold text-gray-800 mt-0.5">
+              {successTxns.length} Txns
+            </h3>
           </div>
         </div>
         <div className="bg-white border border-gray-100/80 rounded-2xl p-5 shadow-soft flex items-center gap-4">
@@ -94,7 +102,9 @@ export default function AdminPaymentsPage() {
           </div>
           <div>
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Failed Attempts</p>
-            <h3 className="text-xl font-extrabold text-gray-800 mt-0.5">14 Failed</h3>
+            <h3 className="text-xl font-extrabold text-gray-800 mt-0.5">
+              {failedTxns.length} Failed
+            </h3>
           </div>
         </div>
       </div>

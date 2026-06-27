@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/gmail';
 import { supabase } from '@/lib/supabaseClient';
 import { createClient } from '@supabase/supabase-js';
+import { verifyAuthAndRole, checkRateLimit, formatFriendlyError } from '@/lib/security';
 
 // Helper to generate a random password (minimum 8 characters)
 function generateRandomPassword(length = 8): string {
@@ -13,8 +14,51 @@ function generateRandomPassword(length = 8): string {
   return password;
 }
 
+// Helper to find a user by email in Supabase Auth
+async function findAuthUserByEmail(adminSupabase: any, email: string): Promise<any | null> {
+  let page = 1;
+  const perPage = 100;
+  while (true) {
+    const { data, error } = await adminSupabase.auth.admin.listUsers({
+      page,
+      perPage
+    });
+    if (error || !data?.users || data.users.length === 0) {
+      break;
+    }
+    const user = data.users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+    if (user) {
+      return user;
+    }
+    if (data.users.length < perPage) {
+      break;
+    }
+    page++;
+  }
+  return null;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // 1. Rate Limiting Check
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+    const rateCheck = checkRateLimit(ip, 10, 60000); // Max 10 creations/min
+    if (!rateCheck.success) {
+      return NextResponse.json(
+        { error: 'Too many requests. Please wait a minute before creating more users.' },
+        { status: 429 }
+      );
+    }
+
+    // 2. Authentication & Authorization Guard (Only admin allowed)
+    const auth = await verifyAuthAndRole(request, ['admin']);
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { error: auth.error || 'Access denied.' },
+        { status: auth.status || 401 }
+      );
+    }
+
     const body = await request.json();
     const { name, email, role, phone, course } = body;
 
@@ -69,25 +113,55 @@ export async function POST(request: NextRequest) {
       });
 
       if (authError) {
-        return NextResponse.json({ error: authError.message }, { status: 400 });
+        const errorMsg = authError.message.toLowerCase();
+        if (
+          errorMsg.includes('already registered') ||
+          errorMsg.includes('already exists') ||
+          errorMsg.includes('already been registered')
+        ) {
+          console.log('[Create User] User already exists in Supabase Auth. Searching for existing user...');
+          const existingUser = await findAuthUserByEmail(adminSupabase, email);
+          if (existingUser) {
+            authUserId = existingUser.id;
+            console.log(`[Create User] Found existing Auth user with ID: ${authUserId}. Updating user credentials...`);
+            
+            // Update the user's password and metadata
+            const { error: updateError } = await adminSupabase.auth.admin.updateUserById(authUserId, {
+              password,
+              user_metadata: {
+                name,
+                role,
+                phone,
+              },
+            });
+            if (updateError) {
+              return NextResponse.json({ error: `User already exists, but updating credentials failed: ${updateError.message}` }, { status: 400 });
+            }
+          } else {
+            return NextResponse.json({ error: `User already exists according to Auth, but could not be located in the user list.` }, { status: 400 });
+          }
+        } else {
+          return NextResponse.json({ error: authError.message }, { status: 400 });
+        }
+      } else if (authData?.user) {
+        authUserId = authData.user.id;
       }
 
-      if (authData?.user) {
-        authUserId = authData.user.id;
-
-        // 2. Insert user profile into the profiles table (RLS is bypassed via service role key)
-        const { error: profileError } = await adminSupabase.from('profiles').insert({
+      if (authUserId) {
+        // 2. Insert/Upsert user profile into the profiles table (RLS is bypassed via service role key)
+        const { error: profileError } = await adminSupabase.from('profiles').upsert({
           id: authUserId,
           email,
           role,
           name,
           phone,
           level: role === 'student' ? 'Intermediate (B1)' : 'Expert',
+          needs_password_change: true,
         });
 
         if (profileError) {
-          console.error('[Create User] Profile insertion failed:', profileError.message);
-          return NextResponse.json({ error: `Failed to insert user profile: ${profileError.message}` }, { status: 400 });
+          console.error('[Create User] Profile upsert failed:', profileError.message);
+          return NextResponse.json({ error: `Failed to save user profile: ${profileError.message}` }, { status: 400 });
         }
 
         databaseSaved = true;
@@ -95,13 +169,23 @@ export async function POST(request: NextRequest) {
         // 3. If student, enroll them in the course
         if (role === 'student' && course) {
           const courseId = course.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          const { error: enrollError } = await adminSupabase.from('enrollments').insert({
-            student_id: authUserId,
-            course_id: courseId,
-            status: 'active',
-          });
-          if (enrollError) {
-            console.error('[Create User] Enrollment failed:', enrollError.message);
+          // Check if enrollment already exists to avoid duplicate constraint errors
+          const { data: existingEnrollment } = await adminSupabase
+            .from('enrollments')
+            .select('*')
+            .eq('student_id', authUserId)
+            .eq('course_id', courseId)
+            .maybeSingle();
+
+          if (!existingEnrollment) {
+            const { error: enrollError } = await adminSupabase.from('enrollments').insert({
+              student_id: authUserId,
+              course_id: courseId,
+              status: 'active',
+            });
+            if (enrollError) {
+              console.error('[Create User] Enrollment failed:', enrollError.message);
+            }
           }
         }
       }
@@ -135,6 +219,7 @@ export async function POST(request: NextRequest) {
           name,
           phone,
           level: role === 'student' ? 'Intermediate (B1)' : 'Expert',
+          needs_password_change: true,
         });
 
         if (profileError) {
@@ -259,7 +344,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error creating user:', error);
     return NextResponse.json(
-      { error: error.message || 'An error occurred during user creation.' },
+      { error: formatFriendlyError(error) },
       { status: 500 }
     );
   }

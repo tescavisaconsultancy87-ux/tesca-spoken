@@ -12,8 +12,8 @@ const studentNavGroups: NavGroup[] = [
     title: 'Dashboard',
     items: [
       { label: 'Overview', href: '/student', icon: LayoutDashboard },
-      { label: 'My Courses', href: '/student/courses', icon: BookOpen, badge: 2 },
-      { label: 'Live Classes', href: '/student/live-classes', icon: Video, badge: 1 },
+      { label: 'My Courses', href: '/student/courses', icon: BookOpen },
+      { label: 'Live Classes', href: '/student/live-classes', icon: Video },
       { label: 'Study Materials', href: '/student/materials', icon: FileText },
     ],
   },
@@ -31,8 +31,12 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'student')) {
-      router.push('/login');
+    if (!loading) {
+      if (!user || user.role !== 'student') {
+        router.push('/login');
+      } else if (user.needsPasswordChange) {
+        router.push('/change-password');
+      }
     }
   }, [user, loading, router]);
 

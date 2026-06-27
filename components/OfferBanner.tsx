@@ -32,7 +32,8 @@ export default function OfferBanner() {
   const isExcludedPage =
     pathname === '/login' ||
     pathname.startsWith('/admin') ||
-    pathname.startsWith('/student');
+    pathname.startsWith('/student') ||
+    pathname.startsWith('/tutor');
   const [scrolled, setScrolled] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const { hours, minutes, seconds } = useCountdown();

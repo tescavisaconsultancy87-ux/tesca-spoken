@@ -16,7 +16,7 @@ export default function Hero() {
   return (
     <section
       id="home"
-      className="relative overflow-x-clip pt-20 pb-6 lg:pt-24 lg:pb-10"
+      className="relative overflow-x-clip pt-28 pb-6 lg:pt-36 lg:pb-10"
       style={{
         background: `
           radial-gradient(circle at 90% 10%, rgba(13, 148, 136, 0.08), transparent 45%),
@@ -74,7 +74,7 @@ export default function Hero() {
                 <CalendarCheck className="h-4 w-4" />
                 Book Free Demo
               </button>
-              <a href="#courses" className="btn-secondary w-full sm:w-auto transition-transform hover:scale-[1.03]">
+              <a href="/courses" className="btn-secondary w-full sm:w-auto transition-transform hover:scale-[1.03]">
                 <BookOpen className="h-4 w-4" />
                 Explore Courses
               </a>

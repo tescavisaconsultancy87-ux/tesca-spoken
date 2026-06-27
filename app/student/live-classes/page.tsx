@@ -12,7 +12,6 @@ interface LiveClass {
   duration: string;
   status: 'live' | 'upcoming' | 'completed';
   joinUrl?: string;
-  recordingUrl?: string;
 }
 
 export default function StudentLiveClassesPage() {
@@ -29,9 +28,8 @@ export default function StudentLiveClassesPage() {
         trainer: lc.trainer,
         dateTime: lc.date_time,
         duration: lc.duration,
-        status: lc.status as 'live' | 'upcoming' | 'completed',
+        status: db.computeStatus(lc.date_time, lc.duration),
         joinUrl: lc.join_url,
-        recordingUrl: lc.recording_url,
       }));
       setLiveClasses(mapped);
       setLoading(false);
@@ -153,20 +151,29 @@ export default function StudentLiveClassesPage() {
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </a>
                   ) : lc.status === 'upcoming' ? (
-                    <button
-                      disabled
-                      className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-gray-50 border border-gray-100 text-gray-400 text-xs font-bold cursor-not-allowed"
-                    >
-                      Class Scheduled
-                    </button>
+                    lc.joinUrl ? (
+                      <a
+                        href={lc.joinUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-primary hover:bg-primary-600 text-white text-xs font-bold shadow-soft transition-all duration-300"
+                      >
+                        Join Live Class
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </a>
+                    ) : (
+                      <button
+                        disabled
+                        className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-gray-50 border border-gray-100 text-gray-400 text-xs font-bold cursor-not-allowed"
+                      >
+                        Class Scheduled
+                      </button>
+                    )
                   ) : (
-                    <a
-                      href={lc.recordingUrl}
-                      className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl border border-primary text-primary hover:bg-primary hover:text-white text-xs font-bold transition-all duration-300"
-                    >
-                      <Play className="h-3.5 w-3.5 fill-current" />
-                      Play Recording
-                    </a>
+                    <span className="w-full md:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-gray-50 border border-gray-100 text-gray-400 text-xs font-bold">
+                      <Play className="h-3.5 w-3.5" />
+                      Completed
+                    </span>
                   )}
                 </div>
               </div>

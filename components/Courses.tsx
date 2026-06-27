@@ -1,10 +1,12 @@
 'use client';
 
-import { CheckCircle, Clock, BarChart3, ArrowRight, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { CheckCircle, Clock, BarChart3, ArrowRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
 import { COURSES } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
+import { db } from '@/lib/db';
 
 const LEVEL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
   Beginner: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
@@ -15,6 +17,44 @@ const LEVEL_COLORS: Record<string, { bg: string; text: string; border: string }>
 
 export default function Courses() {
   const { openModal } = useDemoModal();
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await db.getCourses();
+        if (data && data.length > 0) {
+          const mapped = data.map((c: any) => {
+            const priceVal = Number(c.price || 0);
+            const origVal = Number(c.original_price || priceVal * 1.5);
+            return {
+              title: c.title,
+              duration: c.duration || '3 Months',
+              level: c.level || 'Beginner',
+              accent: c.accent || 'primary',
+              benefits: c.benefits 
+                ? c.benefits.split(',').map((b: string) => b.trim()) 
+                : ['Grammar foundations', 'Vocabulary building', 'Basic conversation'],
+              price: `₹${priceVal.toLocaleString('en-IN')}`,
+              originalPrice: `₹${origVal.toLocaleString('en-IN')}`,
+              popular: !!c.popular
+            };
+          });
+          setCourses(mapped);
+        } else {
+          setCourses(COURSES);
+        }
+      } catch (err) {
+        console.error('Failed to load courses on Home, using fallback', err);
+        setCourses(COURSES);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, []);
+
   return (
     <section id="courses" className="bg-[#062426] py-20 lg:py-28">
       <div className="container-x">
@@ -31,16 +71,22 @@ export default function Courses() {
         />
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 xl:grid-cols-5">
-          {COURSES.map((course, i) => {
-            const levelStyle = LEVEL_COLORS[course.level] || LEVEL_COLORS.Beginner;
-            const isPopular = course.popular;
+          {loading ? (
+            <div className="col-span-full py-12 text-center text-primary-200">
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-secondary border-t-transparent" />
+              <p className="mt-2 text-xs font-semibold">Loading courses...</p>
+            </div>
+          ) : (
+            courses.map((course, i) => {
+              const levelStyle = LEVEL_COLORS[course.level] || LEVEL_COLORS.Beginner;
+              const isPopular = course.popular;
 
-            return (
-              <Reveal
-                key={course.title}
-                delay={i * 70}
-                className={isPopular ? 'lg:-mt-4' : ''}
-              >
+              return (
+                <Reveal
+                  key={course.title}
+                  delay={i * 70}
+                  className={isPopular ? 'lg:-mt-4' : ''}
+                >
                 <article
                   className={`group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-white shadow-soft transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 ${
                     isPopular
@@ -88,7 +134,7 @@ export default function Courses() {
                       What You&apos;ll Learn
                     </p>
                     <ul className="space-y-2">
-                      {course.benefits.map((b) => (
+                      {course.benefits.map((b: string) => (
                         <li key={b} className="flex items-start gap-2 text-xs text-ink-soft">
                           <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
                           {b}
@@ -102,20 +148,27 @@ export default function Courses() {
                     <div className="flex items-end justify-between mb-3.5">
                       <div>
                         <p className="text-xl font-bold font-heading text-ink">{course.price}</p>
-                        <p className="text-xs text-ink-muted line-through">{course.originalPrice}</p>
+                        {course.originalPrice && course.originalPrice !== course.price && (
+                          <p className="text-xs text-ink-muted line-through">{course.originalPrice}</p>
+                        )}
                       </div>
-                      <div className="rounded-lg bg-green-50 border border-green-200 px-2 py-1 text-center">
-                        <p className="text-[10px] font-semibold text-green-700">
-                          Save{' '}
-                          {Math.round(
-                            ((parseInt(course.originalPrice.replace(/[₹,]/g, '')) -
-                              parseInt(course.price.replace(/[₹,]/g, ''))) /
-                              parseInt(course.originalPrice.replace(/[₹,]/g, ''))) *
-                              100
-                          )}
-                          %
-                        </p>
-                      </div>
+                      {(() => {
+                        try {
+                          const orig = parseInt((course.originalPrice || '').replace(/[₹,]/g, ''));
+                          const price = parseInt((course.price || '').replace(/[₹,]/g, ''));
+                          if (orig > 0 && orig > price) {
+                            const pct = Math.round(((orig - price) / orig) * 100);
+                            return (
+                              <div className="rounded-lg bg-green-50 border border-green-200 px-2 py-1 text-center">
+                                <p className="text-[10px] font-semibold text-green-700">
+                                  Save {pct}%
+                                </p>
+                              </div>
+                            );
+                          }
+                        } catch (e) {}
+                        return null;
+                      })()}
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -139,7 +192,7 @@ export default function Courses() {
                 </article>
               </Reveal>
             );
-          })}
+          }))}
         </div>
 
         {/* Bottom note */}

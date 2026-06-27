@@ -82,40 +82,40 @@ export const AlertDialogContent = ({ children, from = 'center', className = '' }
   return (
     <AnimatePresence>
       {context.open && (
-        <>
-          {/* Backdrop */}
+        <motion.div
+          key="backdrop"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => context.setOpen(false)}
+          className="fixed inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4"
+        />
+      )}
+      {context.open && (
+        <motion.div key="modal-container" className="fixed inset-0 z-[51] flex items-center justify-center p-4 pointer-events-none">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => context.setOpen(false)}
-            className="fixed inset-0 z-50 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4"
-          />
-          {/* Modal Container */}
-          <div className="fixed inset-0 z-[51] flex items-center justify-center p-4 pointer-events-none">
-            <motion.div
-              initial={getInitialPosition()}
-              animate={{ 
-                x: 0, 
-                y: 0, 
-                scale: 1, 
-                opacity: 1 
-              }}
-              exit={getExitPosition()}
-              transition={{
-                type: 'spring',
-                damping: 24,
-                stiffness: 220,
-              }}
-              className={`pointer-events-auto w-full max-w-[380px] rounded-[24px] bg-white/90 backdrop-blur-[16px] border border-white/60 p-6 shadow-soft-xl ${className}`}
-              style={{
-                boxShadow: '0 20px 50px rgba(6, 119, 121, 0.12), 0 0 0 1px rgba(6, 119, 121, 0.05)'
-              }}
-            >
-              {children}
-            </motion.div>
-          </div>
-        </>
+            key="modal-popup"
+            initial={getInitialPosition()}
+            animate={{ 
+              x: 0, 
+              y: 0, 
+              scale: 1, 
+              opacity: 1 
+            }}
+            exit={getExitPosition()}
+            transition={{
+              type: 'spring',
+              damping: 24,
+              stiffness: 220,
+            }}
+            className={`pointer-events-auto w-full max-w-[380px] rounded-[24px] bg-white/90 backdrop-blur-[16px] border border-white/60 p-6 shadow-soft-xl ${className}`}
+            style={{
+              boxShadow: '0 20px 50px rgba(6, 119, 121, 0.12), 0 0 0 1px rgba(6, 119, 121, 0.05)'
+            }}
+          >
+            {children}
+          </motion.div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
