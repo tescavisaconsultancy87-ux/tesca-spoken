@@ -24,6 +24,7 @@ export default function Courses() {
             const priceVal = Number(c.price || 0);
             const origVal = Number(c.original_price || priceVal * 1.5);
             return {
+              id: c.id,
               title: c.title,
               duration: c.duration || '3 Months',
               accent: c.accent || 'primary',
@@ -159,16 +160,27 @@ export default function Courses() {
                       })()}
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={openModal}
-                        className={`flex-1 btn-warm text-[11px] py-2 px-3 justify-center cursor-pointer ${
-                          isPopular ? '' : 'btn-primary'
-                        }`}
-                        style={isPopular ? {} : { background: 'var(--color-primary)' }}
-                      >
-                        Enroll
-                        <ArrowRight className="h-3 w-3 shrink-0 ml-1" />
-                      </button>
+                      {(() => {
+                        const planParam = course.id === 'spoken-english-basic' ? 'starter' :
+                                          course.id === 'business-communication' ? 'professional' :
+                                          course.id === 'vocabulary-accelerator' ? 'premium' :
+                                          course.title.toLowerCase().includes('basic') ? 'starter' :
+                                          course.title.toLowerCase().includes('business') || course.title.toLowerCase().includes('interview') ? 'professional' :
+                                          course.title.toLowerCase().includes('vocabulary') || course.title.toLowerCase().includes('idioms') ? 'premium' : '';
+                        const enrollHref = planParam ? `/pricing?plan=${planParam}` : '/pricing';
+                        return (
+                          <a
+                            href={enrollHref}
+                            className={`flex-1 btn-warm text-[11px] py-2 px-3 justify-center items-center flex cursor-pointer ${
+                              isPopular ? '' : 'btn-primary'
+                            }`}
+                            style={isPopular ? {} : { background: 'var(--color-primary)' }}
+                          >
+                            Enroll
+                            <ArrowRight className="h-3 w-3 shrink-0 ml-1" />
+                          </a>
+                        );
+                      })()}
                       <button
                         onClick={openModal}
                         className="btn-secondary text-[11px] py-2 px-3 justify-center cursor-pointer"
