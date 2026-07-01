@@ -37,7 +37,7 @@ export default function Navbar() {
           ? 'bg-white border-b border-black/5 shadow-soft'
           : 'bg-transparent'
       }`}
-      style={{ top: 'var(--banner-height, 36px)' }}
+      style={{ top: 'var(--banner-height, 0px)' }}
     >
       <nav className="container-x flex h-14 items-center justify-between py-2 lg:h-16">
         <Link href="/" className="group flex items-center gap-2" aria-label="TESCA home">
