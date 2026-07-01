@@ -218,19 +218,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               return { success: false, error: 'Your account has not been set up yet. Please contact an administrator.' };
             }
 
-            // Check if student has paid (has a successful transaction log)
+            // Check if student has paid (has an active course enrollment)
             if (resolvedRole === 'student') {
-              const { data: paymentRecord, error: paymentError } = await supabase
-                .from('payments')
+              const { data: enrollmentRecord, error: enrollmentError } = await supabase
+                .from('enrollments')
                 .select('status')
-                .eq('email', email)
-                .eq('status', 'success')
+                .eq('student_id', data.user.id)
+                .eq('status', 'active')
+                .limit(1)
                 .maybeSingle();
 
-              if (paymentError || !paymentRecord) {
-                console.warn(`[Auth] Payment check failed or no successful payment found for ${email}`);
+              if (enrollmentError || !enrollmentRecord) {
+                console.warn(`[Auth] Enrollment check failed or no active enrollment found for ${email}`);
                 await supabase.auth.signOut();
-                return { success: false, error: 'Access denied: No valid course purchase or payment record found.' };
+                return { success: false, error: 'Access denied: No valid course purchase or active enrollment found.' };
               }
             }
 
