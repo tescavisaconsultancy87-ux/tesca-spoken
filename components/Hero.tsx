@@ -60,7 +60,7 @@ export default function Hero() {
         <div className="absolute top-[35%] right-[38%] w-4.5 h-4.5 rounded-full border-2 border-[#F97823] opacity-50 z-[15] hidden lg:block animate-pulse" />
 
         {/* Background illustration on the right */}
-        <div className="absolute top-0 right-0 bottom-0 w-full lg:w-[48%] xl:w-[44%] z-[5] pointer-events-none select-none flex items-end lg:items-center justify-end">
+        <div className="absolute top-0 right-0 bottom-0 w-full lg:w-[48%] xl:w-[44%] z-[5] pointer-events-none select-none flex items-end lg:items-center justify-end hidden lg:flex">
           <img
             src="/hero_image.png"
             alt="TESCA Students"
@@ -105,6 +105,15 @@ export default function Hero() {
             <p className="max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
               Unlock global career paths and test success (IELTS/PTE). Join thousands of professionals speaking with clarity, confidence, and authority under guidance from expert tutors.
             </p>
+
+            {/* Mobile Hero Image */}
+            <div className="relative w-full max-w-sm mx-auto aspect-[4/3] pointer-events-none select-none lg:hidden mt-4">
+              <img
+                src="/hero_image.png"
+                alt="TESCA Students"
+                className="w-full h-full object-contain"
+              />
+            </div>
 
             {/* CTA Buttons Row */}
             <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-start pt-2">

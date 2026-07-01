@@ -110,7 +110,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
       {/* Modal Card — Large and Spacious */}
-      <div className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-soft-xl overflow-hidden grid md:grid-cols-12 animate-scale-up">
+      <div className="relative w-full max-w-5xl bg-white rounded-[2.5rem] shadow-soft-xl overflow-hidden grid md:grid-cols-12 animate-scale-up max-h-[92vh] overflow-y-auto">
         
         {/* Elegant Close Button */}
         <button
@@ -226,9 +226,14 @@ export default function DemoModal({ onClose }: DemoModalProps) {
 
               {/* Phone */}
               <div>
-                <label htmlFor="modal-phone" className="block text-xs font-semibold text-ink mb-1.5">
-                  Phone Number <span className="text-accent">*</span>
-                </label>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label htmlFor="modal-phone" className="block text-xs font-semibold text-ink">
+                    Phone Number <span className="text-accent">*</span>
+                  </label>
+                  <span className={`text-[10px] font-semibold transition-colors ${form.phone.length === 10 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {form.phone.length} / 10 digits
+                  </span>
+                </div>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted">
                     <Phone className="h-4 w-4" />
@@ -238,8 +243,11 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                     type="tel"
                     required
                     value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    placeholder="+91 XXXXX XXXXX"
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setForm((f) => ({ ...f, phone: val }));
+                    }}
+                    placeholder="Enter 10-digit number"
                     className="w-full rounded-xl border border-black/10 bg-bg-soft pl-10 pr-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
                   />
                 </div>
