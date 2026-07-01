@@ -802,12 +802,20 @@ export default function PricingPage() {
 
                   {/* Phone */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-gray-500">Phone Number <span className="text-rose-500">*</span></label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-gray-500">Phone Number <span className="text-rose-500">*</span></label>
+                      <span className={`text-[10px] font-semibold transition-colors ${checkoutForm.phone.length === 10 ? 'text-green-600' : 'text-gray-400'}`}>
+                        {checkoutForm.phone.length} / 10 digits
+                      </span>
+                    </div>
                     <input
                       type="tel"
-                      placeholder="e.g. +91 98765 43210"
+                      placeholder="Enter 10-digit number"
                       value={checkoutForm.phone}
-                      onChange={(e) => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setCheckoutForm({ ...checkoutForm, phone: val });
+                      }}
                       className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                       required
                     />
