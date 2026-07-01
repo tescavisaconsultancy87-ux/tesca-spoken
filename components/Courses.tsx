@@ -8,12 +8,7 @@ import { COURSES } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
 
-const LEVEL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Beginner: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  Intermediate: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  Advanced: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  Professional: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-};
+
 
 export default function Courses() {
   const { openModal } = useDemoModal();
@@ -31,7 +26,6 @@ export default function Courses() {
             return {
               title: c.title,
               duration: c.duration || '3 Months',
-              level: c.level || 'Beginner',
               accent: c.accent || 'primary',
               benefits: c.benefits 
                 ? c.benefits.split(',').map((b: string) => b.trim()) 
@@ -70,7 +64,7 @@ export default function Courses() {
           description="From absolute beginners to advanced exam takers — find the perfect course to match your goals and schedule."
         />
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 max-w-5xl mx-auto justify-center">
           {loading ? (
             <div className="col-span-full py-12 text-center text-primary-200">
               <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-secondary border-t-transparent" />
@@ -78,7 +72,6 @@ export default function Courses() {
             </div>
           ) : (
             courses.map((course, i) => {
-              const levelStyle = LEVEL_COLORS[course.level] || LEVEL_COLORS.Beginner;
               const isPopular = course.popular;
 
               return (
@@ -115,11 +108,6 @@ export default function Courses() {
                         {course.title}
                       </h3>
                       <div className="flex flex-wrap gap-2">
-                        <span
-                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${levelStyle.bg} ${levelStyle.text} ${levelStyle.border}`}
-                        >
-                          {course.level}
-                        </span>
                         <span className="flex items-center gap-1 text-[10px] font-medium text-ink-muted">
                           <Clock className="h-3 w-3" />
                           {course.duration}

@@ -27,19 +27,17 @@ CREATE POLICY "Allow public read access to profiles" ON profiles
   FOR SELECT USING (true);
 
 CREATE POLICY "Allow individual write access to own profile" ON profiles
-  FOR UPDATE USING (auth.uid() = id);
+  FOR UPDATE USING (auth.uid() = id)
+  WITH CHECK (role IS NOT DISTINCT FROM profiles.role);
 
 CREATE POLICY "Allow individual insert access to own profile" ON profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
+  FOR INSERT WITH CHECK (auth.uid() = id AND role = 'student');
 
 -- 3. Create Courses Table
 CREATE TABLE IF NOT EXISTS courses (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
-  trainer TEXT NOT NULL,
-  category TEXT NOT NULL,
   price NUMERIC(10, 2) NOT NULL,
-  lessons_count INTEGER NOT NULL,
   students_count INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
@@ -81,6 +79,9 @@ CREATE TABLE IF NOT EXISTS live_classes (
   date_time TEXT NOT NULL,
   duration TEXT NOT NULL,
   join_url TEXT,
+  platform TEXT DEFAULT 'google_meet',
+  meeting_id TEXT,
+  meeting_password TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
@@ -164,10 +165,10 @@ CREATE POLICY "Allow admins full access to testimonials" ON testimonials FOR ALL
 -- Seed Initial Data
 -- ═══════════════════════════════════════════════════════════
 
-INSERT INTO courses (id, title, trainer, category, price, lessons_count, students_count) VALUES
-('spoken-english-intermediate', 'Spoken English Mastery — Intermediate', 'Sarah Jenkins', 'Fluency & Pronunciation', 29.00, 18, 654),
-('business-communication', 'Business Communication & Interview Prep', 'David Vance', 'Professional Skills', 49.00, 20, 382),
-('vocabulary-accelerator', 'Vocabulary & Idioms Accelerator', 'Emma Watson', 'Vocabulary', 19.00, 12, 384)
+INSERT INTO courses (id, title, price, students_count) VALUES
+('spoken-english-intermediate', 'Spoken English Mastery — Intermediate', 29.00, 654),
+('business-communication', 'Business Communication & Interview Prep', 49.00, 382),
+('vocabulary-accelerator', 'Vocabulary & Idioms Accelerator', 19.00, 384)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO live_classes (id, topic, trainer, date_time, duration, join_url) VALUES
@@ -227,4 +228,38 @@ CREATE POLICY "Allow users to update own notifications" ON public.notifications
 
 CREATE POLICY "Allow service role full control on notifications" ON public.notifications
   FOR ALL USING (true);
+
+
+-- 11. Create Trainers Table
+CREATE TABLE IF NOT EXISTS trainers (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  role TEXT NOT NULL,
+  experience TEXT,
+  certification TEXT,
+  students TEXT,
+  specialization TEXT,
+  photo TEXT,
+  verified BOOLEAN DEFAULT true NOT NULL,
+  show_on_homepage BOOLEAN DEFAULT true NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE trainers ENABLE ROW LEVEL SECURITY;
+
+-- Set up policies
+CREATE POLICY "Allow public read access to trainers" ON trainers FOR SELECT USING (true);
+
+CREATE POLICY "Allow full admin control on trainers" ON trainers FOR ALL USING (
+  EXISTS (SELECT 1 FROM profiles WHERE profiles.id = auth.uid() AND profiles.role = 'admin')
+);
+
+-- Seed Initial Trainers
+INSERT INTO trainers (id, name, role, experience, certification, students, specialization, photo, verified, show_on_homepage) VALUES
+('trainer-1', 'Dr. Anjali Desai', 'Lead IELTS Trainer', '18 years', 'CELTA, TESOL', '2,400+', 'IELTS Speaking & Writing', 'https://images.pexels.com/photos/5212343/pexels-photo-5212343.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop', true, true),
+('trainer-2', 'James Whitfield', 'Native English Expert', '12 years', 'DELTA, MA Linguistics', '1,800+', 'Accent Neutralization', 'https://images.pexels.com/photos/5212702/pexels-photo-5212702.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop', true, true),
+('trainer-3', 'Meera Krishnan', 'PTE & Communication Coach', '10 years', 'TEFL, PTE Certified', '1,500+', 'PTE Academic', 'https://images.pexels.com/photos/5212295/pexels-photo-5212295.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop', true, true),
+('trainer-4', 'Rohan Mehta', 'Corporate Communication Trainer', '14 years', 'MBA, TESOL', '2,100+', 'Interview & Corporate English', 'https://images.pexels.com/photos/3777943/pexels-photo-3777943.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop', true, true)
+ON CONFLICT (id) DO NOTHING;
 

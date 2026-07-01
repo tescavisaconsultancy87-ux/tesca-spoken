@@ -13,6 +13,8 @@ import {
   Home,
   Video,
   FileText,
+  GraduationCap,
+  Megaphone,
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
@@ -57,9 +59,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {
             title: 'Content & Settings',
             items: [
+              { label: 'Manage Tutors', href: '/admin/tutors', icon: GraduationCap },
               { label: 'Live Classes', href: '/admin/live-classes', icon: Video },
-              { label: 'Study Materials', href: '/admin/materials', icon: FileText },
               { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
+              { label: 'Offer Banner Settings', href: '/admin/banner', icon: Megaphone },
               { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
               { label: 'Back to Home', href: '/', icon: Home },
             ],
@@ -103,9 +106,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     {
       title: 'Content & Settings',
       items: [
+        { label: 'Manage Tutors', href: '/admin/tutors', icon: GraduationCap },
         { label: 'Live Classes', href: '/admin/live-classes', icon: Video },
-        { label: 'Study Materials', href: '/admin/materials', icon: FileText },
         { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
+        { label: 'Offer Banner Settings', href: '/admin/banner', icon: Megaphone },
         { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
         { label: 'Back to Home', href: '/', icon: Home },
       ],

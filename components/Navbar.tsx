@@ -14,6 +14,7 @@ export default function Navbar() {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const pathname = usePathname();
   const { openModal } = useDemoModal();
+  const isDarkBg = false;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -50,30 +51,33 @@ export default function Navbar() {
         >
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
+            const isHighlight = hoveredLink ? hoveredLink === link.href : isActive;
             return (
               <li key={link.href} className="relative">
                 <Link
                   href={link.href}
                   onMouseEnter={() => setHoveredLink(link.href)}
-                  className={`group relative px-4 py-2 text-sm font-semibold transition-colors duration-300 ${
-                    isActive ? 'text-primary' : 'text-ink-soft hover:text-primary'
+                  className={`group relative px-4 py-2 text-sm font-semibold transition-colors duration-300 block rounded-full ${
+                    isHighlight 
+                      ? 'text-white' 
+                      : isDarkBg 
+                        ? 'text-white/85 hover:text-white' 
+                        : 'text-ink-soft hover:text-ink'
                   }`}
                 >
-                  <span className="relative z-10">{link.label}</span>
+                  <span className="relative z-10 inline-flex items-center gap-1 transition-transform duration-300 group-hover:scale-[1.02]">
+                    {link.label}
+                  </span>
                   
-                  {hoveredLink === link.href && (
+                  {isHighlight && (
                     <motion.span
                       layoutId="nav-hover-backdrop"
-                      className="absolute inset-0 bg-primary-50 rounded-lg"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                    />
-                  )}
-
-                  {isActive && (
-                    <motion.span
-                      layoutId="nav-active-underline"
-                      className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary rounded-full"
-                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                      className={`absolute inset-0 rounded-full shadow-[0_4px_14px_rgba(6,119,121,0.12)] ${
+                        isActive
+                          ? 'bg-primary-900 border border-primary-800/50'
+                          : 'bg-primary-800/90 border border-primary-700/30'
+                      }`}
+                      transition={{ type: 'spring', stiffness: 320, damping: 32 }}
                     />
                   )}
                 </Link>
@@ -89,7 +93,9 @@ export default function Navbar() {
           </button>
           <Link
             href="/login"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-ink-soft transition-colors hover:text-primary"
+            className={`inline-flex items-center gap-1.5 text-sm font-semibold transition-colors ${
+              isDarkBg ? 'text-white/85 hover:text-white' : 'text-ink-soft hover:text-primary'
+            }`}
           >
             <LogIn className="h-4 w-4" />
             Login
@@ -100,7 +106,9 @@ export default function Navbar() {
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-ink transition-colors hover:bg-bg-soft lg:hidden"
+          className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:bg-bg-soft lg:hidden ${
+            isDarkBg ? 'text-white' : 'text-ink'
+          }`}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
         >

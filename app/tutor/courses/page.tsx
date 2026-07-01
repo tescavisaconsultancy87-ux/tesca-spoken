@@ -18,14 +18,10 @@ import {
 interface Course {
   id: string;
   title: string;
-  trainer: string;
-  category: string;
   price: number;
   studentsCount: number;
-  lessonsCount: number;
   originalPrice: number;
   duration: string;
-  level: string;
   accent: string;
   benefits: string;
   popular: boolean;
@@ -41,13 +37,9 @@ export default function TutorCoursesPage() {
 
   const [formData, setFormData] = useState({
     title: '',
-    trainer: 'Sarah Jenkins',
-    category: 'Fluency & Pronunciation',
     price: 2999,
-    lessonsCount: 10,
     originalPrice: 4999,
     duration: '3 Months',
-    level: 'Beginner',
     accent: 'primary',
     benefits: [''],
     popular: false,
@@ -59,14 +51,10 @@ export default function TutorCoursesPage() {
       const mapped = data.map((c: any) => ({
         id: c.id,
         title: c.title,
-        trainer: c.trainer,
-        category: c.category,
         price: Number(c.price),
         studentsCount: c.students_count || 0,
-        lessonsCount: c.lessons_count || 12,
         originalPrice: Number(c.original_price || c.price || 0),
         duration: c.duration || '3 Months',
-        level: c.level || 'Beginner',
         accent: c.accent || 'primary',
         benefits: c.benefits || '',
         popular: !!c.popular,
@@ -81,13 +69,9 @@ export default function TutorCoursesPage() {
     setEditingCourse(null);
     setFormData({
       title: '',
-      trainer: 'Sarah Jenkins',
-      category: 'Fluency & Pronunciation',
       price: 2999,
-      lessonsCount: 10,
       originalPrice: 4999,
       duration: '3 Months',
-      level: 'Beginner',
       accent: 'primary',
       benefits: [''],
       popular: false,
@@ -99,13 +83,9 @@ export default function TutorCoursesPage() {
     setEditingCourse(course);
     setFormData({
       title: course.title,
-      trainer: course.trainer,
-      category: course.category,
       price: course.price,
-      lessonsCount: course.lessonsCount,
       originalPrice: course.originalPrice,
       duration: course.duration,
-      level: course.level,
       accent: course.accent,
       benefits: course.benefits
         ? course.benefits.split(',').map((b) => b.trim()).filter(Boolean)
@@ -123,13 +103,9 @@ export default function TutorCoursesPage() {
       // Edit Mode
       const updatedObj = {
         title: formData.title,
-        trainer: formData.trainer,
-        category: formData.category,
         price: Number(formData.price),
-        lessons_count: Number(formData.lessonsCount),
         original_price: Number(formData.originalPrice),
         duration: formData.duration,
-        level: formData.level,
         accent: formData.accent,
         benefits: formattedBenefits,
         popular: formData.popular,
@@ -143,13 +119,9 @@ export default function TutorCoursesPage() {
             ? {
                 ...c,
                 title: formData.title,
-                trainer: formData.trainer,
-                category: formData.category,
                 price: Number(formData.price),
-                lessonsCount: Number(formData.lessonsCount),
                 originalPrice: Number(formData.originalPrice),
                 duration: formData.duration,
-                level: formData.level,
                 accent: formData.accent,
                 benefits: formattedBenefits,
                 popular: formData.popular,
@@ -163,14 +135,10 @@ export default function TutorCoursesPage() {
       const createdObj = {
         id: newId,
         title: formData.title,
-        trainer: formData.trainer,
-        category: formData.category,
         price: Number(formData.price),
         students_count: 0,
-        lessons_count: Number(formData.lessonsCount),
         original_price: Number(formData.originalPrice),
         duration: formData.duration,
-        level: formData.level,
         accent: formData.accent,
         benefits: formattedBenefits,
         popular: formData.popular,
@@ -183,14 +151,10 @@ export default function TutorCoursesPage() {
         {
           id: createdObj.id,
           title: createdObj.title,
-          trainer: createdObj.trainer,
-          category: createdObj.category,
           price: createdObj.price,
           studentsCount: createdObj.students_count,
-          lessonsCount: createdObj.lessons_count,
           originalPrice: createdObj.original_price,
           duration: createdObj.duration,
-          level: createdObj.level,
           accent: createdObj.accent,
           benefits: createdObj.benefits,
           popular: createdObj.popular,
@@ -207,8 +171,7 @@ export default function TutorCoursesPage() {
 
   const filteredCourses = courses.filter(
     (c) =>
-      c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.trainer.toLowerCase().includes(searchQuery.toLowerCase())
+      c.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -302,61 +265,6 @@ export default function TutorCoursesPage() {
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                     className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Level</label>
-                  <select
-                    value={formData.level}
-                    onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  >
-                    <option>Beginner</option>
-                    <option>Intermediate</option>
-                    <option>Advanced</option>
-                    <option>Professional</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  >
-                    <option>Fluency & Pronunciation</option>
-                    <option>Professional Skills</option>
-                    <option>Vocabulary</option>
-                    <option>Exam Preparation</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Trainer</label>
-                  <select
-                    value={formData.trainer}
-                    onChange={(e) => setFormData({ ...formData, trainer: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  >
-                    <option>Sarah Jenkins</option>
-                    <option>David Vance</option>
-                    <option>Emma Watson</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Lessons Count</label>
-                  <input
-                    type="number"
-                    value={formData.lessonsCount}
-                    onChange={(e) => setFormData({ ...formData, lessonsCount: Number(e.target.value) })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                    min="1"
                     required
                   />
                 </div>
@@ -472,10 +380,7 @@ export default function TutorCoursesPage() {
                 </span>
               )}
               <div className="flex justify-between items-start gap-4">
-                <span className="bg-primary-50 text-primary text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider shrink-0">
-                  {course.category}
-                </span>
-                <div className="text-right">
+                <div className="text-right ml-auto">
                   <span className="text-sm font-extrabold text-gray-800">₹{course.price.toLocaleString('en-IN')}</span>
                   {course.originalPrice > course.price && (
                     <span className="block text-[10px] text-gray-400 line-through font-semibold">
@@ -485,25 +390,17 @@ export default function TutorCoursesPage() {
                 </div>
               </div>
               <h3 className="text-sm font-bold text-gray-800 leading-snug">{course.title}</h3>
-              <p className="text-[11px] text-gray-450 font-semibold">Lead Trainer: {course.trainer}</p>
               <div className="flex flex-wrap gap-1.5 pt-1">
-                <span className="bg-gray-55 text-gray-400 border border-gray-100 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  {course.level}
-                </span>
                 <span className="bg-gray-55 text-gray-400 border border-gray-100 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
                   {course.duration}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 border-t border-b border-gray-50 py-3.5 text-xs font-semibold text-gray-500">
-              <div className="flex items-center gap-1.5">
+            <div className="grid grid-cols-1 gap-4 border-t border-b border-gray-50 py-3.5 text-xs font-semibold text-gray-500">
+              <div className="flex items-center gap-1.5 justify-center">
                 <Users className="h-4 w-4 text-gray-400" />
                 <span>{course.studentsCount} Students</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <BookOpen className="h-4 w-4 text-gray-400" />
-                <span>{course.lessonsCount} Lessons</span>
               </div>
             </div>
 

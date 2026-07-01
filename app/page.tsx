@@ -1,6 +1,5 @@
 import Navbar from '@/components/Navbar';
 import Hero from '@/components/Hero';
-import TrustBar from '@/components/TrustBar';
 import WhyTesca from '@/components/WhyTesca';
 import Courses from '@/components/Courses';
 import Journey from '@/components/Journey';
@@ -12,21 +11,29 @@ import Faq from '@/components/Faq';
 import FinalCTA from '@/components/FinalCTA';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
+import { db } from '@/lib/db';
 
-export default function Home() {
+export default async function Home() {
+  let showFreeTest = true;
+  try {
+    const settings = await db.getSystemSettings();
+    showFreeTest = !!settings.enableFreeTest;
+  } catch (err) {
+    console.error('Failed to load settings in Home Page:', err);
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       <main>
         <Hero />
-        <TrustBar />
         <WhyTesca />
         <Courses />
         <Journey />
         <StudentSuccess />
         <Testimonials />
         <Trainers />
-        <FreeTest />
+        {showFreeTest && <FreeTest />}
         <Faq />
         <FinalCTA />
       </main>

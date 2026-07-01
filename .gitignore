@@ -45,3 +45,8 @@ next-env.d.ts
 .dev.vars
 .wrangler/
 .hang/
+
+# temp & logs
+scratch/
+*.log
+wrangler_tail*

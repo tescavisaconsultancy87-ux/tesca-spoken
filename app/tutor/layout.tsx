@@ -2,10 +2,11 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { LayoutDashboard, BookOpen, Video, FileText, Home } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Video, FileText, Home, Users } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
 import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/db';
 
 const tutorNavGroups: NavGroup[] = [
   {
@@ -15,6 +16,7 @@ const tutorNavGroups: NavGroup[] = [
       { label: 'Courses', href: '/tutor/courses', icon: BookOpen },
       { label: 'Live Classes', href: '/tutor/live-classes', icon: Video },
       { label: 'Study Materials', href: '/tutor/materials', icon: FileText },
+      { label: 'Batches', href: '/tutor/batches', icon: Users },
     ],
   },
   {
@@ -30,13 +32,29 @@ export default function TutorLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (!user || user.role !== 'tutor') {
-        router.push('/login');
-      } else if (user.needsPasswordChange) {
-        router.push('/change-password');
+    async function checkGates() {
+      if (!loading) {
+        if (!user || user.role !== 'tutor') {
+          router.push('/login');
+          return;
+        }
+
+        try {
+          const settings = await db.getSystemSettings();
+          if (settings.maintenanceMode) {
+            router.push('/maintenance');
+            return;
+          }
+        } catch (e) {
+          console.error('[Tutor Layout] Maintenance gate check failed:', e);
+        }
+
+        if (user.needsPasswordChange) {
+          router.push('/change-password');
+        }
       }
     }
+    checkGates();
   }, [user, loading, router]);
 
   if (loading) {

@@ -332,8 +332,8 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                           </DropdownMenuItem>
                         </DropdownMenuHighlightItem>
                         <DropdownMenuHighlightItem>
-                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Offline Classroom (MG Road)' }))}>
-                            Offline Classroom (MG Road)
+                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Offline Classroom (Surat)' }))}>
+                            Offline Classroom (Surat)
                           </DropdownMenuItem>
                         </DropdownMenuHighlightItem>
                       </DropdownMenuHighlight>

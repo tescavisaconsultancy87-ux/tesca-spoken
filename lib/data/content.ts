@@ -3,6 +3,7 @@ export const NAV_LINKS = [
   { label: 'About Us', href: '/about' },
   { label: 'Courses', href: '/courses' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'Assessment', href: '/assessment' },
   { label: 'Contact', href: '/contact' },
 ];
 
@@ -53,7 +54,6 @@ export const COURSES = [
   {
     title: 'Spoken English Basic',
     duration: '3 Months',
-    level: 'Beginner',
     accent: 'primary',
     benefits: ['Grammar foundations', 'Vocabulary building', 'Basic conversation', 'Pronunciation basics'],
     price: '₹7,999',
@@ -62,7 +62,6 @@ export const COURSES = [
   {
     title: 'Spoken English Advanced',
     duration: '4 Months',
-    level: 'Intermediate',
     accent: 'secondary',
     benefits: ['Advanced fluency', 'Public speaking', 'Business communication', 'Neutral accent'],
     price: '₹12,999',
@@ -72,7 +71,6 @@ export const COURSES = [
   {
     title: 'IELTS Preparation',
     duration: '6 Weeks',
-    level: 'Advanced',
     accent: 'primary',
     benefits: ['All 4 modules', '15+ mock tests', 'Band 7.5+ strategies', 'Writing evaluation'],
     price: '₹9,999',
@@ -81,7 +79,6 @@ export const COURSES = [
   {
     title: 'PTE Preparation',
     duration: '5 Weeks',
-    level: 'Advanced',
     accent: 'secondary',
     benefits: ['AI-scored mock tests', 'Speaking templates', 'Writing framework', '65+ score guarantee'],
     price: '₹8,999',
@@ -90,7 +87,6 @@ export const COURSES = [
   {
     title: 'Interview Preparation',
     duration: '4 Weeks',
-    level: 'Professional',
     accent: 'accent',
     benefits: ['Mock interviews', 'HR question mastery', 'Resume review', 'Confidence coaching'],
     price: '₹5,999',
@@ -132,8 +128,8 @@ export const JOURNEY_STEPS = [
 ];
 
 export const SUCCESS_METRICS = [
-  { value: 5000, label: 'Students Trained', suffix: '+' },
-  { value: 95, label: 'Success Rate', suffix: '%' },
+  { value: 25, label: 'Countries Reached', suffix: '+' },
+  { value: 12000, label: 'Mock Tests Conducted', suffix: '+' },
   { value: 1200, label: 'IELTS 7+ Scores', suffix: '+' },
   { value: 15, label: 'Years of Teaching', suffix: '+' },
 ];

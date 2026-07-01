@@ -1,4 +1,5 @@
 import { Clock, Award, Sparkles, ArrowRight, ListChecks } from 'lucide-react';
+import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 
 const TEST_PERKS = [
@@ -55,10 +56,10 @@ export default function FreeTest() {
                 </p>
 
                 <div className="mt-8">
-                  <a href="#start-test" className="btn-warm">
+                  <Link href="/assessment" className="btn-warm">
                     Start Free Assessment
                     <ArrowRight className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </div>
               </div>
 

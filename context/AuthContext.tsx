@@ -49,23 +49,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 resolvedRole = (profile?.role as 'student' | 'admin' | 'tutor') || (session.user.user_metadata?.role as 'student' | 'admin' | 'tutor') || 'student';
               }
 
-              // Self-healing database upsert if role differs or profile is missing
-              if (supabase && (!profile || profile.role !== resolvedRole)) {
-                console.log(`[Auth] Self-healing profile for ${email} with role ${resolvedRole}`);
-                await supabase.from('profiles').upsert({
-                  id: session.user.id,
-                  email: email,
-                  role: resolvedRole,
-                  name: profile?.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
-                });
+              // No profile exists — user hasn't been set up by admin yet
+              if (!profile) {
+                console.warn(`[Auth] No profile found for ${email}. User must be created by an admin.`);
+                setLoading(false);
+                return;
               }
 
               setUser({
                 id: session.user.id,
                 email,
                 role: resolvedRole,
-                name: profile?.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
-                needsPasswordChange: profile ? !!profile.needs_password_change : false,
+                name: profile.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
+                needsPasswordChange: !!profile.needs_password_change,
               });
             }
             
@@ -76,6 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return;
               }
               if (session?.user) {
+                // Ensure session cookie is set for server middleware
+                document.cookie = 'sb-session-active=true; path=/; max-age=86400;';
+
                 const email = session.user.email || '';
                 const { data: profile } = await supabase!.from('profiles').select('role, name, needs_password_change').eq('id', session.user.id).single();
                 
@@ -88,25 +87,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   resolvedRole = (profile?.role as 'student' | 'admin' | 'tutor') || (session.user.user_metadata?.role as 'student' | 'admin' | 'tutor') || 'student';
                 }
 
-                // Self-healing
-                if (supabase && (!profile || profile.role !== resolvedRole)) {
-                  console.log(`[Auth] Self-healing profile on auth-change for ${email}`);
-                  await supabase.from('profiles').upsert({
-                    id: session.user.id,
-                    email: email,
-                    role: resolvedRole,
-                    name: profile?.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
-                  });
+                // No profile exists — user hasn't been set up by admin yet
+                if (!profile) {
+                  console.warn(`[Auth] No profile found for ${email} on auth-state-change. User must be created by an admin.`);
+                  setUser(null);
+                  return;
                 }
 
                 setUser({
                   id: session.user.id,
                   email,
                   role: resolvedRole,
-                  name: profile?.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
-                  needsPasswordChange: profile ? !!profile.needs_password_change : false,
+                  name: profile.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
+                  needsPasswordChange: !!profile.needs_password_change,
                 });
               } else {
+                // Clear session cookie for server middleware
+                document.cookie = 'sb-session-active=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
                 setUser(null);
               }
             });
@@ -137,6 +134,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const savedSession = sessionStorage.getItem('tesca_dev_session');
           if (savedSession) {
             setUser(JSON.parse(savedSession));
+            // Keep the mock middleware session cookie active
+            document.cookie = `sb-mock-session=true; path=/; max-age=86400;`;
           }
         }
         setLoading(false);
@@ -173,6 +172,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         needsPasswordChange: isTemp,
       };
       sessionStorage.setItem('tesca_dev_session', JSON.stringify(profile));
+      // Write mock session cookie to satisfy middleware check
+      document.cookie = `sb-mock-session=true; path=/; max-age=86400;`;
       setUser(profile);
       return { success: true, role, needsPasswordChange: isTemp };
     } else {
@@ -192,6 +193,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (error) throw error;
           
           if (data.user) {
+            // Write session cookie synchronously before redirecting to satisfy middleware
+            document.cookie = 'sb-session-active=true; path=/; max-age=86400;';
+
             const email = data.user.email || '';
             const { data: profile } = await supabase
               .from('profiles')
@@ -208,23 +212,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               resolvedRole = (profile?.role as 'student' | 'admin' | 'tutor') || (data.user.user_metadata?.role as 'student' | 'admin' | 'tutor') || 'student';
             }
 
-            // Self-healing
-            if (!profile || profile.role !== resolvedRole) {
-              console.log(`[Auth] Self-healing profile on login for ${email}`);
-              await supabase.from('profiles').upsert({
-                id: data.user.id,
-                email: email,
-                role: resolvedRole,
-                name: profile?.name || data.user.user_metadata?.name || email.split('@')[0] || 'User',
-              });
+            // No profile exists — user hasn't been set up by admin yet
+            if (!profile) {
+              console.warn(`[Auth] No profile found for ${email} on login. User must be created by an admin.`);
+              return { success: false, error: 'Your account has not been set up yet. Please contact an administrator.' };
+            }
+
+            // Check if student has paid (has a successful transaction log)
+            if (resolvedRole === 'student') {
+              const { data: paymentRecord, error: paymentError } = await supabase
+                .from('payments')
+                .select('status')
+                .eq('email', email)
+                .eq('status', 'success')
+                .maybeSingle();
+
+              if (paymentError || !paymentRecord) {
+                console.warn(`[Auth] Payment check failed or no successful payment found for ${email}`);
+                await supabase.auth.signOut();
+                return { success: false, error: 'Access denied: No valid course purchase or payment record found.' };
+              }
             }
 
             const profileData: UserProfile = {
               id: data.user.id,
               email,
               role: resolvedRole,
-              name: profile?.name || data.user.user_metadata?.name || email.split('@')[0] || 'User',
-              needsPasswordChange: profile ? !!profile.needs_password_change : false,
+              name: profile.name || data.user.user_metadata?.name || email.split('@')[0] || 'User',
+              needsPasswordChange: !!profile.needs_password_change,
             };
             setUser(profileData);
             return { success: true, role: profileData.role, needsPasswordChange: profileData.needsPasswordChange };
@@ -258,6 +273,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       sessionStorage.removeItem('tesca_dev_session');
     }
+    // Expire mock session cookie
+    document.cookie = `sb-mock-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
     setUser(null);
     router.push('/login');
   };

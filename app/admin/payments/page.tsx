@@ -8,6 +8,8 @@ interface Transaction {
   id: string;
   student: string;
   email: string;
+  phone?: string;
+  city?: string;
   amount: number;
   date: string;
   method: string;
@@ -26,6 +28,8 @@ export default function AdminPaymentsPage() {
         id: t.id,
         student: t.student_name,
         email: t.email,
+        phone: t.phone,
+        city: t.city,
         amount: Number(t.amount),
         date: t.date,
         method: t.method,
@@ -150,6 +154,13 @@ export default function AdminPaymentsPage() {
                       <div>
                         <p className="font-bold text-gray-800">{t.student}</p>
                         <p className="text-[10px] text-gray-400 mt-0.5">{t.email}</p>
+                        {(t.phone || t.city) && (
+                          <p className="text-[10px] text-gray-400 mt-0.5 flex flex-wrap gap-1.5 items-center">
+                            {t.phone && <span>📞 {t.phone}</span>}
+                            {t.phone && t.city && <span className="text-gray-300">•</span>}
+                            {t.city && <span>📍 {t.city}</span>}
+                          </p>
+                        )}
                       </div>
                     </td>
                     <td className="p-4 sm:p-5 font-bold text-gray-800">₹{t.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>

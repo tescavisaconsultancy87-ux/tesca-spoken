@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/db';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -23,9 +24,22 @@ export default function LoginPage() {
     setError('');
     
     const result = await login(form.username, form.password);
-    setLoading(false);
     
     if (result.success) {
+      if (result.role !== 'admin') {
+        try {
+          const settings = await db.getSystemSettings();
+          if (settings.maintenanceMode) {
+            setError('The portal is currently under maintenance. Please try again later.');
+            setLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.error('[Login Page] Maintenance gate check failed:', err);
+        }
+      }
+
+      setLoading(false);
       if (result.needsPasswordChange) {
         router.push('/change-password');
       } else if (result.role === 'admin') {
@@ -36,6 +50,7 @@ export default function LoginPage() {
         router.push('/student');
       }
     } else {
+      setLoading(false);
       setError(result.error || 'Invalid credentials. Please try again.');
     }
   };

@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthAndRole } from '@/lib/security';
 
 export async function GET(request: NextRequest) {
+  // Block entirely in production — no env info disclosure
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   try {
     const auth = await verifyAuthAndRole(request, ['admin']);
     if (!auth.authorized) {

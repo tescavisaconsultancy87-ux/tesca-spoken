@@ -6,6 +6,7 @@ import { LayoutDashboard, BookOpen, Video, FileText, User, Home } from 'lucide-r
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
 import { useAuth } from '@/context/AuthContext';
+import { db } from '@/lib/db';
 
 const studentNavGroups: NavGroup[] = [
   {
@@ -31,13 +32,30 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading) {
-      if (!user || user.role !== 'student') {
-        router.push('/login');
-      } else if (user.needsPasswordChange) {
-        router.push('/change-password');
+    async function checkGates() {
+      if (!loading) {
+        if (!user || user.role !== 'student') {
+          router.push('/login');
+          return;
+        }
+
+        try {
+          const settings = await db.getSystemSettings();
+          if (settings.maintenanceMode) {
+            router.push('/maintenance');
+            return;
+          }
+
+        } catch (e) {
+          console.error('[Student Layout] Maintenance gate check failed:', e);
+        }
+
+        if (user.needsPasswordChange) {
+          router.push('/change-password');
+        }
       }
     }
+    checkGates();
   }, [user, loading, router]);
 
   if (loading) {

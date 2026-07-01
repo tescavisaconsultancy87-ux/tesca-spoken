@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Save, CheckCircle, HelpCircle } from 'lucide-react';
+import { db } from '@/lib/db';
 
 export default function AdminSettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -13,44 +14,40 @@ export default function AdminSettingsPage() {
     enableRegistrations: true,
     maintenanceMode: false,
     enableFreeTest: true,
+    // Pricing promotions settings
+    showOfferBanner: true,
+    showTimer: true,
+    timerExpiryType: 'rolling',
+    timerFixedExpiry: '',
+    showProgressBar: true,
+    claimedPercentage: 85,
+    progressBarText: '🔥 [percentage]% of promotional seats claimed',
   });
 
   useEffect(() => {
-    const saved = localStorage.getItem('tesca_school_settings');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        // Only load general settings keys
-        setSchoolSettings((prev) => ({
-          schoolName: parsed.schoolName || prev.schoolName,
-          contactEmail: parsed.contactEmail || prev.contactEmail,
-          supportPhone: parsed.supportPhone || prev.supportPhone,
-          currency: parsed.currency || prev.currency,
-          enableRegistrations: parsed.enableRegistrations !== false,
-          maintenanceMode: !!parsed.maintenanceMode,
-          enableFreeTest: parsed.enableFreeTest !== false,
-        }));
-      } catch (err) {
-        console.error('Failed to parse saved settings', err);
-      }
+    async function load() {
+      const data = await db.getSystemSettings();
+      setSchoolSettings(data);
+      // Sync local storage fallback
+      localStorage.setItem('tesca_school_settings', JSON.stringify(data));
     }
+    load();
   }, []);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const saved = localStorage.getItem('tesca_school_settings');
-    let original = {};
-    if (saved) {
-      try {
-        original = JSON.parse(saved);
-      } catch (err) {}
+    setSaveSuccess(false);
+    
+    const success = await db.updateSystemSettings(schoolSettings);
+    if (success) {
+      localStorage.setItem('tesca_school_settings', JSON.stringify(schoolSettings));
+      setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveSuccess(false);
+      }, 3000);
+    } else {
+      alert('Failed to save settings to the database.');
     }
-    const merged = { ...original, ...schoolSettings };
-    localStorage.setItem('tesca_school_settings', JSON.stringify(merged));
-    setSaveSuccess(true);
-    setTimeout(() => {
-      setSaveSuccess(false);
-    }, 3000);
   };
 
   return (
@@ -183,6 +180,8 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           </div>
+
+
 
           {/* Action Row */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-50">

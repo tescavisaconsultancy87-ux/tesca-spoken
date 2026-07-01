@@ -69,6 +69,51 @@ const STATS = [
   { value: '95%', label: 'Success Rate', icon: Trophy },
 ];
 
+const FACULTY_TEAM = [
+  {
+    name: 'Kiran Lathiya',
+    badge: 'Founder',
+    badgeStyle: 'bg-accent-950/40 text-accent-300 border-accent-800/30',
+    title: 'CEO & Spoken English Guru',
+    titleStyle: 'text-primary-400',
+    description:
+      '25+ years of transforming students into confident English speakers. Former corporate trainer at multinational companies. His "Zero to Hero" methodology has helped 10,000+ students overcome hesitation.',
+    photo: '/kiran.png',
+    tags: [
+      { text: 'Accent Trainer', style: 'border-teal-500/20 bg-teal-500/5 text-teal-300' },
+      { text: 'Corporate English', style: 'border-secondary-500/20 bg-secondary-500/5 text-secondary-300' },
+    ],
+  },
+  {
+    name: 'Nikunj Dhanani',
+    badge: 'Co-Founder',
+    badgeStyle: 'bg-emerald-950/40 text-emerald-300 border-emerald-800/30',
+    title: 'Lead Visa Consultant',
+    titleStyle: 'text-primary-400',
+    description:
+      'With 12+ years in international education, Nikunj has successfully placed 5000+ students in top global universities. His expertise in visa documentation has achieved a remarkable 99.2% success rate.',
+    photo: '/nikunj.png',
+    tags: [
+      { text: 'UK Visa Expert', style: 'border-blue-500/20 bg-blue-500/5 text-blue-300' },
+      { text: 'Profile Builder', style: 'border-emerald-500/20 bg-emerald-500/5 text-emerald-300' },
+    ],
+  },
+  {
+    name: 'Vishal Faldu',
+    badge: 'Head Mentor',
+    badgeStyle: 'bg-blue-950/40 text-blue-300 border-blue-800/30',
+    title: 'Spoken English Guru',
+    titleStyle: 'text-secondary-400',
+    description:
+      'A British Council certified trainer with 8+ years experience. Specializes in helping students achieve Band 8+ in IELTS and 85+ in PTE. Known for his unique "Score Booster" techniques.',
+    photo: '/vishal.png',
+    tags: [
+      { text: 'IELTS Band 9', style: 'border-purple-500/20 bg-purple-500/5 text-purple-300' },
+      { text: 'PTE Expert', style: 'border-rose-500/20 bg-rose-500/5 text-rose-300' },
+    ],
+  },
+];
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
@@ -280,6 +325,74 @@ export default function AboutPage() {
 
                   {/* Spacer for the other side on desktop */}
                   <div className="hidden flex-1 lg:block" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Faculty Team ── */}
+        <section className="bg-[#011616] py-20 lg:py-28 relative overflow-hidden">
+          {/* Decorative background glow */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-primary/10 blur-3xl" />
+          </div>
+
+          <div className="container-x relative z-10">
+            <div className="text-center mb-14">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-900/50 border border-primary-800/30 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary-300">
+                Meet Our Experts
+              </span>
+              <h2 className="font-heading mt-3 text-3xl font-bold text-white sm:text-4xl">
+                World-Class <span className="bg-gradient-to-r from-primary-400 via-primary-300 to-secondary bg-clip-text text-transparent">Faculty Team</span>
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-primary-100/70">
+                Learn from industry veterans with decades of combined experience in English training and global visa consultancy.
+              </p>
+            </div>
+
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+              {FACULTY_TEAM.map((member) => (
+                <div
+                  key={member.name}
+                  className="group relative rounded-3xl bg-[#022222]/60 border border-primary-800/30 hover:border-primary-400/50 p-6 flex flex-col justify-between items-center text-center shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="flex flex-col items-center">
+                    {/* Portrait Photo Container */}
+                    <div className="relative w-28 h-28 mb-5 rounded-full overflow-hidden border-2 border-primary-800/60 group-hover:border-primary-400 transition-colors duration-300">
+                      <img
+                        src={member.photo}
+                        alt={member.name}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+
+                    <h3 className="font-heading text-lg font-bold text-white">{member.name}</h3>
+
+                    <span className={`inline-block rounded-full border px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider mt-2.5 ${member.badgeStyle}`}>
+                      {member.badge}
+                    </span>
+
+                    <p className={`text-xs font-semibold mt-3 ${member.titleStyle}`}>
+                      {member.title}
+                    </p>
+
+                    <p className="text-xs text-primary-100/70 leading-relaxed mt-4 font-normal">
+                      {member.description}
+                    </p>
+                  </div>
+
+                  {/* Tags at the bottom */}
+                  <div className="flex flex-wrap gap-2 justify-center mt-6 pt-5 border-t border-primary-900/50 w-full">
+                    {member.tags.map((tag) => (
+                      <span
+                        key={tag.text}
+                        className={`text-[9px] font-semibold px-2.5 py-1 rounded-full border uppercase tracking-wider ${tag.style}`}
+                      >
+                        {tag.text}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               ))}
             </div>

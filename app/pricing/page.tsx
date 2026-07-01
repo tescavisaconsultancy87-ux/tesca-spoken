@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import { CheckCircle, X, ArrowRight, Clock, Star, Zap } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
+import { db } from '@/lib/db';
 
 const PLANS = [
   {
@@ -158,14 +159,161 @@ export default function PricingPage() {
     progressBarText: '🔥 [percentage]% of promotional seats claimed',
   });
 
+  const [selectedPlanForPurchase, setSelectedPlanForPurchase] = useState<any | null>(null);
+  const [checkoutForm, setCheckoutForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    city: '',
+  });
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleGetStarted = (plan: any) => {
+    setSelectedPlanForPurchase(plan);
+    setCheckoutForm({ name: '', email: '', phone: '', city: '' });
+    setPaymentSuccess(false);
+    setPaymentError(null);
+    setAgreedToTerms(false);
+  };
+
+  const handlePurchaseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!agreedToTerms) {
+      setPaymentError('You must agree to the Terms of Service, Privacy Policy, and Refund Policy to proceed.');
+      return;
+    }
+    setIsPurchasing(true);
+    setPaymentError(null);
+
+    try {
+      // 1. Create order on the backend
+      const res = await fetch('/api/checkout/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: selectedPlanForPurchase.id,
+          billing: billing,
+          email: checkoutForm.email
+        }),
+      });
+
+      const orderData = await res.json();
+      if (!res.ok || orderData.error) {
+        throw new Error(orderData.error || 'Failed to initialize transaction order.');
+      }
+
+      // 2. Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Razorpay client script failed to load. Check your internet connection.');
+      }
+
+      // 3. Launch Razorpay Checkout Overlay
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'TESCA Spoken English',
+        description: `Enrollment - ${selectedPlanForPurchase.name} Plan`,
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            setIsPurchasing(true);
+            setPaymentError(null);
+
+            const verifyRes = await fetch('/api/checkout/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                name: checkoutForm.name,
+                email: checkoutForm.email,
+                phone: checkoutForm.phone,
+                city: checkoutForm.city,
+                planId: selectedPlanForPurchase.id,
+                billing: billing,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              setPaymentSuccess(true);
+            } else {
+              setPaymentError(verifyData.error || 'Payment validation failed.');
+            }
+          } catch (err: any) {
+            setPaymentError(err.message || 'Signature verification call encountered an error.');
+          } finally {
+            setIsPurchasing(false);
+          }
+        },
+        prefill: {
+          name: checkoutForm.name,
+          email: checkoutForm.email,
+          contact: checkoutForm.phone,
+        },
+        notes: {
+          city: checkoutForm.city,
+        },
+        theme: {
+          color: '#0b3336',
+        },
+        modal: {
+          ondismiss: function () {
+            setIsPurchasing(false);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+
+    } catch (err: any) {
+      setPaymentError(err.message || 'An error occurred during payment setup.');
+      setIsPurchasing(false);
+    }
+  };
+
   useEffect(() => {
-    const saved = localStorage.getItem('tesca_school_settings');
-    if (saved) {
+    async function load() {
       try {
-        const parsed = JSON.parse(saved);
-        setSettings((prev) => ({ ...prev, ...parsed }));
+        const data = await db.getSystemSettings();
+        setSettings(data);
       } catch (err) {
-        console.error('Failed to parse settings in PricingPage', err);
+        console.error('Failed to load settings in PricingPage', err);
+      }
+    }
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const planParam = params.get('plan');
+      if (planParam) {
+        const match = PLANS.find(p => p.id === planParam);
+        if (match) {
+          setSelectedPlanForPurchase(match);
+        }
       }
     }
   }, []);
@@ -422,7 +570,7 @@ export default function PricingPage() {
                       className={`mt-auto p-8 pt-0 ${plan.color === 'ink' ? 'bg-primary-900' : 'bg-white'}`}
                     >
                       <button
-                        onClick={openModal}
+                        onClick={() => handleGetStarted(plan)}
                         className={`flex w-full items-center justify-center cursor-pointer ${
                           plan.popular
                             ? 'btn-warm'
@@ -566,6 +714,192 @@ export default function PricingPage() {
           </div>
         </section>
       </main>
+
+      {/* Checkout Modal */}
+      {selectedPlanForPurchase && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up max-h-[95vh] overflow-y-auto relative">
+            <button
+              onClick={() => setSelectedPlanForPurchase(null)}
+              className="absolute right-4 top-4 p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {paymentSuccess ? (
+              <div className="text-center py-6 space-y-4">
+                <div className="mx-auto h-16 w-16 rounded-full bg-green-50 text-green-600 border border-green-100 flex items-center justify-center shadow-soft animate-bounce">
+                  <CheckCircle className="h-8 w-8" />
+                </div>
+                <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight">Payment Successful!</h3>
+                <p className="text-sm text-gray-550 leading-relaxed max-w-sm mx-auto">
+                  Thank you for enrolling in the <strong className="text-gray-800">{selectedPlanForPurchase.name}</strong> program! 
+                  A confirmation email has been sent to <span className="font-semibold text-primary">{checkoutForm.email}</span>.
+                </p>
+                <div className="bg-gray-55 rounded-2xl p-4 border border-gray-100/80 text-left space-y-1.5 text-xs text-gray-650 max-w-sm mx-auto">
+                  <p className="font-bold text-gray-800 mb-1">Enrollment Details:</p>
+                  <p><span className="font-semibold text-gray-500">Name:</span> {checkoutForm.name}</p>
+                  <p><span className="font-semibold text-gray-500">City:</span> {checkoutForm.city}</p>
+                  <p><span className="font-semibold text-gray-500">Plan:</span> {selectedPlanForPurchase.name} ({selectedPlanForPurchase.duration})</p>
+                  <p><span className="font-semibold text-gray-500">Payment Status:</span> Completed via Razorpay</p>
+                </div>
+                <div className="pt-4">
+                  <a
+                    href="/login"
+                    className="btn-primary inline-flex justify-center px-6 py-3 w-full rounded-xl text-sm font-bold shadow-soft"
+                  >
+                    Go to Student Portal
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-secondary uppercase tracking-wider bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-100 inline-block">
+                    Enrollment Checkout
+                  </span>
+                  <h3 className="text-lg font-heading font-extrabold text-gray-850 tracking-tight">
+                    Join {selectedPlanForPurchase.name} Plan
+                  </h3>
+                  <p className="text-xs text-gray-400 font-medium">
+                    Please provide your contact information to initiate the secure payment gateway.
+                  </p>
+                </div>
+
+                {paymentError && (
+                  <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold leading-relaxed flex gap-2">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 mt-1.5 flex-shrink-0" />
+                    <span>{paymentError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handlePurchaseSubmit} className="space-y-3.5">
+                  {/* Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">Full Name <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. John Doe"
+                      value={checkoutForm.name}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
+                      className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">Email Address <span className="text-rose-500">*</span></label>
+                    <input
+                      type="email"
+                      placeholder="e.g. john@example.com"
+                      value={checkoutForm.email}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                      className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">Phone Number <span className="text-rose-500">*</span></label>
+                    <input
+                      type="tel"
+                      placeholder="e.g. +91 98765 43210"
+                      value={checkoutForm.phone}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, phone: e.target.value })}
+                      className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* City */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">City <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Mumbai"
+                      value={checkoutForm.city}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, city: e.target.value })}
+                      className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* Pricing Summary */}
+                  <div className="border-t border-b border-gray-100 py-3 mt-4 space-y-1.5">
+                    <div className="flex justify-between text-xs text-gray-500 font-medium">
+                      <span>Subtotal:</span>
+                      <span>
+                        ₹{(billing === 'monthly'
+                          ? Math.ceil(selectedPlanForPurchase.price / (selectedPlanForPurchase.duration === '3 Months' ? 3 : selectedPlanForPurchase.duration === '4 Months' ? 4 : 6))
+                          : selectedPlanForPurchase.price
+                        ).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 font-medium">
+                      <span>Taxes & Processing Fees:</span>
+                      <span className="text-green-600 font-semibold">Included</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-800 font-extrabold pt-1">
+                      <span>Total Amount:</span>
+                      <span className="text-primary">
+                        ₹{(billing === 'monthly'
+                          ? Math.ceil(selectedPlanForPurchase.price / (selectedPlanForPurchase.duration === '3 Months' ? 3 : selectedPlanForPurchase.duration === '4 Months' ? 4 : 6))
+                          : selectedPlanForPurchase.price
+                        ).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Terms & Conditions Checkbox */}
+                  <div className="flex items-start gap-2 pt-1.5 pb-2">
+                    <input
+                      type="checkbox"
+                      id="agreeTerms"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="mt-1 h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                      required
+                    />
+                    <label htmlFor="agreeTerms" className="text-[10px] text-gray-500 font-medium leading-normal cursor-pointer select-none">
+                      I agree to the{' '}
+                      <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Terms of Service</a>,{' '}
+                      <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Privacy Policy</a>, and{' '}
+                      <a href="/refund" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Refund Policy (Strict No-Refund)</a>.
+                    </label>
+                  </div>
+
+                  <div className="flex gap-3 justify-end pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlanForPurchase(null)}
+                      className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-50"
+                      disabled={isPurchasing}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isPurchasing}
+                      className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft flex items-center justify-center gap-1.5"
+                    >
+                      {isPurchasing ? (
+                        <>
+                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Pay with Razorpay'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <Footer />
       <FloatingActions />

@@ -36,11 +36,50 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // 3. Fetch all active students
-    const { data: students, error: studentsError } = await adminSupabase
-      .from('profiles')
-      .select('id, email, name')
-      .eq('role', 'student');
+    // 3. Fetch active students (filter by batch if batch_id is provided)
+    let targetStudentIds: string[] | null = null;
+    let isBatchQuery = false;
+
+    if (details && details.batch_id) {
+      isBatchQuery = true;
+      const { data: batch, error: batchError } = await adminSupabase
+        .from('batches')
+        .select('student_ids')
+        .eq('id', details.batch_id)
+        .maybeSingle();
+
+      if (!batchError && batch) {
+        targetStudentIds = Array.isArray(batch.student_ids)
+          ? batch.student_ids
+          : typeof batch.student_ids === 'string'
+          ? JSON.parse(batch.student_ids)
+          : [];
+      }
+    }
+
+    let students: any[] = [];
+    let studentsError: any = null;
+
+    if (isBatchQuery) {
+      if (targetStudentIds && targetStudentIds.length > 0) {
+        const { data, error } = await adminSupabase
+          .from('profiles')
+          .select('id, email, name')
+          .eq('role', 'student')
+          .in('id', targetStudentIds);
+        students = data || [];
+        studentsError = error;
+      } else {
+        students = [];
+      }
+    } else {
+      const { data, error } = await adminSupabase
+        .from('profiles')
+        .select('id, email, name')
+        .eq('role', 'student');
+      students = data || [];
+      studentsError = error;
+    }
 
     if (studentsError) {
       console.error('[Notify API] Failed to fetch student profiles:', studentsError.message);

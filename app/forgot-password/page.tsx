@@ -18,6 +18,17 @@ export default function ForgotPasswordPage() {
 
     try {
       if (supabase) {
+        // Verify email registration in profiles first
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+
+        if (profileError || !profile) {
+          throw new Error('This email address is not registered in our system.');
+        }
+
         const origin = window.location.origin;
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${origin}/login`,

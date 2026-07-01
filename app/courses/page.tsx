@@ -99,7 +99,7 @@ export default function CoursesPage() {
         {/* ── Course Cards ── */}
         <section className="py-20 lg:py-28">
           <div className="container-x">
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 justify-center max-w-5xl mx-auto">
               <CoursesList />
             </div>
           </div>

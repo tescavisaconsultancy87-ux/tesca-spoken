@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Home, HelpCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Page Not Found – TESCA Spoken English',
@@ -11,25 +11,59 @@ export const metadata: Metadata = {
 
 export default function CustomNotFound() {
   return (
-    <div className="min-h-screen bg-bg-soft">
+    <div className="min-h-screen bg-bg-soft flex flex-col justify-between">
       <Navbar />
-      <main className="flex min-h-[calc(100vh-14rem)] items-center justify-center">
-        <div className="text-center space-y-8 px-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white font-bold text-xl">
-            404
+      
+      <main className="flex-1 flex items-center justify-center pt-28 pb-16 lg:pt-36">
+        <div className="container-x w-full">
+          <div className="max-w-4xl mx-auto bg-white border border-black/5 rounded-3xl p-6 sm:p-10 lg:p-12 shadow-soft hover:shadow-soft-lg transition-all duration-300">
+            <div className="grid items-center gap-8 lg:grid-cols-12">
+              
+              {/* Text Area */}
+              <div className="text-center lg:text-left lg:col-span-7 space-y-6">
+                <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 border border-rose-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-rose-600 shadow-soft">
+                  Error 404
+                </div>
+                
+                <h1 className="font-heading text-3xl font-extrabold leading-tight text-ink sm:text-4xl lg:text-5xl">
+                  Lost in <span className="text-primary">Translation?</span>
+                </h1>
+                
+                <p className="text-sm sm:text-base leading-relaxed text-ink-muted">
+                  The page you are looking for has either been moved, deleted, or never existed in the first place. Don&apos;t worry — let&apos;s get you back on track!
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+                  <a href="/" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
+                    <Home className="h-4 w-4" />
+                    Back to Home
+                  </a>
+                  <a 
+                    href="/faq" 
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-150 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Browse FAQs
+                  </a>
+                </div>
+              </div>
+
+              {/* Illustration Area */}
+              <div className="lg:col-span-5 flex justify-center order-first lg:order-last">
+                <div className="relative w-full max-w-[280px] lg:max-w-none aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 to-secondary-50 p-2 border border-black/5 shadow-soft">
+                  <img
+                    src="/not_found_graphic.png"
+                    alt="404 Page Not Found Illustration"
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                </div>
+              </div>
+
+            </div>
           </div>
-          <h1 className="font-heading text-3xl font-bold text-ink sm:text-4xl">
-            Page Not Found
-          </h1>
-          <p className="text-lg text-ink-muted max-w-xl mx-auto">
-            Sorry, we couldn't find the page you're looking for.
-          </p>
-          <a href="/" className="btn-warm inline-flex items-center gap-2">
-            Return to Homepage
-            <ArrowRight className="h-4 w-4" />
-          </a>
         </div>
       </main>
+
       <Footer />
       <FloatingActions />
     </div>

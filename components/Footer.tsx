@@ -51,7 +51,7 @@ const QUICK_LINKS = [
   { label: 'About Us', href: '#why-tesca' },
   { label: 'Courses', href: '#courses' },
   { label: 'Success Stories', href: '#success' },
-  { label: 'Free English Test', href: '#start-test' },
+  { label: 'Free English Test', href: '/assessment' },
 
 ];
 
@@ -141,7 +141,7 @@ export default function Footer() {
           {/* Company info */}
           <div className="lg:col-span-4">
             <a href="#home" className="flex items-center gap-2">
-              <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-9 w-auto object-contain brightness-0 invert" />
+              <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-9 w-auto object-contain" />
             </a>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary-200">
               TESCA Spoken English is a premier institute dedicated to
@@ -269,19 +269,19 @@ export default function Footer() {
           </p>
           <div className="flex gap-6">
             <a
-              href="#privacy"
+              href="/privacy"
               className="text-xs text-primary-300 transition-colors hover:text-white"
             >
               Privacy Policy
             </a>
             <a
-              href="#terms"
+              href="/terms"
               className="text-xs text-primary-300 transition-colors hover:text-white"
             >
               Terms of Service
             </a>
             <a
-              href="#refund"
+              href="/refund"
               className="text-xs text-primary-300 transition-colors hover:text-white"
             >
               Refund Policy

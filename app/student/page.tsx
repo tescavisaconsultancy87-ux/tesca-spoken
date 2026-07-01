@@ -19,20 +19,38 @@ export default function StudentDashboardHome() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [cData, lData] = await Promise.all([
+        const [cData, lData, bData] = await Promise.all([
           db.getCourses(),
-          db.getLiveClasses()
+          db.getLiveClasses(),
+          db.getBatches()
         ]);
         setCourses(cData || []);
-        setLiveClasses(lData || []);
+
+        // Find if student belongs to a batch
+        const myBatch = (bData || []).find((b: any) => {
+          const studentIds = Array.isArray(b.student_ids)
+            ? b.student_ids
+            : typeof b.student_ids === 'string'
+            ? JSON.parse(b.student_ids)
+            : [];
+          return studentIds.includes(user?.id);
+        });
+        const myBatchId = myBatch?.id;
+
+        // Filter: show only if class has no batch_id, or if batch_id matches student's batch
+        const filteredLive = (lData || []).filter((lc: any) => !lc.batch_id || lc.batch_id === myBatchId);
+
+        setLiveClasses(filteredLive);
       } catch (err) {
         console.error('Failed to load student home data', err);
       } finally {
         setLoading(false);
       }
     }
-    loadData();
-  }, []);
+    if (user?.id) {
+      loadData();
+    }
+  }, [user]);
 
   // Find next class from liveClasses
   const nextClass = liveClasses.find((lc) => {
@@ -43,7 +61,7 @@ export default function StudentDashboardHome() {
   const currentCourse = courses[0];
 
   const enrolledCount = courses.length;
-  const totalLessons = courses.reduce((sum, c) => sum + (c.lessons_count || 0), 0);
+
 
   return (
     <div className="space-y-6">
@@ -79,14 +97,7 @@ export default function StudentDashboardHome() {
           icon={Clock}
           color="secondary"
         />
-        <StatCard
-          label="Total Lessons"
-          value={String(totalLessons)}
-          trend={totalLessons > 0 ? { value: totalLessons, isPositive: true } : undefined}
-          description="across all courses"
-          icon={Award}
-          color="indigo"
-        />
+
         <StatCard
           label="Next Live Class"
           value={nextClass ? (nextClass.status === 'live' ? 'Live Now' : 'Scheduled') : 'No Classes'}
@@ -100,20 +111,7 @@ export default function StudentDashboardHome() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left/Middle: Chart and Current Course Card */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Study Hours Line Chart — no study tracking data yet */}
-          {courses.length > 0 && (
-            <AnalyticsChart
-              title="Your Courses"
-              subtitle="Track your progress across enrolled courses"
-              data={courses.map((c: any, i: number) => ({
-                label: c.title?.substring(0, 12) || `Course ${i + 1}`,
-                value: c.lessons_count || 0,
-              }))}
-              type="bar"
-              valueSuffix=" lessons"
-              color="primary"
-            />
-          )}
+
 
           {/* Current Course Spotlight */}
           {currentCourse ? (
@@ -127,14 +125,13 @@ export default function StudentDashboardHome() {
                 </span>
                 <h3 className="text-lg font-bold text-gray-800">{currentCourse.title}</h3>
                 <p className="text-xs text-gray-400 font-medium">
-                  Trainer: {currentCourse.trainer} | {currentCourse.lessons_count} Lessons
+                  Active Course
                 </p>
                 
                 {/* Progress bar */}
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold text-gray-500">
                       <span>Progress</span>
-                      <span>{currentCourse.lessons_count || '?'} lessons</span>
                     </div>
                     <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                       <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: '0%' }} />

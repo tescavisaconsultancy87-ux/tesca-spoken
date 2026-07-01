@@ -4,16 +4,13 @@ import { useState, useEffect } from 'react';
 import { Play, Award, CheckCircle, Search, Clock, BookOpen, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { db } from '@/lib/db';
+import { useAuth } from '@/context/AuthContext';
 
 interface Course {
   id: string;
   title: string;
-  trainer: string;
   image: string;
   progress: number;
-  totalLessons: number;
-  completedLessons: number;
-  category: string;
   lastActive: string;
 }
 
@@ -22,31 +19,43 @@ export default function StudentCoursesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     async function load() {
-      const data = await db.getCourses();
-      const mapped = data.map((c: any) => ({
-        id: c.id,
-        title: c.title,
-        trainer: c.trainer,
-        image: c.image || '/course-english.jpg',
-        progress: 0,
-        totalLessons: c.lessons_count || 12,
-        completedLessons: 0,
-        category: c.category,
-        lastActive: 'New Enrollment',
-      }));
-      setCourses(mapped);
-      setLoading(false);
+      if (!user) return;
+      try {
+        let enrolledData = await db.getEnrolledCourses(user.id);
+        
+        // Self-healing: auto-enroll in spoken-english-intermediate if no active courses
+        if (enrolledData.length === 0) {
+          console.log('[Courses] Auto-enrolling user in spoken-english-intermediate...');
+          await db.enrollStudent(user.id, 'spoken-english-intermediate');
+          enrolledData = await db.getEnrolledCourses(user.id);
+        }
+
+        const mapped = enrolledData.map((e: any) => ({
+          id: e.id,
+          title: e.title,
+          image: '/course-english.jpg',
+          progress: e.progress || 0,
+          lastActive: e.lastActive || 'New Enrollment',
+        }));
+        setCourses(mapped);
+      } catch (err) {
+        console.error('Error loading enrolled courses:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-    load();
-  }, []);
+    if (user) {
+      load();
+    }
+  }, [user]);
 
   const filteredCourses = courses.filter((course) => {
     const matchesTab = activeTab === 'completed' ? course.progress === 100 : course.progress < 100;
-    const matchesQuery = course.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          course.trainer.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesQuery = course.title.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesQuery;
   });
 
@@ -111,15 +120,12 @@ export default function StudentCoursesPage() {
               className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-soft hover:shadow-soft-lg transition-all duration-300 group flex flex-col h-full"
             >
               {/* Course Thumbnail */}
-              <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden flex items-center justify-center">
+              <Link href={`/student/courses/${course.id}`} className="relative aspect-[16/10] bg-gray-100 overflow-hidden flex items-center justify-center cursor-pointer">
                 {/* Fallback image background gradients */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-secondary/20" />
                 <div className="absolute inset-0 bg-gray-900/10 group-hover:bg-gray-900/30 transition-colors duration-300" />
                 
-                {/* Floating Category Tag */}
-                <span className="absolute top-4 left-4 bg-white/90 backdrop-blur-md text-[10px] font-bold text-primary px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  {course.category}
-                </span>
+
 
                 {/* Overlaid Play/Badge Button */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -133,17 +139,17 @@ export default function StudentCoursesPage() {
                     </div>
                   )}
                 </div>
-              </div>
+              </Link>
 
               {/* Course details */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    <span>Trainer: {course.trainer}</span>
-                  </div>
-                  <h3 className="text-base font-bold text-gray-800 leading-snug group-hover:text-primary transition-colors">
-                    {course.title}
-                  </h3>
+
+                  <Link href={`/student/courses/${course.id}`}>
+                    <h3 className="text-base font-bold text-gray-800 leading-snug group-hover:text-primary transition-colors cursor-pointer">
+                      {course.title}
+                    </h3>
+                  </Link>
                 </div>
 
                 {/* Progress bar */}
@@ -151,7 +157,7 @@ export default function StudentCoursesPage() {
                   <div className="flex justify-between items-center text-xs font-semibold text-gray-500">
                     <span className="inline-flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" />
-                      Active {course.lastActive}
+                      {course.lastActive.startsWith('Active:') ? course.lastActive : `Active ${course.lastActive}`}
                     </span>
                     <span>{course.progress}%</span>
                   </div>
@@ -166,10 +172,7 @@ export default function StudentCoursesPage() {
                 </div>
 
                 {/* Bottom Actions */}
-                <div className="pt-4 border-t border-gray-50 flex items-center justify-between text-xs font-bold">
-                  <span className="text-gray-400">
-                    {course.completedLessons}/{course.totalLessons} Lessons
-                  </span>
+                <div className="pt-4 border-t border-gray-50 flex items-center justify-end text-xs font-bold">
                   
                   {course.progress === 100 ? (
                     <button className="inline-flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 transition-colors">
@@ -177,10 +180,10 @@ export default function StudentCoursesPage() {
                       View Certificate
                     </button>
                   ) : (
-                    <button className="inline-flex items-center gap-1 text-primary hover:text-primary-600 transition-all group-hover:translate-x-0.5">
+                    <Link href={`/student/courses/${course.id}`} className="inline-flex items-center gap-1 text-primary hover:text-primary-600 transition-all group-hover:translate-x-0.5">
                       Continue Learning
                       <ArrowRight className="h-3.5 w-3.5" />
-                    </button>
+                    </Link>
                   )}
                 </div>
               </div>

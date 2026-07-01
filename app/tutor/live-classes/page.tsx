@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Edit2, Video, Calendar, Clock, User, X } from 'lucide-react';
+import { Search, Plus, Trash2, Edit2, Video, Calendar, Clock, User, X, Link as LinkIcon, Key, Hash, ChevronDown, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
 import {
   AlertDialog,
@@ -22,12 +22,34 @@ interface LiveClass {
   date_time: string;
   duration: string;
   join_url?: string;
+  platform?: string;
+  meeting_id?: string;
+  meeting_password?: string;
+  batch_id?: string;
   status: string;
+}
+
+interface Batch {
+  id: string;
+  name: string;
+  time_period: string;
+}
+
+const PLATFORMS = [
+  { value: 'google_meet', label: 'Google Meet', color: 'bg-blue-50 text-blue-600 border-blue-100' },
+  { value: 'zoom', label: 'Zoom', color: 'bg-indigo-50 text-indigo-600 border-indigo-100' },
+  { value: 'teams', label: 'Microsoft Teams', color: 'bg-violet-50 text-violet-600 border-violet-100' },
+  { value: 'other', label: 'Other', color: 'bg-gray-50 text-gray-600 border-gray-100' },
+];
+
+function getPlatformInfo(value?: string) {
+  return PLATFORMS.find((p) => p.value === value) || PLATFORMS[0];
 }
 
 export default function TutorLiveClassesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [liveClasses, setLiveClasses] = useState<LiveClass[]>([]);
+  const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<LiveClass | null>(null);
@@ -39,14 +61,21 @@ export default function TutorLiveClassesPage() {
     date_time: '',
     duration: '60 mins',
     join_url: '',
+    platform: 'google_meet',
+    meeting_id: '',
+    meeting_password: '',
+    batch_id: '',
   });
 
   const loadData = async () => {
     try {
       const data = await db.getLiveClasses();
       setLiveClasses(data);
+
+      const bData = await db.getBatches();
+      setBatches(bData);
     } catch (err) {
-      console.error('Failed to load live classes', err);
+      console.error('Failed to load live classes or batches', err);
     } finally {
       setLoading(false);
     }
@@ -64,6 +93,10 @@ export default function TutorLiveClassesPage() {
       date_time: '',
       duration: '60 mins',
       join_url: '',
+      platform: 'google_meet',
+      meeting_id: '',
+      meeting_password: '',
+      batch_id: batches.length > 0 ? batches[0].id : '',
     });
     setIsModalOpen(true);
   };
@@ -76,6 +109,10 @@ export default function TutorLiveClassesPage() {
       date_time: lc.date_time,
       duration: lc.duration,
       join_url: lc.join_url || '',
+      platform: lc.platform || 'google_meet',
+      meeting_id: lc.meeting_id || '',
+      meeting_password: lc.meeting_password || '',
+      batch_id: lc.batch_id || '',
     });
     setIsModalOpen(true);
   };
@@ -106,24 +143,35 @@ export default function TutorLiveClassesPage() {
     e.preventDefault();
 
     const status = db.computeStatus(formData.date_time, formData.duration);
+    const payload = {
+      ...formData,
+      status,
+      // Only include meeting_id/password if they have values
+      meeting_id: formData.meeting_id.trim() || null,
+      meeting_password: formData.meeting_password.trim() || null,
+      batch_id: formData.batch_id || null,
+    };
+
     if (editingClass) {
-      await db.updateLiveClass(editingClass.id, { ...formData, status });
+      await db.updateLiveClass(editingClass.id, payload);
       await triggerNotification('live-class-update', {
         topic: formData.topic,
         trainer: formData.trainer,
         dateTime: formData.date_time,
         duration: formData.duration,
-        joinUrl: formData.join_url
+        joinUrl: formData.join_url,
+        batch_id: formData.batch_id
       });
     } else {
       const newId = `lc-${Date.now()}`;
-      await db.createLiveClass({ id: newId, ...formData, status });
+      await db.createLiveClass({ id: newId, ...payload });
       await triggerNotification('live-class-create', {
         topic: formData.topic,
         trainer: formData.trainer,
         dateTime: formData.date_time,
         duration: formData.duration,
-        joinUrl: formData.join_url
+        joinUrl: formData.join_url,
+        batch_id: formData.batch_id
       });
     }
 
@@ -159,6 +207,8 @@ export default function TutorLiveClassesPage() {
     completed: 'bg-gray-100 text-gray-550',
   };
 
+  const showCredentialFields = formData.platform === 'zoom' || formData.platform === 'other';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -186,9 +236,10 @@ export default function TutorLiveClassesPage() {
         />
       </div>
 
+      {/* ─── Create / Edit Modal ─── */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-lg shadow-2xl animate-scale-up">
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-lg shadow-2xl animate-scale-up max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center pb-4 border-b border-gray-55">
               <h3 className="text-base font-bold text-gray-800">
                 {editingClass ? 'Edit Live Class' : 'Create Live Class'}
@@ -198,8 +249,9 @@ export default function TutorLiveClassesPage() {
               </button>
             </div>
             <form onSubmit={handleSave} className="space-y-4 pt-4">
+              {/* Topic */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Topic / Title</label>
+                <label className="text-xs font-bold text-gray-500">Topic / Title <span className="text-rose-500">*</span></label>
                 <input
                   type="text"
                   placeholder="e.g. Vocabulary Blast: Idioms for Social Gatherings"
@@ -210,38 +262,48 @@ export default function TutorLiveClassesPage() {
                 />
               </div>
 
+              {/* Trainer & Duration */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Trainer</label>
-                  <select
-                    value={formData.trainer}
-                    onChange={(e) => setFormData({ ...formData, trainer: e.target.value })}
-                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  >
-                    <option>Sarah Jenkins</option>
-                    <option>David Vance</option>
-                    <option>Emma Watson</option>
-                  </select>
+                  <label className="text-xs font-bold text-gray-500">Trainer <span className="text-rose-500">*</span></label>
+                  <div className="relative">
+                    <select
+                      value={formData.trainer}
+                      onChange={(e) => setFormData({ ...formData, trainer: e.target.value })}
+                      className="w-full appearance-none bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 pr-9 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none cursor-pointer"
+                      required
+                    >
+                      <option>Sarah Jenkins</option>
+                      <option>David Vance</option>
+                      <option>Emma Watson</option>
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Duration</label>
-                  <select
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  >
-                    <option>30 mins</option>
-                    <option>45 mins</option>
-                    <option>60 mins</option>
-                    <option>90 mins</option>
-                    <option>120 mins</option>
-                  </select>
+                  <label className="text-xs font-bold text-gray-500">Duration <span className="text-rose-500">*</span></label>
+                  <div className="relative">
+                    <select
+                      value={formData.duration}
+                      onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                      className="w-full appearance-none bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 pr-9 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none cursor-pointer"
+                      required
+                    >
+                      <option>30 mins</option>
+                      <option>45 mins</option>
+                      <option>60 mins</option>
+                      <option>90 mins</option>
+                      <option>120 mins</option>
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  </div>
                 </div>
               </div>
 
+              {/* Date/Time (native input) & Platform */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Date & Time</label>
+                  <label className="text-xs font-bold text-gray-500">Date & Time <span className="text-rose-500">*</span></label>
                   <input
                     type="datetime-local"
                     value={formData.date_time}
@@ -251,22 +313,100 @@ export default function TutorLiveClassesPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Google Meet Join Link</label>
-                  <input
-                    type="url"
-                    placeholder="https://meet.google.com/..."
-                    value={formData.join_url}
-                    onChange={(e) => setFormData({ ...formData, join_url: e.target.value })}
-                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  />
+                  <label className="text-xs font-bold text-gray-500">Platform <span className="text-rose-500">*</span></label>
+                  <div className="relative">
+                    <select
+                      value={formData.platform}
+                      onChange={(e) => setFormData({ ...formData, platform: e.target.value })}
+                      className="w-full appearance-none bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 pr-9 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none cursor-pointer"
+                      required
+                    >
+                      {PLATFORMS.map((p) => (
+                        <option key={p.value} value={p.value}>{p.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                  </div>
                 </div>
               </div>
+
+              {/* Batch selection dropdown */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Target Batch <span className="text-rose-500">*</span></label>
+                <div className="relative">
+                  <select
+                    value={formData.batch_id}
+                    onChange={(e) => setFormData({ ...formData, batch_id: e.target.value })}
+                    className="w-full appearance-none bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 pr-9 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none cursor-pointer"
+                    required
+                  >
+                    <option value="">-- Select a Batch --</option>
+                    {batches.map((b) => (
+                      <option key={b.id} value={b.id}>{b.name} ({b.time_period})</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Join URL – full width */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">
+                  <span className="inline-flex items-center gap-1"><LinkIcon className="h-3 w-3" /> Join Link</span> <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="url"
+                  placeholder={
+                    formData.platform === 'zoom' ? 'https://zoom.us/j/...' :
+                    formData.platform === 'teams' ? 'https://teams.microsoft.com/...' :
+                    formData.platform === 'google_meet' ? 'https://meet.google.com/...' :
+                    'https://...'
+                  }
+                  value={formData.join_url}
+                  onChange={(e) => setFormData({ ...formData, join_url: e.target.value })}
+                  className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Meeting ID & Password – conditionally shown */}
+              {showCredentialFields && (
+                <div className="grid grid-cols-2 gap-4 p-3.5 bg-amber-50/50 border border-amber-100 rounded-xl">
+                  <div className="col-span-2">
+                    <p className="text-[10px] font-bold text-amber-600 uppercase tracking-wider mb-2.5">Meeting Credentials (Optional)</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 inline-flex items-center gap-1">
+                      <Hash className="h-3 w-3" /> Meeting ID
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 123 456 7890"
+                      value={formData.meeting_id}
+                      onChange={(e) => setFormData({ ...formData, meeting_id: e.target.value })}
+                      className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:border-primary outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 inline-flex items-center gap-1">
+                      <Key className="h-3 w-3" /> Password
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. abc123"
+                      value={formData.meeting_password}
+                      onChange={(e) => setFormData({ ...formData, meeting_password: e.target.value })}
+                      className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:border-primary outline-none"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-50"
+                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55"
                 >
                   Cancel
                 </button>
@@ -282,12 +422,15 @@ export default function TutorLiveClassesPage() {
         </div>
       )}
 
+      {/* ─── Table ─── */}
       <div className="bg-white border border-gray-100 rounded-2xl shadow-soft overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-50 bg-gray-50/50 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                 <th className="p-4 sm:p-5">Class</th>
+                <th className="p-4 sm:p-5">Batch</th>
+                <th className="p-4 sm:p-5">Platform</th>
                 <th className="p-4 sm:p-5">Schedule</th>
                 <th className="p-4 sm:p-5">Duration</th>
                 <th className="p-4 sm:p-5">Status</th>
@@ -297,77 +440,110 @@ export default function TutorLiveClassesPage() {
             <tbody className="divide-y divide-gray-50 text-xs font-medium text-gray-700">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-400 font-medium">
+                  <td colSpan={7} className="p-12 text-center text-gray-400 font-medium">
                     <Video className="h-10 w-10 text-gray-300 mx-auto mb-3" />
                     No live classes found. Create your first session above.
                   </td>
                 </tr>
               ) : (
-                filtered.map((lc) => (
-                  <tr key={lc.id} className="hover:bg-gray-50/30 transition-colors">
-                    <td className="p-4 sm:p-5">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-xl bg-secondary-50 text-secondary flex items-center justify-center">
-                          <Video className="h-4 w-4" />
+                filtered.map((lc) => {
+                  const platform = getPlatformInfo(lc.platform);
+                  const batch = batches.find((b) => b.id === lc.batch_id);
+                  
+                  return (
+                    <tr key={lc.id} className="hover:bg-gray-50/30 transition-colors">
+                      <td className="p-4 sm:p-5">
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-xl bg-secondary-50 text-secondary flex items-center justify-center">
+                            <Video className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-bold text-gray-800">{lc.topic}</p>
+                            <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              {lc.trainer}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-bold text-gray-800">{lc.topic}</p>
-                          <p className="text-[10px] text-gray-400 mt-0.5 flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {lc.trainer}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 sm:p-5">
-                      <span className="inline-flex items-center gap-1.5 text-gray-500">
-                        <Calendar className="h-3.5 w-3.5" />
-                        {lc.date_time}
-                      </span>
-                    </td>
-                    <td className="p-4 sm:p-5">
-                      <span className="inline-flex items-center gap-1.5 text-gray-500">
-                        <Clock className="h-3.5 w-3.5" />
-                        {lc.duration}
-                      </span>
-                    </td>
-                    <td className="p-4 sm:p-5">
-                      {(() => {
-                        const status = db.computeStatus(lc.date_time, lc.duration);
-                        return (
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[status] || 'bg-gray-100 text-gray-500'}`}>
-                            {status === 'live' && <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
-                            {status}
+                      </td>
+                      <td className="p-4 sm:p-5">
+                        {batch ? (
+                          <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-700 border border-amber-100 px-2 py-0.5 rounded-lg text-[10px] font-bold">
+                            <Layers className="h-3 w-3" />
+                            {batch.name}
                           </span>
-                        );
-                      })()}
-                    </td>
-                    <td className="p-4 sm:p-5 text-right">
-                      <div className="inline-flex items-center gap-2">
-                        <button
-                          onClick={() => handleOpenEdit(lc)}
-                          className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50"
-                          title="Edit Class"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          onClick={() => setDeleteId(lc.id)}
-                          className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-50"
-                          title="Delete Class"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        ) : (
+                          <span className="text-gray-400 text-[10px] italic">No Batch</span>
+                        )}
+                      </td>
+                      <td className="p-4 sm:p-5">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold border ${platform.color}`}>
+                          {platform.label}
+                        </span>
+                      </td>
+                      <td className="p-4 sm:p-5">
+                        <span className="inline-flex items-center gap-1.5 text-gray-500">
+                          <Calendar className="h-3.5 w-3.5" />
+                          {(() => {
+                            const parsedDate = new Date(lc.date_time);
+                            if (isNaN(parsedDate.getTime())) {
+                              return lc.date_time;
+                            }
+                            return parsedDate.toLocaleDateString('en-IN', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            });
+                          })()}
+                        </span>
+                      </td>
+                      <td className="p-4 sm:p-5">
+                        <span className="inline-flex items-center gap-1.5 text-gray-500">
+                          <Clock className="h-3.5 w-3.5" />
+                          {lc.duration}
+                        </span>
+                      </td>
+                      <td className="p-4 sm:p-5">
+                        {(() => {
+                          const status = db.computeStatus(lc.date_time, lc.duration);
+                          return (
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColors[status] || 'bg-gray-100 text-gray-500'}`}>
+                              {status === 'live' && <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
+                              {status}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="p-4 sm:p-5 text-right">
+                        <div className="inline-flex items-center gap-2">
+                          <button
+                            onClick={() => handleOpenEdit(lc)}
+                            className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50"
+                            title="Edit Class"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteId(lc.id)}
+                            className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-50"
+                            title="Delete Class"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
 
+      {/* ─── Delete Confirmation ─── */}
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => { if (!open) setDeleteId(null); }}>
         <AlertDialogPortal>
           <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />

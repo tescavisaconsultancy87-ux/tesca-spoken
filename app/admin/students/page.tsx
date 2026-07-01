@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, UserPlus, Filter, ShieldAlert, Check, X, Trash2 } from 'lucide-react';
+import { Search, UserPlus, Filter, ShieldAlert, Check, X, Trash2, UserCog, Loader2 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
+import { useAuth } from '@/context/AuthContext';
 import { CopyButton } from '@/components/animate-ui/components/buttons/copy';
 import {
   AlertDialog,
@@ -55,6 +56,14 @@ export default function AdminStudentsPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  const { user: currentUser } = useAuth();
+
+  // Change-role modal state
+  const [roleChange, setRoleChange] = useState<{ id: string; name: string; email: string; currentRole: 'student' | 'tutor' | 'admin' } | null>(null);
+  const [selectedNewRole, setSelectedNewRole] = useState<'student' | 'tutor' | 'admin'>('student');
+  const [changingRole, setChangingRole] = useState(false);
+  const [roleChangeError, setRoleChangeError] = useState('');
 
   useEffect(() => {
     async function load() {
@@ -214,6 +223,74 @@ export default function AdminStudentsPage() {
       setTutors(tutors.map(t => t.id === id ? { ...t, status } : t));
     } else {
       setAdmins(admins.map(a => a.id === id ? { ...a, status } : a));
+    }
+  };
+
+  const openRoleChange = (id: string, name: string, email: string, currentRole: 'student' | 'tutor' | 'admin') => {
+    setRoleChange({ id, name, email, currentRole });
+    setSelectedNewRole(currentRole);
+    setRoleChangeError('');
+  };
+
+  const handleRoleChange = async () => {
+    if (!roleChange) return;
+    if (selectedNewRole === roleChange.currentRole) {
+      setRoleChange(null);
+      return;
+    }
+    setChangingRole(true);
+    setRoleChangeError('');
+    try {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const response = await fetch('/api/admin/update-role', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ userId: roleChange.id, newRole: selectedNewRole })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to change role.');
+      }
+
+      // Move the user between the role arrays in local state
+      const { id, currentRole } = roleChange;
+      let movedUser: { id: string; name: string; email: string; phone?: string; joinedDate: string; status: 'active' | 'suspended' | 'pending' } | null = null;
+
+      if (currentRole === 'student') {
+        movedUser = students.find(s => s.id === id) || null;
+        setStudents(students.filter(s => s.id !== id));
+      } else if (currentRole === 'tutor') {
+        movedUser = tutors.find(t => t.id === id) || null;
+        setTutors(tutors.filter(t => t.id !== id));
+      } else {
+        movedUser = admins.find(a => a.id === id) || null;
+        setAdmins(admins.filter(a => a.id !== id));
+      }
+
+      if (movedUser) {
+        if (selectedNewRole === 'student') {
+          setStudents([{ ...movedUser, course: 'Not enrolled yet' } as Student, ...students.filter(s => s.id !== id)]);
+        } else if (selectedNewRole === 'tutor') {
+          setTutors([{ ...movedUser } as TutorUser, ...tutors.filter(t => t.id !== id)]);
+        } else {
+          setAdmins([{ ...movedUser } as AdminUser, ...admins.filter(a => a.id !== id)]);
+        }
+      }
+
+      setRoleChange(null);
+    } catch (err: any) {
+      setRoleChangeError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setChangingRole(false);
     }
   };
 
@@ -514,6 +591,13 @@ export default function AdminStudentsPage() {
                             </button>
                           )}
                           <button
+                            onClick={() => openRoleChange(s.id, s.name, s.email, 'student')}
+                            className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50 cursor-pointer"
+                            title="Change Role"
+                          >
+                            <UserCog className="h-3.5 w-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteUser(s.id, 'student')}
                             className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-55 cursor-pointer"
                             title="Delete Student"
@@ -594,6 +678,13 @@ export default function AdminStudentsPage() {
                               <Check className="h-3.5 w-3.5" />
                             </button>
                           )}
+                          <button
+                            onClick={() => openRoleChange(t.id, t.name, t.email, 'tutor')}
+                            className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50 cursor-pointer"
+                            title="Change Role"
+                          >
+                            <UserCog className="h-3.5 w-3.5" />
+                          </button>
                           <button
                             onClick={() => handleDeleteUser(t.id, 'tutor')}
                             className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-50 cursor-pointer"
@@ -676,6 +767,14 @@ export default function AdminStudentsPage() {
                             </button>
                           )}
                           <button
+                            onClick={() => openRoleChange(a.id, a.name, a.email, 'admin')}
+                            className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                            title={a.id === currentUser?.id ? 'Ask another admin to change your role' : 'Change Role'}
+                            disabled={a.id === currentUser?.id}
+                          >
+                            <UserCog className="h-3.5 w-3.5" />
+                          </button>
+                          <button
                             onClick={() => handleDeleteUser(a.id, 'admin')}
                             className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-50 cursor-pointer"
                             title="Delete Admin"
@@ -740,6 +839,74 @@ export default function AdminStudentsPage() {
           </AlertDialogPopup>
         </AlertDialogPortal>
       </AlertDialog>
+
+      {/* Change Role Modal */}
+      {roleChange && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
+            <div className="flex justify-between items-center pb-4 border-b border-gray-50">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-primary-50 text-primary flex items-center justify-center">
+                  <UserCog className="h-4 w-4" />
+                </div>
+                <h3 className="text-base font-bold text-gray-800">Change Role</h3>
+              </div>
+              <button onClick={() => { setRoleChange(null); setRoleChangeError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="mt-4 p-3 bg-gray-50 border border-gray-100 rounded-xl">
+              <p className="text-xs text-gray-500">User</p>
+              <p className="text-sm font-bold text-gray-800">{roleChange.name}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{roleChange.email}</p>
+              <p className="text-[10px] text-gray-400 mt-1">Current role: <span className="font-bold uppercase text-gray-600">{roleChange.currentRole}</span></p>
+            </div>
+
+            {roleChangeError && (
+              <div className="mt-3 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">
+                {roleChangeError}
+              </div>
+            )}
+
+            <div className="mt-4 space-y-1.5">
+              <label className="text-xs font-bold text-gray-500">New Role</label>
+              <select
+                value={selectedNewRole}
+                onChange={(e) => setSelectedNewRole(e.target.value as 'student' | 'tutor' | 'admin')}
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+              >
+                <option value="student">Student (User)</option>
+                <option value="tutor">Tutor (Instructor)</option>
+                <option value="admin">Administrator (Admin)</option>
+              </select>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-5 mt-4 border-t border-gray-100">
+              <button
+                type="button"
+                onClick={() => { setRoleChange(null); setRoleChangeError(''); }}
+                className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleRoleChange}
+                disabled={changingRole || selectedNewRole === roleChange.currentRole}
+                className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                {changingRole ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Changing...
+                  </>
+                ) : 'Change Role'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X, LogOut } from 'lucide-react';
@@ -28,6 +29,29 @@ interface SidebarProps {
 export default function DashboardSidebar({ groups, role, open, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  
+  const [readHrefs, setReadHrefs] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('read_badges');
+      if (saved) {
+        try {
+          setReadHrefs(JSON.parse(saved));
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  }, []);
+
+  const markAsRead = (href: string) => {
+    const updated = { ...readHrefs, [href]: true };
+    setReadHrefs(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('read_badges', JSON.stringify(updated));
+    }
+  };
 
   const isActive = (href: string) => {
     if (href === `/${role}`) return pathname === `/${role}`;
@@ -53,7 +77,7 @@ export default function DashboardSidebar({ groups, role, open, onClose }: Sideba
         `}
       >
         {/* Logo + close button */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-50">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-55">
           <Link href="/" className="flex items-center gap-2.5">
             <img src="/Tesca_logo.png" alt="TESCA" className="h-8 w-auto object-contain" />
           </Link>
@@ -76,11 +100,16 @@ export default function DashboardSidebar({ groups, role, open, onClose }: Sideba
                 {group.items.map((item) => {
                   const Icon = item.icon;
                   const active = isActive(item.href);
+                  const showBadge = item.badge !== undefined && item.badge > 0 && !active && !readHrefs[item.href];
+                  
                   return (
                     <li key={item.href}>
                       <Link
                         href={item.href}
-                        onClick={onClose}
+                        onClick={() => {
+                          onClose();
+                          markAsRead(item.href);
+                        }}
                         className={`
                           group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium
                           transition-all duration-200
@@ -96,7 +125,7 @@ export default function DashboardSidebar({ groups, role, open, onClose }: Sideba
                         )}
                         <Icon className={`h-[18px] w-[18px] flex-shrink-0 ${active ? 'text-primary' : 'text-gray-400 group-hover:text-gray-500'}`} />
                         <span>{item.label}</span>
-                        {item.badge !== undefined && item.badge > 0 && (
+                        {showBadge && (
                           <span className="ml-auto inline-flex items-center justify-center h-5 min-w-[20px] rounded-full bg-secondary text-white text-[10px] font-bold px-1.5">
                             {item.badge}
                           </span>

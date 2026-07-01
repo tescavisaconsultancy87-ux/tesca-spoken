@@ -5,17 +5,12 @@ import { CheckCircle, Clock, BarChart3, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { COURSES } from '@/lib/data/content';
 
-const LEVEL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Beginner: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  Intermediate: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  Advanced: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  Professional: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-};
+
 
 interface ClientCourse {
+  id?: string;
   title: string;
   duration: string;
-  level: string;
   accent: string;
   benefits: string[];
   price: string;
@@ -36,9 +31,9 @@ export default function CoursesList() {
             const priceVal = Number(c.price || 0);
             const origVal = Number(c.original_price || priceVal * 1.5);
             return {
+              id: c.id,
               title: c.title,
               duration: c.duration || '3 Months',
-              level: c.level || 'Beginner',
               accent: c.accent || 'primary',
               benefits: c.benefits 
                 ? c.benefits.split(',').map((b: string) => b.trim()) 
@@ -74,7 +69,6 @@ export default function CoursesList() {
   return (
     <>
       {courses.map((course) => {
-        const levelStyle = LEVEL_COLORS[course.level] || LEVEL_COLORS.Beginner;
         const isPopular = course.popular;
 
         return (
@@ -104,21 +98,12 @@ export default function CoursesList() {
                 <h2 className="font-heading text-xl font-bold text-ink leading-snug">
                   {course.title}
                 </h2>
-                <span
-                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${levelStyle.bg} ${levelStyle.text} ${levelStyle.border}`}
-                >
-                  {course.level}
-                </span>
               </div>
 
               <div className="mt-4 flex items-center gap-4 text-sm text-ink-muted">
                 <span className="flex items-center gap-1.5">
                   <Clock className="h-4 w-4" />
                   {course.duration}
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <BarChart3 className="h-4 w-4" />
-                  {course.level}
                 </span>
               </div>
             </div>
@@ -163,16 +148,28 @@ export default function CoursesList() {
                 )}
               </div>
               <div className="flex gap-3">
-                <a
-                  href="/?demo=true"
-                  className={`flex-1 btn-warm text-sm ${
-                    isPopular ? '' : 'btn-primary'
-                  }`}
-                  style={isPopular ? {} : { background: 'var(--color-primary)' }}
-                >
-                  Enroll Now
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </a>
+                {(() => {
+                  const planParam = course.id === 'spoken-english-basic' ? 'starter' :
+                                    course.id === 'business-communication' ? 'professional' :
+                                    course.id === 'vocabulary-accelerator' ? 'premium' :
+                                    course.title.toLowerCase().includes('basic') ? 'starter' :
+                                    course.title.toLowerCase().includes('business') || course.title.toLowerCase().includes('interview') ? 'professional' :
+                                    course.title.toLowerCase().includes('vocabulary') || course.title.toLowerCase().includes('idioms') ? 'premium' : '';
+                  const enrollHref = planParam ? `/pricing?plan=${planParam}` : '/pricing';
+                  
+                  return (
+                    <a
+                      href={enrollHref}
+                      className={`flex-1 btn-warm text-sm ${
+                        isPopular ? '' : 'btn-primary'
+                      }`}
+                      style={isPopular ? {} : { background: 'var(--color-primary)' }}
+                    >
+                      Enroll Now
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </a>
+                  );
+                })()}
                 <a
                   href="/?demo=true"
                   className="btn-secondary text-sm"

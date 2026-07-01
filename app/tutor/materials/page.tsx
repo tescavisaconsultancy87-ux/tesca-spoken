@@ -19,11 +19,20 @@ interface StudyMaterial {
   id: string;
   name: string;
   category: 'grammar' | 'vocabulary' | 'speaking' | 'worksheet';
-  format: 'PDF' | 'MP3' | 'DOCX';
+  format: 'PDF' | 'MP3' | 'DOCX' | 'JPG';
   size: string;
   download_url: string;
   added_date: string;
 }
+
+const formatBytes = (bytes: number, decimals = 1) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
 
 export default function TutorMaterialsPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,10 +45,52 @@ export default function TutorMaterialsPage() {
   const [formData, setFormData] = useState({
     name: '',
     category: 'grammar' as 'grammar' | 'vocabulary' | 'speaking' | 'worksheet',
-    format: 'PDF' as 'PDF' | 'MP3' | 'DOCX',
+    format: 'PDF' as 'PDF' | 'MP3' | 'DOCX' | 'JPG',
     size: '',
     download_url: '',
   });
+
+  const [fileError, setFileError] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setFileError(null);
+    if (!file) return;
+
+    // Check size <= 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      setFileError('File size must be less than 5MB.');
+      e.target.value = '';
+      return;
+    }
+
+    // Check type is JPG or PDF
+    const isJpg = file.type === 'image/jpeg' || file.type === 'image/jpg';
+    const isPdf = file.type === 'application/pdf';
+
+    if (!isJpg && !isPdf) {
+      setFileError('Only JPG/JPEG and PDF files are allowed.');
+      e.target.value = '';
+      return;
+    }
+
+    const detectedFormat = isPdf ? 'PDF' : 'JPG';
+    const detectedSize = formatBytes(file.size);
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData((prev) => ({
+        ...prev,
+        format: detectedFormat as any,
+        size: detectedSize,
+        download_url: reader.result as string,
+      }));
+    };
+    reader.onerror = () => {
+      setFileError('Failed to read file.');
+    };
+    reader.readAsDataURL(file);
+  };
 
   const loadData = async () => {
     try {
@@ -58,12 +109,14 @@ export default function TutorMaterialsPage() {
 
   const handleOpenCreate = () => {
     setEditingMaterial(null);
+    setFileError(null);
     setFormData({ name: '', category: 'grammar', format: 'PDF', size: '', download_url: '' });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (mat: StudyMaterial) => {
     setEditingMaterial(mat);
+    setFileError(null);
     setFormData({
       name: mat.name,
       category: mat.category,
@@ -208,7 +261,7 @@ export default function TutorMaterialsPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-500">Category</label>
                   <select
@@ -222,44 +275,27 @@ export default function TutorMaterialsPage() {
                     <option value="worksheet">Worksheets</option>
                   </select>
                 </div>
+
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">File Format</label>
-                  <select
-                    value={formData.format}
-                    onChange={(e) => setFormData({ ...formData, format: e.target.value as any })}
-                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  >
-                    <option value="PDF">PDF</option>
-                    <option value="MP3">MP3</option>
-                    <option value="DOCX">DOCX</option>
-                  </select>
+                  <label className="text-xs font-bold text-gray-500">File (PDF, JPG, Max 5MB)</label>
+                  <input
+                    type="file"
+                    accept="application/pdf, image/jpeg, image/jpg"
+                    onChange={handleFileChange}
+                    className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-primary-50 file:text-primary hover:file:bg-primary-100 cursor-pointer"
+                    required={!editingMaterial}
+                  />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">File Size</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 1.2 MB"
-                    value={formData.size}
-                    onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Download URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://..."
-                    value={formData.download_url}
-                    onChange={(e) => setFormData({ ...formData, download_url: e.target.value })}
-                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                    required
-                  />
-                </div>
-              </div>
+              {fileError && (
+                <p className="text-[10px] text-rose-500 font-semibold mt-1">{fileError}</p>
+              )}
+              {formData.size && (
+                <p className="text-[10px] text-gray-400 font-semibold mt-1">
+                  Detected: {formData.format} ({formData.size})
+                </p>
+              )}
 
               <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
                 <button
