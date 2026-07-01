@@ -15,6 +15,8 @@
   ],
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://sdkiidhjvauoxbgojnxe.supabase.co",
-    "APP_NAME": "tesca-spoken"
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka2lpZGhqdmF1b3hiZ29qbnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTc5NjgsImV4cCI6MjA5NzY5Mzk2OH0.qMtx_m4gmjF-xwT9DQmVn2AEfZffqVXPfgA_8zZD6R0",
+    "APP_NAME": "tesca-spoken",
+    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "rzp_test_T8Di8FC7DPO6pN"
   }
 }
