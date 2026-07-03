@@ -19,7 +19,7 @@ export default function PrivacyPage() {
               Privacy Policy
             </h1>
             <p className="mb-4 text-ink-muted leading-relaxed">
-              At TESCA Spoken English, accessible from tescaspokenenglish.com, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by TESCA Spoken English and how we use it.
+              At TESCA Spoken English, accessible from tesca.co, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by TESCA Spoken English and how we use it.
             </p>
             <p className="mb-4 text-ink-muted leading-relaxed">
               If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us.

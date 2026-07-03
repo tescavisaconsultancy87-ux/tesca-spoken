@@ -21,7 +21,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://tescaspokenenglish.com'),
+  metadataBase: new URL('https://tesca.co'),
   title: 'TESCA Spoken English — Master English Fluency from Basic to Advanced',
   description:
     'Join thousands of students and professionals who improved their communication skills through TESCA\'s expert-led programs. Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
       'Expert-led English learning: Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
     type: 'website',
     locale: 'en_US',
-    url: 'https://tescaspokenenglish.com',
+    url: 'https://tesca.co',
     siteName: 'TESCA Spoken English',
   },
   twitter: {

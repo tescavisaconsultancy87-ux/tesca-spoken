@@ -19,7 +19,7 @@ export default function TermsPage() {
               Terms of Service
             </h1>
             <p className="mb-4 text-ink-muted leading-relaxed">
-              Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the tescaspokenenglish.com website (the "Service") operated by TESCA Spoken English.
+              Please read these Terms of Service ("Terms", "Terms of Service") carefully before using the tesca.co website (the "Service") operated by TESCA Spoken English.
             </p>
             <p className="mb-4 text-ink-muted leading-relaxed">
               Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users and others who access or use the Service.

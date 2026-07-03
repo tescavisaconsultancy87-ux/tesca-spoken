@@ -9,4 +9,4 @@ Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /login
 
-Sitemap: https://tescaspokenenglish.com/sitemap.xml
+Sitemap: https://tesca.co/sitemap.xml
