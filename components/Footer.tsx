@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import {
   Mail,
   Phone,
@@ -47,20 +48,19 @@ const Twitter = ({ className }: { className?: string }) => (
 );
 
 const QUICK_LINKS = [
-  { label: 'Home', href: '#home' },
-  { label: 'About Us', href: '#why-tesca' },
-  { label: 'Courses', href: '#courses' },
-  { label: 'Success Stories', href: '#success' },
+  { label: 'Home', href: '/' },
+  { label: 'About Us', href: '/about' },
+  { label: 'Courses', href: '/courses' },
+  { label: 'Success Stories', href: '/#success' },
   { label: 'Free English Test', href: '/assessment' },
-
 ];
 
 const COURSE_LINKS = [
-  { label: 'Spoken English Basic', href: '#courses' },
-  { label: 'Spoken English Advanced', href: '#courses' },
-  { label: 'IELTS Preparation', href: '#courses' },
-  { label: 'PTE Preparation', href: '#courses' },
-  { label: 'Interview Preparation', href: '#courses' },
+  { label: 'Spoken English Basic', href: '/courses' },
+  { label: 'Spoken English Advanced', href: '/courses' },
+  { label: 'IELTS Preparation', href: '/courses' },
+  { label: 'PTE Preparation', href: '/courses' },
+  { label: 'Interview Preparation', href: '/courses' },
 ];
 
 const SOCIAL_LINKS = [
@@ -140,9 +140,9 @@ export default function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12">
           {/* Company info */}
           <div className="lg:col-span-4">
-            <a href="#home" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-9 w-auto object-contain" />
-            </a>
+            </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary-200">
               TESCA Spoken English is a premier institute dedicated to
               transforming communication skills since 2005. Expert-led spoken
@@ -172,13 +172,13 @@ export default function Footer() {
             <ul className="mt-4 space-y-2.5">
               {QUICK_LINKS.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
                     className="group flex items-center gap-1.5 text-sm text-primary-200 transition-colors hover:text-white"
                   >
                     <ArrowRight className="h-3 w-3 opacity-0 transition-all duration-300 group-hover:opacity-100" />
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -192,13 +192,13 @@ export default function Footer() {
             <ul className="mt-4 space-y-2.5">
               {COURSE_LINKS.map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
                     className="group flex items-center gap-1.5 text-sm text-primary-200 transition-colors hover:text-white"
                   >
                     <ArrowRight className="h-3 w-3 opacity-0 transition-all duration-300 group-hover:opacity-100" />
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -268,24 +268,24 @@ export default function Footer() {
             reserved.
           </p>
           <div className="flex gap-6">
-            <a
+            <Link
               href="/privacy"
               className="text-xs text-primary-300 transition-colors hover:text-white"
             >
               Privacy Policy
-            </a>
-            <a
+            </Link>
+            <Link
               href="/terms"
               className="text-xs text-primary-300 transition-colors hover:text-white"
             >
               Terms of Service
-            </a>
-            <a
+            </Link>
+            <Link
               href="/refund"
               className="text-xs text-primary-300 transition-colors hover:text-white"
             >
               Refund Policy
-            </a>
+            </Link>
           </div>
         </div>
       </div>

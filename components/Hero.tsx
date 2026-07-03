@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { CalendarCheck, BookOpen, Star, Users, Award, GraduationCap, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
@@ -65,6 +66,7 @@ export default function Hero() {
             src="/hero_image.png"
             alt="TESCA Students"
             className="w-full h-full object-contain object-bottom lg:object-right"
+            fetchPriority="high"
           />
           {/* Soft fade overlay on the left to blend with the text section */}
           <div className="absolute inset-y-0 left-0 w-full lg:w-48 bg-gradient-to-r from-white via-white/80 to-transparent hidden lg:block" />
@@ -112,6 +114,7 @@ export default function Hero() {
                 src="/hero_image.png"
                 alt="TESCA Students"
                 className="w-full h-full object-contain"
+                fetchPriority="high"
               />
             </div>
 
@@ -124,13 +127,13 @@ export default function Hero() {
                 <CalendarCheck className="h-4.5 w-4.5" />
                 Book Free Demo Class
               </button>
-              <a 
+              <Link 
                 href="/courses" 
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-slate-200 bg-white text-slate-800 font-bold text-sm hover:bg-slate-50 transition-all duration-300 hover:scale-[1.03]"
               >
                 <BookOpen className="h-4.5 w-4.5 text-slate-600" />
                 Explore Courses
-              </a>
+              </Link>
             </div>
           </div>
         </div>

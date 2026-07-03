@@ -1,0 +1,12 @@
+User-Agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /student/
+Disallow: /tutor/
+Disallow: /api/
+Disallow: /change-password
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /login
+
+Sitemap: https://tescaspokenenglish.com/sitemap.xml

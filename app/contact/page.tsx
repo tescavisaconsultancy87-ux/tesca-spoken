@@ -67,7 +67,7 @@ const BRANCHES = [
   {
     title: 'Branch 3 - Hirabaug',
     address: '39, Ambika Vijay Soc., 2nd Floor, Near Surat Super Store, Hirabaug, Surat.',
-    embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119066.52982230402!2d72.73989467475143!3d21.15918020304383!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e59411d1563%3A0xfe4558290938b042!2sSurat%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1783070800000!5m2!1sen!2sin',
+    embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1859.7143171918644!2d72.85818739660405!3d21.214844924916058!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f003b425e37%3A0xbe2c90ec8201665e!2sTESCA%20ENGLISH%20SPOKEN!5e0!3m2!1sen!2sin!4v1783072796797!5m2!1sen!2sin',
   },
   {
     title: 'Branch 4 - Yogichowk',
@@ -77,6 +77,7 @@ const BRANCHES = [
 ];
 
 export default function ContactPage() {
+  const [mapsLoaded, setMapsLoaded] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -175,6 +176,7 @@ export default function ContactPage() {
                     src="/contact_hero.png"
                     alt="TESCA Contact Illustration"
                     className="w-full h-full object-contain"
+                    fetchPriority="high"
                   />
                 </div>
               </div>
@@ -433,6 +435,11 @@ export default function ContactPage() {
                 >
                   {branch.embedMap && (
                     <div className="h-56 relative w-full overflow-hidden border-b border-black/5 bg-bg-soft">
+                      {!mapsLoaded[branch.title] && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-bg-soft z-10">
+                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        </div>
+                      )}
                       <iframe
                         src={branch.embedMap}
                         width="100%"
@@ -442,6 +449,7 @@ export default function ContactPage() {
                         loading="lazy"
                         referrerPolicy="strict-origin-when-cross-origin"
                         className="w-full h-full"
+                        onLoad={() => setMapsLoaded((prev) => ({ ...prev, [branch.title]: true }))}
                       />
                     </div>
                   )}

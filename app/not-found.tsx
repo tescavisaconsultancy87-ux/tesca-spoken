@@ -1,13 +1,8 @@
-import type { Metadata } from 'next';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
-import { ArrowRight, Home, HelpCircle } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'Page Not Found – TESCA Spoken English',
-  description: 'Sorry, the page you are looking for does not exist.',
-};
+import { Home, HelpCircle } from 'lucide-react';
 
 export default function CustomNotFound() {
   return (
@@ -34,17 +29,17 @@ export default function CustomNotFound() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                  <a href="/" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
+                  <Link href="/" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
                     <Home className="h-4 w-4" />
                     Back to Home
-                  </a>
-                  <a 
+                  </Link>
+                  <Link 
                     href="/faq" 
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-150 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all"
                   >
                     <HelpCircle className="h-4 w-4" />
                     Browse FAQs
-                  </a>
+                  </Link>
                 </div>
               </div>
 

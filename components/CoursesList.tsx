@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { CheckCircle, Clock, BarChart3, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { COURSES } from '@/lib/data/content';
@@ -158,7 +159,7 @@ export default function CoursesList() {
                   const enrollHref = planParam ? `/pricing?plan=${planParam}` : '/pricing';
                   
                   return (
-                    <a
+                    <Link
                       href={enrollHref}
                       className={`flex-1 btn-warm text-sm ${
                         isPopular ? '' : 'btn-primary'
@@ -167,15 +168,15 @@ export default function CoursesList() {
                     >
                       Enroll Now
                       <ArrowRight className="h-3.5 w-3.5" />
-                    </a>
+                    </Link>
                   );
                 })()}
-                <a
+                <Link
                   href="/?demo=true"
                   className="btn-secondary text-sm"
                 >
                   Free Demo
-                </a>
+                </Link>
               </div>
             </div>
           </div>

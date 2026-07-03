@@ -381,6 +381,7 @@ export default function PricingPage() {
                     src="/pricing_hero.jpg"
                     alt="TESCA Pricing Illustration"
                     className="w-full h-full object-contain"
+                    fetchPriority="high"
                   />
                 </div>
               </div>

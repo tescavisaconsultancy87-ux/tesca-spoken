@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
@@ -89,6 +90,7 @@ export default function CoursesPage() {
                     src="/courses_hero.png"
                     alt="TESCA Courses Illustration"
                     className="w-full h-full object-contain"
+                    fetchPriority="high"
                   />
                 </div>
               </div>
@@ -194,14 +196,14 @@ export default function CoursesPage() {
                   course for your current level and goals.
                 </p>
                 <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                  <a href="/?demo=true" className="btn-warm">
+                  <Link href="/?demo=true" className="btn-warm">
                     Book Free Counselling
                     <ArrowRight className="h-4 w-4" />
-                  </a>
-                  <a href="/pricing" className="inline-flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white transition-colors">
+                  </Link>
+                  <Link href="/pricing" className="inline-flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white transition-colors">
                     View Pricing Plans
                     <ArrowRight className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
