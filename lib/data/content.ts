@@ -159,7 +159,7 @@ export const TESTIMONIALS = [
     review:
       'TESCA transformed my approach to English. I went from Band 5.5 to Band 8.0 in just 8 weeks. The trainers genuinely care about your progress and the mock tests are incredibly realistic. I am now studying at the University of Melbourne.',
     photo: 'https://images.pexels.com/photos/5905902/pexels-photo-5905902.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-    location: 'Melbourne, Australia',
+    location: 'Surat, India',
   },
   {
     name: 'Karthik Reddy',
@@ -168,7 +168,7 @@ export const TESTIMONIALS = [
     review:
       'I was terrified of speaking in meetings. After 4 months at TESCA, I gave a presentation to 200 people without breaking a sweat. The interactive classes forced me to practice every single day. Worth every rupee.',
     photo: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-    location: 'Bangalore, India',
+    location: 'Surat, India',
   },
   {
     name: 'Sneha Patel',
@@ -177,7 +177,7 @@ export const TESTIMONIALS = [
     review:
       'Scored 88 in PTE after just 5 weeks of training. The AI-scored mock tests and speaking templates were game-changers. TESCA does not just teach English — they teach you how to crack the exam strategically.',
     photo: 'https://images.pexels.com/photos/1858175/pexels-photo-1858175.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-    location: 'Toronto, Canada',
+    location: 'Surat, India',
   },
   {
     name: 'Mohammed Ali',
@@ -195,7 +195,7 @@ export const TESTIMONIALS = [
     review:
       'I joined as a complete beginner who could barely introduce myself. TESCA built my foundation brick by brick with patience and encouragement. Six months later, I can hold full conversations in English. Life-changing.',
     photo: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-    location: 'Kochi, India',
+    location: 'Surat, India',
   },
   {
     name: 'Vikram Singh',
@@ -204,7 +204,7 @@ export const TESTIMONIALS = [
     review:
       'The writing evaluation was the most valuable part. My trainer went line-by-line through every essay and showed me exactly where I was losing marks. Band 7.5 achieved. Highly recommend TESCA to anyone serious about IELTS.',
     photo: 'https://images.pexels.com/photos/2014427/pexels-photo-2014427.jpeg?auto=compress&cs=tinysrgb&w=200&h=200&fit=crop',
-    location: 'London, UK',
+    location: 'Surat, India',
   },
 ];
 

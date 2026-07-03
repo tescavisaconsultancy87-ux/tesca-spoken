@@ -82,6 +82,8 @@ export default function AdminStudentsPage() {
   const [validationError, setValidationError] = useState('');
   const [successCredentials, setSuccessCredentials] = useState<{ email: string; password: string; warning?: string } | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; role: 'student' | 'tutor' | 'admin' } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const [newForm, setNewForm] = useState({
     name: '',
@@ -214,6 +216,8 @@ export default function AdminStudentsPage() {
 
   const handleDeleteUser = (id: string, role: 'student' | 'tutor' | 'admin') => {
     setDeleteConfirm({ id, role });
+    setDeleteError('');
+    setIsDeleting(false);
   };
 
   const handleToggleStatus = (id: string, role: 'student' | 'tutor' | 'admin', status: 'active' | 'suspended') => {
@@ -793,7 +797,7 @@ export default function AdminStudentsPage() {
       </div>
 
       {/* Delete Confirmation Alert Dialog */}
-      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}>
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open) => { if (!open) { setDeleteConfirm(null); setDeleteError(''); setIsDeleting(false); } }}>
         <AlertDialogPortal>
           <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
           <AlertDialogPopup
@@ -812,28 +816,71 @@ export default function AdminStudentsPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
 
+            {deleteError && (
+              <div className="mt-4 rounded-xl bg-red-50 border border-red-100 p-3.5 text-xs font-semibold text-red-600 text-center">
+                {deleteError}
+              </div>
+            )}
+
             <AlertDialogFooter className="mt-6 flex justify-end gap-3 w-full">
               <AlertDialogClose className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-200">
                 Cancel
               </AlertDialogClose>
               <button
                 type="button"
+                disabled={isDeleting}
                 onClick={async () => {
                   if (deleteConfirm) {
-                    await db.deleteStudentProfile(deleteConfirm.id);
-                    if (deleteConfirm.role === 'student') {
-                      setStudents(students.filter(s => s.id !== deleteConfirm.id));
-                    } else if (deleteConfirm.role === 'tutor') {
-                      setTutors(tutors.filter(t => t.id !== deleteConfirm.id));
-                    } else {
-                      setAdmins(admins.filter(a => a.id !== deleteConfirm.id));
+                    setIsDeleting(true);
+                    setDeleteError('');
+                    try {
+                      await ensureSupabaseClient();
+                      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                      if (supabase) {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        if (session?.access_token) {
+                          headers['Authorization'] = `Bearer ${session.access_token}`;
+                        }
+                      }
+
+                      const response = await fetch('/api/admin/delete-user', {
+                        method: 'POST',
+                        headers,
+                        body: JSON.stringify({ userId: deleteConfirm.id })
+                      });
+
+                      const result = await response.json();
+
+                      if (!response.ok) {
+                        throw new Error(result.error || 'Failed to delete account.');
+                      }
+
+                      if (deleteConfirm.role === 'student') {
+                        setStudents(students.filter(s => s.id !== deleteConfirm.id));
+                      } else if (deleteConfirm.role === 'tutor') {
+                        setTutors(tutors.filter(t => t.id !== deleteConfirm.id));
+                      } else {
+                        setAdmins(admins.filter(a => a.id !== deleteConfirm.id));
+                      }
+                      setDeleteConfirm(null);
+                    } catch (err: any) {
+                      console.error('Delete error:', err);
+                      setDeleteError(err.message || 'An error occurred. Please try again.');
+                    } finally {
+                      setIsDeleting(false);
                     }
-                    setDeleteConfirm(null);
                   }
                 }}
-                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft"
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft disabled:opacity-50"
               >
-                Delete Account
+                {isDeleting ? (
+                  <span className="flex items-center justify-center gap-1.5">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  'Delete Account'
+                )}
               </button>
             </AlertDialogFooter>
           </AlertDialogPopup>

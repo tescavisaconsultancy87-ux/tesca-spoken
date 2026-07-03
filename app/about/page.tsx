@@ -53,7 +53,7 @@ const VALUES = [
 ];
 
 const MILESTONES = [
-  { year: '2005', event: 'TESCA Founded in Bangalore with a batch of 12 students' },
+  { year: '2005', event: 'TESCA Founded in Surat with a batch of 12 students' },
   { year: '2008', event: 'Launched IELTS preparation program — 100% pass rate in Year 1' },
   { year: '2012', event: 'Expanded to 3 cities; crossed 1,000 alumni milestone' },
   { year: '2016', event: 'Introduced live online classes — now available globally' },
@@ -192,7 +192,7 @@ export default function AboutPage() {
                 </h2>
                 <div className="mt-6 space-y-4 text-ink-muted leading-relaxed">
                   <p>
-                    TESCA was born in a small room in Bangalore in 2005 with a simple belief:
+                    TESCA was born in a small room in Surat in 2005 with a simple belief:
                     <strong className="text-ink"> every student deserves world-class English education</strong>,
                     regardless of their background or location.
                   </p>

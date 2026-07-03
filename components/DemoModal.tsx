@@ -335,13 +335,23 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                     <DropdownMenuContent className="w-64 z-50">
                       <DropdownMenuHighlight>
                         <DropdownMenuHighlightItem>
-                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Online Zoom/Meet' }))}>
-                            Online Zoom/Meet
+                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Online — Zoom' }))}>
+                            Online — Zoom
                           </DropdownMenuItem>
                         </DropdownMenuHighlightItem>
                         <DropdownMenuHighlightItem>
-                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Offline Classroom (Surat)' }))}>
-                            Offline Classroom (Surat)
+                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Online — Google Meet' }))}>
+                            Online — Google Meet
+                          </DropdownMenuItem>
+                        </DropdownMenuHighlightItem>
+                        <DropdownMenuHighlightItem>
+                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Online — Mobile App' }))}>
+                            Online — Mobile App
+                          </DropdownMenuItem>
+                        </DropdownMenuHighlightItem>
+                        <DropdownMenuHighlightItem>
+                          <DropdownMenuItem onClick={() => setForm(f => ({ ...f, mode: 'Offline — Classroom (Surat)' }))}>
+                            Offline — Classroom (Surat)
                           </DropdownMenuItem>
                         </DropdownMenuHighlightItem>
                       </DropdownMenuHighlight>

@@ -4,6 +4,7 @@ import WhyTesca from '@/components/WhyTesca';
 import Courses from '@/components/Courses';
 import Journey from '@/components/Journey';
 import StudentSuccess from '@/components/StudentSuccess';
+import SchoolMarquee from '@/components/SchoolMarquee';
 import Testimonials from '@/components/Testimonials';
 import Trainers from '@/components/Trainers';
 import FreeTest from '@/components/FreeTest';
@@ -31,6 +32,7 @@ export default async function Home() {
         <Courses />
         <Journey />
         <StudentSuccess />
+        <SchoolMarquee />
         <Testimonials />
         <Trainers />
         {showFreeTest && <FreeTest />}
