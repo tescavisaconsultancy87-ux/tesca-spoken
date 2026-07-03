@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Award, BadgeCheck, Users, Briefcase } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
@@ -62,11 +63,12 @@ export default function Trainers() {
                 <article className="group relative h-full overflow-hidden rounded-3xl border border-black/5 bg-white shadow-soft transition-all duration-500 hover:-translate-y-2 hover:shadow-soft-lg">
                   {/* Photo */}
                   <div className="relative aspect-[4/5] overflow-hidden">
-                    <img
+                    <Image
                       src={trainer.photo}
                       alt={`Photo of ${trainer.name}, ${trainer.role}`}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 250px"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
+import Image from 'next/image';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import { WHATSAPP_URL } from '@/lib/data/content';
@@ -172,11 +173,13 @@ export default function ContactPage() {
               {/* Right Column: AI Generated Image */}
               <div className="lg:col-span-5 flex justify-center">
                 <div className="relative w-full max-w-[380px] lg:max-w-none aspect-square overflow-hidden rounded-3xl border border-black/5 bg-white p-4 shadow-soft-lg">
-                  <img
+                  <Image
                     src="/contact_hero.png"
                     alt="TESCA Contact Illustration"
-                    className="w-full h-full object-contain"
-                    fetchPriority="high"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 380px, 450px"
+                    className="object-contain p-4"
                   />
                 </div>
               </div>

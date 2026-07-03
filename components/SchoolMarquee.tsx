@@ -1,6 +1,7 @@
 'use client';
 
 import SectionHeading from '@/components/SectionHeading';
+import Image from 'next/image';
 
 const SCHOOLS = [
   { name: 'Ashadeep Group of Schools', logo: '/schools/Ashadeep_Group_of_Schools.png' },
@@ -52,11 +53,12 @@ export default function SchoolMarquee() {
             >
               {/* Logo Area */}
               <div className="flex flex-1 items-center justify-center w-full">
-                <img
+                <Image
                   src={school.logo}
                   alt={`${school.name} logo`}
+                  width={120}
+                  height={48}
                   className="max-h-12 max-w-full object-contain transition-all duration-300 hover:scale-105"
-                  loading="lazy"
                 />
               </div>
               

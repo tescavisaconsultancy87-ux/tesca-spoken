@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
@@ -21,6 +22,14 @@ export const metadata: Metadata = {
   title: 'English Courses — TESCA Spoken English | Beginner to Advanced',
   description:
     'Explore TESCA\'s complete range of English courses — Spoken English Basic, Advanced, IELTS preparation, PTE, and Interview Prep. Live classes, flexible schedules, expert trainers.',
+  alternates: {
+    canonical: 'https://tesca.co/courses',
+  },
+  openGraph: {
+    title: 'English Courses — TESCA Spoken English | Beginner to Advanced',
+    description: 'Explore TESCA\'s English courses: Spoken English Basic/Advanced, IELTS, PTE, and Interview Prep.',
+    url: 'https://tesca.co/courses',
+  },
 };
 
 const FEATURES = [
@@ -40,8 +49,98 @@ const LEVEL_COLORS: Record<string, { bg: string; text: string; border: string }>
 };
 
 export default function CoursesPage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Courses',
+        'item': 'https://tesca.co/courses'
+      }
+    ]
+  };
+
+  const courseListSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    'itemListElement': [
+      {
+        '@type': 'Course',
+        'position': 1,
+        'name': 'Spoken English Basic',
+        'description': 'Master grammar foundations, vocabulary building, basic conversation, and pronunciation basics in 3 months.',
+        'provider': {
+          '@type': 'EducationalOrganization',
+          'name': 'TESCA Spoken English',
+          'sameAs': 'https://tesca.co'
+        }
+      },
+      {
+        '@type': 'Course',
+        'position': 2,
+        'name': 'Spoken English Advanced',
+        'description': 'Gain advanced fluency, public speaking, business communication, and a neutral accent in 4 months.',
+        'provider': {
+          '@type': 'EducationalOrganization',
+          'name': 'TESCA Spoken English',
+          'sameAs': 'https://tesca.co'
+        }
+      },
+      {
+        '@type': 'Course',
+        'position': 3,
+        'name': 'IELTS Preparation',
+        'description': 'Comprehensive 6-week training covering all 4 modules, 15+ mock tests, and strategies for achieving Band 7.5+.',
+        'provider': {
+          '@type': 'EducationalOrganization',
+          'name': 'TESCA Spoken English',
+          'sameAs': 'https://tesca.co'
+        }
+      },
+      {
+        '@type': 'Course',
+        'position': 4,
+        'name': 'PTE Preparation',
+        'description': '5-week PTE course with AI-scored mock tests, speaking templates, writing frameworks, and a target 65+ score guarantee.',
+        'provider': {
+          '@type': 'EducationalOrganization',
+          'name': 'TESCA Spoken English',
+          'sameAs': 'https://tesca.co'
+        }
+      },
+      {
+        '@type': 'Course',
+        'position': 5,
+        'name': 'Interview Preparation',
+        'description': '4-week interview preparation containing mock interviews, HR question mastery, resume review, and confidence coaching.',
+        'provider': {
+          '@type': 'EducationalOrganization',
+          'name': 'TESCA Spoken English',
+          'sameAs': 'https://tesca.co'
+        }
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@graph': [breadcrumbSchema, courseListSchema]
+          })
+        }}
+      />
       <Navbar />
 
       <main>
@@ -86,11 +185,13 @@ export default function CoursesPage() {
               {/* Right Column: AI Generated Image */}
               <div className="lg:col-span-5 flex justify-center">
                 <div className="relative w-full max-w-[380px] lg:max-w-none aspect-square overflow-hidden rounded-3xl border border-black/5 bg-white p-4 shadow-soft-lg">
-                  <img
+                  <Image
                     src="/courses_hero.png"
                     alt="TESCA Courses Illustration"
-                    className="w-full h-full object-contain"
-                    fetchPriority="high"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 380px, 450px"
+                    className="object-contain p-4"
                   />
                 </div>
               </div>

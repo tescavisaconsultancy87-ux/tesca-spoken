@@ -1,0 +1,21 @@
+{
+  "name": "TESCA Spoken English",
+  "short_name": "TESCA",
+  "description": "Master English Fluency from Basic to Advanced",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#062426",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

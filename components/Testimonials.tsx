@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { Star, Quote, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
 import { TESTIMONIALS } from '@/lib/data/content';
@@ -73,11 +74,12 @@ export default function Testimonials() {
 
                   {/* Author */}
                   <figcaption className="mt-6 flex items-center gap-4 border-t border-black/5 pt-6">
-                    <img
+                    <Image
                       src={t.photo}
                       alt={`Photo of ${t.name}`}
+                      width={56}
+                      height={56}
                       className="h-14 w-14 rounded-full object-cover ring-2 ring-primary-100"
-                      loading="lazy"
                     />
                     <div>
                       <p className="font-heading text-sm font-bold text-ink">

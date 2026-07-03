@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Poppins, Inter } from 'next/font/google';
 import './globals.css';
 import OfferBanner from '@/components/OfferBanner';
@@ -20,6 +20,12 @@ const inter = Inter({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#062426',
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://tesca.co'),
   title: 'TESCA Spoken English — Master English Fluency from Basic to Advanced',
@@ -34,6 +40,11 @@ export const metadata: Metadata = {
     'english speaking course',
     'TESCA',
   ],
+  authors: [{ name: 'TESCA Spoken English', url: 'https://tesca.co' }],
+  publisher: 'TESCA Spoken English',
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     title: 'TESCA Spoken English — Master English Fluency',
     description:
@@ -42,11 +53,20 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://tesca.co',
     siteName: 'TESCA Spoken English',
+    images: [
+      {
+        url: '/images/excited_man.png', // Fallback OG Image if any specific page doesn't override it
+        width: 1200,
+        height: 630,
+        alt: 'TESCA Spoken English',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'TESCA Spoken English',
     description: 'Master English Fluency from Basic to Advanced — Anytime, Anywhere.',
+    images: ['/images/excited_man.png'],
   },
   robots: {
     index: true,
@@ -57,6 +77,7 @@ export const metadata: Metadata = {
     shortcut: '/favicon.png',
     apple: '/favicon.png',
   },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

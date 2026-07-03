@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
@@ -20,6 +21,15 @@ export const metadata: Metadata = {
   title: 'About TESCA Spoken English — Our Story, Mission & Expert Team',
   description:
     'Since 2005, TESCA has helped 5,000+ students master English fluency. Meet our Cambridge-certified trainers and learn about our mission to make quality English education accessible to all.',
+  alternates: {
+    canonical: 'https://tesca.co/about',
+  },
+  openGraph: {
+    title: 'About TESCA Spoken English — Our Story, Mission & Expert Team',
+    description:
+      'Since 2005, TESCA has helped 5,000+ students master English fluency. Meet our Cambridge-certified trainers.',
+    url: 'https://tesca.co/about',
+  },
 };
 
 const VALUES = [
@@ -166,11 +176,13 @@ export default function AboutPage() {
               {/* Right Column: AI Generated Image */}
               <div className="lg:col-span-5 flex justify-center">
                 <div className="relative w-full max-w-[380px] lg:max-w-none aspect-square overflow-hidden rounded-3xl border border-black/5 bg-white p-4 shadow-soft-lg">
-                  <img
+                  <Image
                     src="/about_hero.png"
                     alt="TESCA About Us Illustration"
-                    className="w-full h-full object-contain"
-                    fetchPriority="high"
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 380px, 450px"
+                    className="object-contain p-4"
                   />
                 </div>
               </div>
@@ -362,10 +374,12 @@ export default function AboutPage() {
                   <div className="flex flex-col items-center">
                     {/* Portrait Photo Container */}
                     <div className="relative w-28 h-28 mb-5 rounded-full overflow-hidden border-2 border-primary-800/60 group-hover:border-primary-400 transition-colors duration-300">
-                      <img
+                      <Image
                         src={member.photo}
                         alt={member.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        sizes="112px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
 
@@ -424,11 +438,12 @@ export default function AboutPage() {
                   className="group overflow-hidden rounded-2xl bg-white shadow-soft hover:shadow-soft-xl transition-all duration-300 hover:-translate-y-1"
                 >
                   <div className="relative h-56 overflow-hidden">
-                    <img
+                    <Image
                       src={trainer.photo}
                       alt={trainer.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 250px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-primary-900/60 via-transparent to-transparent" />
                     <div className="absolute bottom-3 left-3">

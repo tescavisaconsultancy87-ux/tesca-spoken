@@ -6,6 +6,9 @@ import FloatingActions from '@/components/FloatingActions';
 export const metadata: Metadata = {
   title: 'Privacy Policy - TESCA Spoken English',
   description: 'Read our privacy policy to understand how we collect, use, and protect your personal information.',
+  alternates: {
+    canonical: 'https://tesca.co/privacy',
+  },
 };
 
 export default function PrivacyPage() {

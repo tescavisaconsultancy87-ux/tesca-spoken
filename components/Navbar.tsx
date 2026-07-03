@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { Menu, X, CalendarCheck, LogIn } from 'lucide-react';
 import { NAV_LINKS, WHATSAPP_URL } from '@/lib/data/content';
@@ -41,7 +42,7 @@ export default function Navbar() {
     >
       <nav className="container-x flex h-14 items-center justify-between py-2 lg:h-16">
         <Link href="/" className="group flex items-center gap-2" aria-label="TESCA home">
-          <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-8 lg:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]" />
+          <Image src="/Tesca_logo.png" alt="TESCA Logo" width={150} height={36} priority className="h-8 lg:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]" />
         </Link>
 
         {/* Desktop nav */}

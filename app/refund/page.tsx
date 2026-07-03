@@ -6,6 +6,9 @@ import FloatingActions from '@/components/FloatingActions';
 export const metadata: Metadata = {
   title: 'Refund Policy - TESCA Spoken English',
   description: 'Read our refund policy regarding spoken English and competitive training courses.',
+  alternates: {
+    canonical: 'https://tesca.co/refund',
+  },
 };
 
 export default function RefundPage() {

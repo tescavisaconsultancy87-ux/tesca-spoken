@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Mail,
   Phone,
@@ -141,7 +142,7 @@ export default function Footer() {
           {/* Company info */}
           <div className="lg:col-span-4">
             <Link href="/" className="flex items-center gap-2">
-              <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-9 w-auto object-contain" />
+              <Image src="/Tesca_logo.png" alt="TESCA Logo" width={150} height={36} className="h-9 w-auto object-contain" />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary-200">
               TESCA Spoken English is a premier institute dedicated to

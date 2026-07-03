@@ -6,6 +6,9 @@ import FloatingActions from '@/components/FloatingActions';
 export const metadata: Metadata = {
   title: 'Terms of Service - TESCA Spoken English',
   description: 'Read our terms of service to understand the rules and guidelines for using our website and services.',
+  alternates: {
+    canonical: 'https://tesca.co/terms',
+  },
 };
 
 export default function TermsPage() {

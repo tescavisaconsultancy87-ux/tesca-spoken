@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { CalendarCheck, BookOpen, Star, Users, Award, GraduationCap, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
@@ -62,11 +63,13 @@ export default function Hero() {
 
         {/* Background illustration on the right */}
         <div className="absolute top-0 right-0 bottom-0 w-full lg:w-[48%] xl:w-[44%] z-[5] pointer-events-none select-none flex items-end lg:items-center justify-end hidden lg:flex">
-          <img
+          <Image
             src="/hero_image.png"
             alt="TESCA Students"
-            className="w-full h-full object-contain object-bottom lg:object-right"
-            fetchPriority="high"
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            className="object-contain object-bottom lg:object-right"
           />
           {/* Soft fade overlay on the left to blend with the text section */}
           <div className="absolute inset-y-0 left-0 w-full lg:w-48 bg-gradient-to-r from-white via-white/80 to-transparent hidden lg:block" />
@@ -110,11 +113,13 @@ export default function Hero() {
 
             {/* Mobile Hero Image */}
             <div className="relative w-full max-w-sm mx-auto aspect-[4/3] pointer-events-none select-none lg:hidden mt-4">
-              <img
+              <Image
                 src="/hero_image.png"
                 alt="TESCA Students"
-                className="w-full h-full object-contain"
-                fetchPriority="high"
+                fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 400px"
+                className="object-contain"
               />
             </div>
 
