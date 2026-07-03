@@ -57,18 +57,22 @@ const BRANCHES = [
   {
     title: 'Branch 1 - Sarthana',
     address: '110,111,112 Royal Arcade, Opp. Deep Kamal Mall, Sarthana Jakatnaka, Surat.',
+    embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29754.938162078433!2d72.8858624!3d21.21728!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f8647b359b3%3A0x11f64af5f5637cfe!2sTESCA%20VISA%20CONSULTANCY!5e0!3m2!1sen!2sin!4v1783070611318!5m2!1sen!2sin',
   },
   {
     title: 'Branch 2 - Mota Varachha',
     address: '106-107, Ambika Pinnacle, Lajamani Chowk, Mota Varachha, Surat.',
+    embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3718.8386097921198!2d72.88554337597363!3d21.238247480549106!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04fffa7abe0fb%3A0xd7c140b507f0e691!2sTESCA%20SPOKEN%20ENGLISH%20AND%20VISA%20COUNSULTANCY!5e0!3m2!1sen!2sin!4v1783070684461!5m2!1sen!2sin',
   },
   {
     title: 'Branch 3 - Hirabaug',
     address: '39, Ambika Vijay Soc., 2nd Floor, Near Surat Super Store, Hirabaug, Surat.',
+    embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119066.52982230402!2d72.73989467475143!3d21.15918020304383!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04e59411d1563%3A0xfe4558290938b042!2sSurat%2C%20Gujarat!5e0!3m2!1sen!2sin!4v1783070800000!5m2!1sen!2sin',
   },
   {
     title: 'Branch 4 - Yogichowk',
     address: '2nd Floor, Bhavna Park Soc., Opp. Paladium Mall, Above Prasang Fashion, Yogichowk, Surat.',
+    embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3719.4620727097463!2d72.88151159678955!3d21.21351790000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f00099b1a45%3A0x790d12f6f9c10d20!2sTESCA%20SPOKEN%20ENGLISH%20%26%20COMPUTER%20EDUCATION!5e0!3m2!1sen!2sin!4v1783070752116!5m2!1sen!2sin',
   },
 ];
 
@@ -427,21 +431,23 @@ export default function ContactPage() {
                   key={branch.title}
                   className="overflow-hidden rounded-[1.5rem] border border-black/5 bg-white shadow-soft transition-all hover:shadow-soft-lg"
                 >
-                  <div className="bg-primary-50 h-40 flex items-center justify-center relative">
-                    <div className="text-center relative z-10">
-                      <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white mx-auto">
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                      <p className="font-heading font-bold text-ink">{branch.title}</p>
+                  {branch.embedMap && (
+                    <div className="h-56 relative w-full overflow-hidden border-b border-black/5 bg-bg-soft">
+                      <iframe
+                        src={branch.embedMap}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        allowFullScreen
+                        loading="lazy"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        className="w-full h-full"
+                      />
                     </div>
-                    <div className="pointer-events-none absolute inset-0 opacity-5"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23067779' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                      }}
-                    />
-                  </div>
-                  <div className="p-4">
-                    <p className="text-xs text-ink-muted leading-relaxed">{branch.address}</p>
+                  )}
+                  <div className="p-5">
+                    <h3 className="font-heading font-bold text-ink text-sm mb-1">{branch.title}</h3>
+                    <p className="text-xs text-ink-muted leading-relaxed min-h-[32px]">{branch.address}</p>
                     <a
                       href={`https://www.google.com/maps/search/${encodeURIComponent(branch.address)}`}
                       target="_blank"
