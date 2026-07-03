@@ -124,8 +124,57 @@ export default function ContactPage() {
     }
   };
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Contact Us',
+        'item': 'https://tesca.co/contact'
+      }
+    ]
+  };
+
+  const contactPageSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'ContactPage',
+    'name': 'Contact TESCA Spoken English',
+    'description': 'Contact details and branch locations for TESCA Spoken English in Surat.',
+    'url': 'https://tesca.co/contact',
+    'mainEntity': {
+      '@type': 'EducationalBusiness',
+      'name': 'TESCA Spoken English',
+      'telephone': '+91 98241 52731',
+      'areaServed': 'Surat, Gujarat, India',
+      'address': {
+        '@type': 'PostalAddress',
+        'streetAddress': 'Royal Arcade, Sarthana Jakatnaka / Ambika Pinnacle, Mota Varachha',
+        'addressLocality': 'Surat',
+        'addressRegion': 'Gujarat',
+        'postalCode': '395006',
+        'addressCountry': 'IN'
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-bg-soft">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(contactPageSchema) }}
+      />
       <Navbar />
 
       <main>

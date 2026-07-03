@@ -318,8 +318,31 @@ export default function PricingPage() {
     }
   }, []);
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Pricing',
+        'item': 'https://tesca.co/pricing'
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Navbar />
 
       <main>

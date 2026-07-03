@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 // Paths that require an active authenticated session
 const PROTECTED_PATHS = ['/admin', '/tutor', '/student'];
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') || '';
   const xProto = request.headers.get('x-forwarded-proto') || '';
@@ -63,6 +63,7 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
+  runtime: 'experimental-edge',
   matcher: [
     // Match all routes except static files, api routes, and _next internals
     '/((?!_next/static|_next/image|favicon\\.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',

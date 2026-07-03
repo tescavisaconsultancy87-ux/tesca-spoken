@@ -43,7 +43,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'TESCA Spoken English', url: 'https://tesca.co' }],
   publisher: 'TESCA Spoken English',
   alternates: {
-    canonical: '/',
+    canonical: 'https://tesca.co/',
   },
   openGraph: {
     title: 'TESCA Spoken English — Master English Fluency',
@@ -51,11 +51,11 @@ export const metadata: Metadata = {
       'Expert-led English learning: Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
     type: 'website',
     locale: 'en_US',
-    url: 'https://tesca.co',
+    url: 'https://tesca.co/',
     siteName: 'TESCA Spoken English',
     images: [
       {
-        url: '/images/excited_man.png', // Fallback OG Image if any specific page doesn't override it
+        url: '/og-image.jpg', // Fallback OG Image
         width: 1200,
         height: 630,
         alt: 'TESCA Spoken English',
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TESCA Spoken English',
     description: 'Master English Fluency from Basic to Advanced — Anytime, Anywhere.',
-    images: ['/images/excited_man.png'],
+    images: ['/og-image.jpg'],
   },
   robots: {
     index: true,

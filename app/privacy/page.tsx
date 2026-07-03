@@ -4,16 +4,61 @@ import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy - TESCA Spoken English',
-  description: 'Read our privacy policy to understand how we collect, use, and protect your personal information.',
+  title: 'Privacy Policy — TESCA Spoken English',
+  description:
+    'Read the Privacy Policy of TESCA Spoken English to understand how we protect, collect, and handle your personal information.',
   alternates: {
     canonical: 'https://tesca.co/privacy',
+  },
+  openGraph: {
+    title: 'Privacy Policy — TESCA Spoken English',
+    description:
+      'Read the Privacy Policy of TESCA Spoken English to understand how we protect, collect, and handle your personal information.',
+    url: 'https://tesca.co/privacy',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Privacy Policy — TESCA Spoken English',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Privacy Policy — TESCA Spoken English',
+    description:
+      'Read the Privacy Policy of TESCA Spoken English to understand how we protect, collect, and handle your personal information.',
+    images: ['/og-image.jpg'],
   },
 };
 
 export default function PrivacyPage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Privacy Policy',
+        'item': 'https://tesca.co/privacy'
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Navbar />
       <main>
         <div className="container-x py-12">

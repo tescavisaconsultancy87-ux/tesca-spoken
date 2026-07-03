@@ -4,16 +4,61 @@ import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 
 export const metadata: Metadata = {
-  title: 'Refund Policy - TESCA Spoken English',
-  description: 'Read our refund policy regarding spoken English and competitive training courses.',
+  title: 'Refund & Cancellation Policy — TESCA Spoken English',
+  description:
+    'Review the Refund and Cancellation Policy of TESCA Spoken English. Details on course enrollments and batch assignments.',
   alternates: {
     canonical: 'https://tesca.co/refund',
+  },
+  openGraph: {
+    title: 'Refund & Cancellation Policy — TESCA Spoken English',
+    description:
+      'Review the Refund and Cancellation Policy of TESCA Spoken English. Details on course enrollments and batch assignments.',
+    url: 'https://tesca.co/refund',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Refund & Cancellation Policy — TESCA Spoken English',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Refund & Cancellation Policy — TESCA Spoken English',
+    description:
+      'Review the Refund and Cancellation Policy of TESCA Spoken English. Details on course enrollments and batch assignments.',
+    images: ['/og-image.jpg'],
   },
 };
 
 export default function RefundPage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Refund Policy',
+        'item': 'https://tesca.co/refund'
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Navbar />
       <main className="pt-24 pb-12">
         <div className="container-x py-12">

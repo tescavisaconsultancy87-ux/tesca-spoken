@@ -29,6 +29,21 @@ export const metadata: Metadata = {
     description:
       'Since 2005, TESCA has helped 5,000+ students master English fluency. Meet our Cambridge-certified trainers.',
     url: 'https://tesca.co/about',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'About TESCA Spoken English — Our Story, Mission & Expert Team',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'About TESCA Spoken English — Our Story, Mission & Expert Team',
+    description:
+      'Since 2005, TESCA has helped 5,000+ students master English fluency. Meet our Cambridge-certified trainers.',
+    images: ['/og-image.jpg'],
   },
 };
 
@@ -126,8 +141,31 @@ const FACULTY_TEAM = [
 ];
 
 export default function AboutPage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'About Us',
+        'item': 'https://tesca.co/about'
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Navbar />
 
       <main>

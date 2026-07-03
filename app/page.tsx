@@ -26,6 +26,20 @@ export const metadata: Metadata = {
     title: 'TESCA Spoken English — Master English Fluency from Basic to Advanced',
     description: 'Master English Fluency with TESCA\'s expert-led classes, IELTS & PTE prep. Trusted since 2005.',
     url: 'https://tesca.co/',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'TESCA Spoken English — Master English Fluency',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TESCA Spoken English — Master English Fluency from Basic to Advanced',
+    description: 'Master English Fluency with TESCA\'s expert-led classes, IELTS & PTE prep. Trusted since 2005.',
+    images: ['/og-image.jpg'],
   },
 };
 

@@ -4,16 +4,61 @@ import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service - TESCA Spoken English',
-  description: 'Read our terms of service to understand the rules and guidelines for using our website and services.',
+  title: 'Terms of Service — TESCA Spoken English',
+  description:
+    'Review the Terms of Service for TESCA Spoken English, governing your use of our website, courses, and educational services.',
   alternates: {
     canonical: 'https://tesca.co/terms',
+  },
+  openGraph: {
+    title: 'Terms of Service — TESCA Spoken English',
+    description:
+      'Review the Terms of Service for TESCA Spoken English, governing your use of our website, courses, and educational services.',
+    url: 'https://tesca.co/terms',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Terms of Service — TESCA Spoken English',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Terms of Service — TESCA Spoken English',
+    description:
+      'Review the Terms of Service for TESCA Spoken English, governing your use of our website, courses, and educational services.',
+    images: ['/og-image.jpg'],
   },
 };
 
 export default function TermsPage() {
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'Terms of Service',
+        'item': 'https://tesca.co/terms'
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Navbar />
       <main>
         <div className="container-x py-12">

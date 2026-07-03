@@ -184,8 +184,31 @@ export default function AssessmentPage() {
   const currentQuestion = QUESTIONS[currentIdx];
   const progressPercent = Math.round(((currentIdx + 1) / QUESTIONS.length) * 100);
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    'itemListElement': [
+      {
+        '@type': 'ListItem',
+        'position': 1,
+        'name': 'Home',
+        'item': 'https://tesca.co'
+      },
+      {
+        '@type': 'ListItem',
+        'position': 2,
+        'name': 'English Assessment',
+        'item': 'https://tesca.co/assessment'
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col justify-between">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <Navbar />
 
       <main className="flex-grow pt-40 pb-20 lg:pt-48 lg:pb-28 bg-gradient-to-b from-primary-50/20 via-white to-secondary-50/20">
