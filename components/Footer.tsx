@@ -289,11 +289,16 @@ export default function Footer() {
                 Refund Policy
               </Link>
             </div>
-            <div className="flex items-center gap-1 text-xs text-primary-300 sm:border-l sm:border-white/15 sm:pl-6">
+            <a
+              href="https://portfolio-avadh.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-xs text-primary-300 transition-colors hover:text-white sm:border-l sm:border-white/15 sm:pl-6"
+            >
               <span>Developed & Managed by</span>
               <strong className="font-bold text-white">AD</strong>
               <span className="h-1.5 w-1.5 rounded-full bg-rose-500 inline-block ml-0.5" />
-            </div>
+            </a>
           </div>
         </div>
       </div>
