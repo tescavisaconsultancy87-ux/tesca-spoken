@@ -263,30 +263,37 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 sm:flex-row">
+        <div className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-8 md:flex-row">
           <p className="text-xs text-primary-300">
             &copy; {new Date().getFullYear()} TESCA Spoken English. All rights
             reserved.
           </p>
-          <div className="flex gap-6">
-            <Link
-              href="/privacy"
-              className="text-xs text-primary-300 transition-colors hover:text-white"
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-xs text-primary-300 transition-colors hover:text-white"
-            >
-              Terms of Service
-            </Link>
-            <Link
-              href="/refund"
-              className="text-xs text-primary-300 transition-colors hover:text-white"
-            >
-              Refund Policy
-            </Link>
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
+            <div className="flex gap-6">
+              <Link
+                href="/privacy"
+                className="text-xs text-primary-300 transition-colors hover:text-white"
+              >
+                Privacy Policy
+              </Link>
+              <Link
+                href="/terms"
+                className="text-xs text-primary-300 transition-colors hover:text-white"
+              >
+                Terms of Service
+              </Link>
+              <Link
+                href="/refund"
+                className="text-xs text-primary-300 transition-colors hover:text-white"
+              >
+                Refund Policy
+              </Link>
+            </div>
+            <div className="flex items-center gap-1 text-xs text-primary-300 sm:border-l sm:border-white/15 sm:pl-6">
+              <span>Developed & Managed by</span>
+              <strong className="font-bold text-white">AD</strong>
+              <span className="h-1.5 w-1.5 rounded-full bg-rose-500 inline-block ml-0.5" />
+            </div>
           </div>
         </div>
       </div>
