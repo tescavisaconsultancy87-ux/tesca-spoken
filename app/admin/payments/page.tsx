@@ -1,8 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Download, CreditCard, IndianRupee, ArrowUpRight, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Search, Download, CreditCard, IndianRupee, ArrowUpRight, CheckCircle2, AlertCircle, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { db } from '@/lib/db';
+import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
+import {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogClose,
+} from '@/components/animate-ui/primitives/base/alert-dialog';
 
 interface Transaction {
   id: string;
@@ -20,6 +32,101 @@ export default function AdminPaymentsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Edit & Delete Payment states
+  const [editingPayment, setEditingPayment] = useState<Transaction | null>(null);
+  const [editValidationError, setEditValidationError] = useState('');
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleOpenEditModal = (txn: Transaction) => {
+    setEditingPayment({ ...txn });
+    setEditValidationError('');
+  };
+
+  const handleEditPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingPayment) return;
+    setEditValidationError('');
+    setEditSubmitting(true);
+
+    try {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const response = await fetch('/api/admin/payments', {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          id: editingPayment.id,
+          student_name: editingPayment.student,
+          email: editingPayment.email,
+          amount: editingPayment.amount,
+          date: editingPayment.date,
+          method: editingPayment.method,
+          status: editingPayment.status
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update payment record.');
+      }
+
+      // Update state locally
+      setTransactions(transactions.map(t => t.id === editingPayment.id ? { ...editingPayment } : t));
+      setEditingPayment(null);
+    } catch (err: any) {
+      setEditValidationError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!deleteConfirmId) return;
+    setDeleteError('');
+    setIsDeleting(true);
+
+    try {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const response = await fetch('/api/admin/payments', {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ id: deleteConfirmId })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to delete payment record.');
+      }
+
+      // Update state locally
+      setTransactions(transactions.filter(t => t.id !== deleteConfirmId));
+      setDeleteConfirmId(null);
+    } catch (err: any) {
+      setDeleteError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     async function load() {
@@ -137,12 +244,13 @@ export default function AdminPaymentsPage() {
                 <th className="p-4 sm:p-5">Date</th>
                 <th className="p-4 sm:p-5">Method</th>
                 <th className="p-4 sm:p-5">Status</th>
+                <th className="p-4 sm:p-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 text-xs font-medium text-gray-700">
               {filteredTxns.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-12 text-center text-gray-400 font-medium">
+                  <td colSpan={7} className="p-12 text-center text-gray-400 font-medium">
                     No transaction entries found.
                   </td>
                 </tr>
@@ -175,6 +283,24 @@ export default function AdminPaymentsPage() {
                         {t.status}
                       </span>
                     </td>
+                    <td className="p-4 sm:p-5 text-right">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleOpenEditModal(t)}
+                          className="p-1.5 rounded-lg border border-gray-100 text-gray-650 hover:bg-gray-50 cursor-pointer"
+                          title="Edit Payment"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmId(t.id)}
+                          className="p-1.5 rounded-lg border border-gray-100 text-rose-600 hover:bg-rose-50 cursor-pointer"
+                          title="Delete Payment"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -182,6 +308,176 @@ export default function AdminPaymentsPage() {
           </table>
         </div>
       </div>
+
+      {/* Edit Payment Modal */}
+      {editingPayment && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
+            <div className="flex justify-between items-center pb-4 border-b border-gray-50">
+              <h3 className="text-base font-bold text-gray-800">Edit Payment Record</h3>
+              <button onClick={() => { setEditingPayment(null); setEditValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {editValidationError && (
+              <div className="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">
+                {editValidationError}
+              </div>
+            )}
+            <form onSubmit={handleEditPayment} className="space-y-4 pt-4">
+              {/* TXN ID */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Transaction ID</label>
+                <div className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-500 font-bold select-all">
+                  {editingPayment.id}
+                </div>
+              </div>
+
+              {/* Student Name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Student Name</label>
+                <input
+                  type="text"
+                  value={editingPayment.student}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, student: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Email Address</label>
+                <input
+                  type="email"
+                  value={editingPayment.email}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, email: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Amount */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Amount (INR)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editingPayment.amount}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, amount: Number(e.target.value) })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Date */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Date</label>
+                <input
+                  type="text"
+                  value={editingPayment.date}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, date: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Method */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Method</label>
+                <input
+                  type="text"
+                  value={editingPayment.method}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, method: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Status */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Status</label>
+                <select
+                  value={editingPayment.status}
+                  onChange={(e) => setEditingPayment({ ...editingPayment, status: e.target.value as any })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                >
+                  <option value="success">Success</option>
+                  <option value="failed">Failed</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+              </div>
+
+              <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
+                <button
+                  type="button"
+                  onClick={() => { setEditingPayment(null); setEditValidationError(''); }}
+                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {editSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={deleteConfirmId !== null} onOpenChange={(open) => { if (!open) { setDeleteConfirmId(null); setDeleteError(''); } }}>
+        <AlertDialogPortal>
+          <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+          <AlertDialogPopup
+            from="bottom"
+            className="sm:max-w-md border bg-white rounded-3xl p-6 shadow-2xl"
+          >
+            <AlertDialogHeader>
+              <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-lg font-bold text-center text-gray-800">
+                Delete Payment Record?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-center text-gray-500 mt-2">
+                Are you absolutely sure you want to delete this payment record ({deleteConfirmId})? This action will permanently remove it from the system and cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            {deleteError && (
+              <div className="mt-4 rounded-xl bg-red-50 border border-red-100 p-3.5 text-xs font-semibold text-red-600 text-center">
+                {deleteError}
+              </div>
+            )}
+
+            <AlertDialogFooter className="mt-6 flex justify-end gap-3 w-full">
+              <AlertDialogClose className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-200">
+                Cancel
+              </AlertDialogClose>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDeletePayment}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <span className="flex items-center justify-center gap-1.5">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Deleting...
+                  </span>
+                ) : (
+                  'Delete Record'
+                )}
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialogPortal>
+      </AlertDialog>
     </div>
   );
 }

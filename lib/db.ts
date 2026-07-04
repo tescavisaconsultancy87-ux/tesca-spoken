@@ -442,6 +442,7 @@ export const db = {
         id: p.id,
         name: p.name || 'Student User',
         email: p.email,
+        phone: p.phone,
         course: p.level ? `Spoken English — ${p.level}` : 'Spoken English Mastery',
         joinedDate: new Date(p.created_at).toLocaleDateString('en-IN', { month: 'short', day: '2-digit', year: 'numeric' }),
         status: 'active'
@@ -465,6 +466,7 @@ export const db = {
         id: p.id,
         name: p.name || 'Admin User',
         email: p.email,
+        phone: p.phone,
         joinedDate: new Date(p.created_at).toLocaleDateString('en-IN', { month: 'short', day: '2-digit', year: 'numeric' }),
         status: 'active'
       }));
@@ -487,6 +489,7 @@ export const db = {
         id: p.id,
         name: p.name || 'Tutor User',
         email: p.email,
+        phone: p.phone,
         joinedDate: new Date(p.created_at).toLocaleDateString('en-IN', { month: 'short', day: '2-digit', year: 'numeric' }),
         status: 'active'
       }));

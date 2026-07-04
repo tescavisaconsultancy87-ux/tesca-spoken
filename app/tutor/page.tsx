@@ -49,6 +49,15 @@ export default function TutorDashboardHome() {
     loadData();
   }, []);
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 min-h-[400px]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary/25 border-t-primary" />
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-3 animate-pulse">Loading Instructor Overview...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-scale-up">
       {/* Welcome Banner */}

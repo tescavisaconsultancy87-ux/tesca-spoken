@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, UserPlus, Filter, ShieldAlert, Check, X, Trash2, UserCog, Loader2 } from 'lucide-react';
+import { Search, UserPlus, Filter, ShieldAlert, Check, X, Trash2, UserCog, Loader2, Pencil } from 'lucide-react';
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { useAuth } from '@/context/AuthContext';
@@ -84,6 +84,104 @@ export default function AdminStudentsPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; role: 'student' | 'tutor' | 'admin' } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // Edit User State
+  const [editingUser, setEditingUser] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    role: 'student' | 'tutor' | 'admin';
+    course?: string;
+  } | null>(null);
+  const [editValidationError, setEditValidationError] = useState('');
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  const handleOpenEditModal = (user: any, role: 'student' | 'tutor' | 'admin') => {
+    setEditingUser({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone || '',
+      role: role,
+      course: role === 'student' ? user.course || 'Spoken English Mastery' : undefined
+    });
+    setEditValidationError('');
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setEditValidationError('');
+    setEditSubmitting(true);
+
+    const cleanedPhone = editingUser.phone.replace(/\D/g, '');
+    if (cleanedPhone.length !== 10) {
+      setEditValidationError('Phone number must be exactly 10 digits.');
+      setEditSubmitting(false);
+      return;
+    }
+
+    try {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const response = await fetch('/api/admin/edit-user', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          userId: editingUser.id,
+          name: editingUser.name,
+          email: editingUser.email,
+          phone: editingUser.phone,
+          role: editingUser.role,
+          course: editingUser.role === 'student' ? editingUser.course : undefined
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update user account.');
+      }
+
+      // Update locally
+      if (editingUser.role === 'student') {
+        setStudents(students.map(s => s.id === editingUser.id ? {
+          ...s,
+          name: editingUser.name,
+          email: editingUser.email,
+          phone: editingUser.phone,
+          course: editingUser.course || 'Spoken English Mastery'
+        } : s));
+      } else if (editingUser.role === 'tutor') {
+        setTutors(tutors.map(t => t.id === editingUser.id ? {
+          ...t,
+          name: editingUser.name,
+          email: editingUser.email,
+          phone: editingUser.phone
+        } : t));
+      } else {
+        setAdmins(admins.map(a => a.id === editingUser.id ? {
+          ...a,
+          name: editingUser.name,
+          email: editingUser.email,
+          phone: editingUser.phone
+        } : a));
+      }
+
+      setEditingUser(null);
+    } catch (err: any) {
+      setEditValidationError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
 
   const [newForm, setNewForm] = useState({
     name: '',
@@ -595,6 +693,13 @@ export default function AdminStudentsPage() {
                             </button>
                           )}
                           <button
+                            onClick={() => handleOpenEditModal(s, 'student')}
+                            className="p-1.5 rounded-lg border border-gray-100 text-gray-600 hover:bg-gray-50 cursor-pointer"
+                            title="Edit Student"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
                             onClick={() => openRoleChange(s.id, s.name, s.email, 'student')}
                             className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50 cursor-pointer"
                             title="Change Role"
@@ -683,6 +788,13 @@ export default function AdminStudentsPage() {
                             </button>
                           )}
                           <button
+                            onClick={() => handleOpenEditModal(t, 'tutor')}
+                            className="p-1.5 rounded-lg border border-gray-100 text-gray-600 hover:bg-gray-55 cursor-pointer"
+                            title="Edit Tutor"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button
                             onClick={() => openRoleChange(t.id, t.name, t.email, 'tutor')}
                             className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50 cursor-pointer"
                             title="Change Role"
@@ -770,6 +882,13 @@ export default function AdminStudentsPage() {
                               <Check className="h-3.5 w-3.5" />
                             </button>
                           )}
+                          <button
+                            onClick={() => handleOpenEditModal(a, 'admin')}
+                            className="p-1.5 rounded-lg border border-gray-100 text-gray-600 hover:bg-gray-55 cursor-pointer"
+                            title="Edit Admin"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
                           <button
                             onClick={() => openRoleChange(a.id, a.name, a.email, 'admin')}
                             className="p-1.5 rounded-lg border border-gray-100 text-primary hover:bg-primary-50 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
@@ -886,6 +1005,103 @@ export default function AdminStudentsPage() {
           </AlertDialogPopup>
         </AlertDialogPortal>
       </AlertDialog>
+
+      {/* Edit User Modal overlay */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
+            <div className="flex justify-between items-center pb-4 border-b border-gray-50">
+              <h3 className="text-base font-bold text-gray-800">Edit User Account</h3>
+              <button onClick={() => { setEditingUser(null); setEditValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {editValidationError && (
+              <div className="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">
+                {editValidationError}
+              </div>
+            )}
+            <form onSubmit={handleEditUser} className="space-y-4 pt-4">
+              {/* Role Display */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Account Role</label>
+                <div className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-500 capitalize">
+                  {editingUser.role} (Use "Change Role" button to modify)
+                </div>
+              </div>
+
+              {/* Name */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Full Name</label>
+                <input
+                  type="text"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Email Address</label>
+                <input
+                  type="email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Phone */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Phone Number (10 digits)</label>
+                <input
+                  type="tel"
+                  value={editingUser.phone}
+                  onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+
+              {/* Course Selection (Only for Student) */}
+              {editingUser.role === 'student' && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Select Course</label>
+                  <select
+                    value={editingUser.course}
+                    onChange={(e) => setEditingUser({ ...editingUser, course: e.target.value })}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  >
+                    <option>Spoken English Mastery</option>
+                    <option>Business Communication</option>
+                    <option>Vocabulary Accelerator</option>
+                  </select>
+                </div>
+              )}
+
+              <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
+                <button
+                  type="button"
+                  onClick={() => { setEditingUser(null); setEditValidationError(''); }}
+                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  {editSubmitting ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Change Role Modal */}
       {roleChange && (
