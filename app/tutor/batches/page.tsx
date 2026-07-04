@@ -120,11 +120,9 @@ export default function TutorBatchesPage() {
       setSaveStatus('success');
       setTimeout(() => {
         setSaveStatus('saved');
-        setTimeout(() => {
-          setIsModalOpen(false);
-          loadData();
-        }, 500);
-      }, 800);
+        setIsModalOpen(false);
+        loadData();
+      }, 1000);
     } catch (err) {
       console.error(err);
       setSaveStatus('idle');

@@ -195,10 +195,8 @@ export default function AdminStudentsPage() {
       setEditStatus('success');
       setTimeout(() => {
         setEditStatus('saved');
-        setTimeout(() => {
-          setEditingUser(null);
-        }, 500);
-      }, 800);
+        setEditingUser(null);
+      }, 1000);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
       setEditStatus('idle');
@@ -318,25 +316,24 @@ export default function AdminStudentsPage() {
       setCreateStatus('success');
       setTimeout(() => {
         setCreateStatus('saved');
-        setTimeout(() => {
-          // Show success popup with the generated password
-          setSuccessCredentials({
-            email: newForm.email,
-            password: result.password,
-            warning: result.warning
-          });
+        
+        // Show success popup with the generated password
+        setSuccessCredentials({
+          email: newForm.email,
+          password: result.password,
+          warning: result.warning
+        });
 
-          // Clear Form and close addition modal
-          setNewForm({
-            name: '',
-            email: '',
-            role: 'student',
-            phone: '',
-            course: 'Spoken English Mastery'
-          });
-          setIsAdding(false);
-        }, 500);
-      }, 800);
+        // Clear Form and close addition modal
+        setNewForm({
+          name: '',
+          email: '',
+          role: 'student',
+          phone: '',
+          course: 'Spoken English Mastery'
+        });
+        setIsAdding(false);
+      }, 1000);
     } catch (err: any) {
       setValidationError(err.message || 'An error occurred. Please try again.');
       setCreateStatus('idle');

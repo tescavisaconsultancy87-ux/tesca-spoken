@@ -15,11 +15,11 @@ export default function StudentProfilePage() {
   const [passwordSaveStatus, setPasswordSaveStatus] = useState<ButtonStatus>('idle');
 
   const [profileData, setProfileData] = useState({
-    name: 'Aarav Patel',
-    email: 'aarav.patel@gmail.com',
-    phone: '+91 98765 43210',
-    location: 'Mumbai, India',
-    joinedDate: 'May 2026',
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+    joinedDate: '',
     currentLevel: 'Intermediate (B1)',
   });
 
@@ -37,15 +37,22 @@ export default function StudentProfilePage() {
       const data = await db.getProfile(userId);
       if (data) {
         setProfileData({
-          name: data.name || userName || 'Student User',
-          email: data.email || userEmail || 'student@tesca.com',
+          name: data.name || userName || '',
+          email: data.email || userEmail || '',
           phone: data.phone || '',
           location: data.location || '',
           joinedDate: data.created_at
             ? new Date(data.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-            : 'May 2026',
+            : 'July 2026',
           currentLevel: data.level || 'Intermediate (B1)',
         });
+      } else {
+        setProfileData((prev) => ({
+          ...prev,
+          name: userName || '',
+          email: userEmail || '',
+          joinedDate: 'July 2026',
+        }));
       }
     }
     loadProfile();
@@ -235,7 +242,7 @@ export default function StudentProfilePage() {
                       {validationError}
                     </span>
                   ) : (
-                    <span className="text-[11px] text-gray-400 font-medium">Fields are editable. Changes will be saved locally in this state.</span>
+                    <span className="text-[11px] text-gray-400 font-medium">Click Save Changes to update your account profile.</span>
                   )}
                   <SaveToggle
                     type="submit"

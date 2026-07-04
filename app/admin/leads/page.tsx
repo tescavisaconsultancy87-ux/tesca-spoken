@@ -94,10 +94,8 @@ export default function AdminLeadsPage() {
       setSaveStatus('success');
       setTimeout(() => {
         setSaveStatus('saved');
-        setTimeout(() => {
-          setEditingLead(null);
-        }, 500);
-      }, 800);
+        setEditingLead(null);
+      }, 1000);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
       setSaveStatus('idle');

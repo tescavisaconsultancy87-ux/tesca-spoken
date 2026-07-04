@@ -97,10 +97,8 @@ export default function AdminPaymentsPage() {
       setSaveStatus('success');
       setTimeout(() => {
         setSaveStatus('saved');
-        setTimeout(() => {
-          setEditingPayment(null);
-        }, 500);
-      }, 800);
+        setEditingPayment(null);
+      }, 1000);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
       setSaveStatus('idle');

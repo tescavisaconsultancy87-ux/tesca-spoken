@@ -175,10 +175,8 @@ export default function TutorCoursesPage() {
       setSaveStatus('success');
       setTimeout(() => {
         setSaveStatus('saved');
-        setTimeout(() => {
-          setIsModalOpen(false);
-        }, 500);
-      }, 800);
+        setIsModalOpen(false);
+      }, 1000);
     } catch (err) {
       console.error(err);
       setSaveStatus('idle');

@@ -18,9 +18,10 @@ export default function StudentDashboardHome() {
 
   useEffect(() => {
     async function loadData() {
+      if (!user?.id) return;
       try {
         const [cData, lData, bData] = await Promise.all([
-          db.getCourses(),
+          db.getEnrolledCourses(user.id),
           db.getLiveClasses(),
           db.getBatches()
         ]);
@@ -141,9 +142,10 @@ export default function StudentDashboardHome() {
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs font-semibold text-gray-500">
                       <span>Progress</span>
+                      <span>{currentCourse.progress || 0}%</span>
                     </div>
                     <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: '0%' }} />
+                      <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${currentCourse.progress || 0}%` }} />
                     </div>
                   </div>
               </div>
