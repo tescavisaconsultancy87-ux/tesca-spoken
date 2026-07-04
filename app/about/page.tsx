@@ -4,7 +4,7 @@ import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
-import { TRAINERS } from '@/lib/data/content';
+import AboutTrainers from '@/components/AboutTrainers';
 import {
   GraduationCap,
   Users,
@@ -469,48 +469,7 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {TRAINERS.map((trainer) => (
-                <div
-                  key={trainer.name}
-                  className="group overflow-hidden rounded-2xl bg-white shadow-soft hover:shadow-soft-xl transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="relative h-56 overflow-hidden">
-                    <Image
-                      src={trainer.photo}
-                      alt={trainer.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 250px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-primary-900/60 via-transparent to-transparent" />
-                    <div className="absolute bottom-3 left-3">
-                      <span className="inline-block rounded-full bg-secondary px-3 py-1 text-xs font-bold text-white">
-                        {trainer.students} students
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-heading text-base font-bold text-ink">{trainer.name}</h3>
-                    <p className="text-sm text-primary font-medium mt-0.5">{trainer.role}</p>
-                    <div className="mt-3 space-y-1.5">
-                      <div className="flex items-center gap-2 text-xs text-ink-muted">
-                        <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                        {trainer.certification}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-ink-muted">
-                        <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                        {trainer.experience} experience
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-ink-muted">
-                        <CheckCircle className="h-3.5 w-3.5 text-primary" />
-                        {trainer.specialization}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <AboutTrainers />
           </div>
         </section>
 
