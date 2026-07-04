@@ -141,8 +141,8 @@ export default function Footer() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-12">
           {/* Company info */}
           <div className="lg:col-span-4">
-            <Link href="/" className="flex items-center gap-2">
-              <Image src="/Tesca_logo.png" alt="TESCA Logo" width={150} height={36} className="h-9 w-auto object-contain" />
+            <Link href="/" className="inline-flex items-center justify-center bg-white rounded-2xl px-5 py-3 shadow-sm transition-transform hover:scale-[1.02] duration-300">
+              <Image src="/Tesca_logo.png" alt="TESCA Logo" width={140} height={32} className="h-8 w-auto object-contain" />
             </Link>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-primary-200">
               TESCA Spoken English is a premier institute dedicated to

@@ -1,14 +1,16 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
+'use client';
+
 import Image from 'next/image';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import CoursesList from '@/components/CoursesList';
+import { useDemoModal } from '@/context/DemoModalContext';
+import { COURSES, TRAINERS, COURSE_FAQS } from '@/lib/data/content';
+import { useState, useEffect } from 'react';
 import {
   CheckCircle,
   Clock,
-  BarChart3,
   ArrowRight,
   BookOpen,
   Play,
@@ -16,35 +18,13 @@ import {
   Download,
   Video,
   MessageCircle,
+  Award,
+  ChevronDown,
+  GraduationCap,
+  Layers,
+  Star,
+  X,
 } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: 'English Courses — TESCA Spoken English | Beginner to Advanced',
-  description:
-    'Explore TESCA\'s complete range of English courses — Spoken English Basic, Advanced, IELTS preparation, PTE, and Interview Prep. Live classes, flexible schedules, expert trainers.',
-  alternates: {
-    canonical: 'https://tesca.co/courses',
-  },
-  openGraph: {
-    title: 'English Courses — TESCA Spoken English | Beginner to Advanced',
-    description: 'Explore TESCA\'s English courses: Spoken English Basic/Advanced, IELTS, PTE, and Interview Prep.',
-    url: 'https://tesca.co/courses',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-        alt: 'English Courses — TESCA Spoken English',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'English Courses — TESCA Spoken English | Beginner to Advanced',
-    description: 'Explore TESCA\'s English courses: Spoken English Basic/Advanced, IELTS, PTE, and Interview Prep.',
-    images: ['/og-image.jpg'],
-  },
-};
 
 const FEATURES = [
   { icon: Video, label: 'Live Interactive Classes' },
@@ -55,93 +35,146 @@ const FEATURES = [
   { icon: BookOpen, label: 'Mock Tests & Quizzes' },
 ];
 
-const LEVEL_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  Beginner: { bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-200' },
-  Intermediate: { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
-  Advanced: { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  Professional: { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-};
-
 export default function CoursesPage() {
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    'itemListElement': [
-      {
-        '@type': 'ListItem',
-        'position': 1,
-        'name': 'Home',
-        'item': 'https://tesca.co'
-      },
-      {
-        '@type': 'ListItem',
-        'position': 2,
-        'name': 'Courses',
-        'item': 'https://tesca.co/courses'
+  const { openModal } = useDemoModal();
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [expandedCurriculum, setExpandedCurriculum] = useState<number>(0);
+
+  // Enrollment checkout states
+  const [selectedPlanForPurchase, setSelectedPlanForPurchase] = useState<any | null>(null);
+  const [checkoutForm, setCheckoutForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    city: '',
+  });
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [billing, setBilling] = useState<'monthly' | 'full'>('full');
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
       }
-    ]
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
-  const courseListSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'ItemList',
-    'itemListElement': [
-      {
-        '@type': 'Course',
-        'position': 1,
-        'name': 'Spoken English Basic',
-        'description': 'Master grammar foundations, vocabulary building, basic conversation, and pronunciation basics in 3 months.',
-        'provider': {
-          '@type': 'EducationalOrganization',
-          'name': 'TESCA Spoken English',
-          'sameAs': 'https://tesca.co'
-        }
-      },
-      {
-        '@type': 'Course',
-        'position': 2,
-        'name': 'Spoken English Advanced',
-        'description': 'Gain advanced fluency, public speaking, business communication, and a neutral accent in 4 months.',
-        'provider': {
-          '@type': 'EducationalOrganization',
-          'name': 'TESCA Spoken English',
-          'sameAs': 'https://tesca.co'
-        }
-      },
-      {
-        '@type': 'Course',
-        'position': 3,
-        'name': 'IELTS Preparation',
-        'description': 'Comprehensive 6-week training covering all 4 modules, 15+ mock tests, and strategies for achieving Band 7.5+.',
-        'provider': {
-          '@type': 'EducationalOrganization',
-          'name': 'TESCA Spoken English',
-          'sameAs': 'https://tesca.co'
-        }
-      },
-      {
-        '@type': 'Course',
-        'position': 4,
-        'name': 'PTE Preparation',
-        'description': '5-week PTE course with AI-scored mock tests, speaking templates, writing frameworks, and a target 65+ score guarantee.',
-        'provider': {
-          '@type': 'EducationalOrganization',
-          'name': 'TESCA Spoken English',
-          'sameAs': 'https://tesca.co'
-        }
-      },
-      {
-        '@type': 'Course',
-        'position': 5,
-        'name': 'Interview Preparation',
-        'description': '4-week interview preparation containing mock interviews, HR question mastery, resume review, and confidence coaching.',
-        'provider': {
-          '@type': 'EducationalOrganization',
-          'name': 'TESCA Spoken English',
-          'sameAs': 'https://tesca.co'
-        }
+  const handleEnroll = (course: any) => {
+    setSelectedPlanForPurchase(course);
+    setCheckoutForm({ name: '', email: '', phone: '', city: '' });
+    setPaymentSuccess(false);
+    setPaymentError(null);
+    setAgreedToTerms(false);
+    setBilling('full');
+  };
+
+  const handlePurchaseSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!agreedToTerms) {
+      setPaymentError('You must agree to the Terms of Service, Privacy Policy, and Refund Policy to proceed.');
+      return;
+    }
+    setIsPurchasing(true);
+    setPaymentError(null);
+
+    try {
+      // 1. Create order on the backend
+      const res = await fetch('/api/checkout/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: selectedPlanForPurchase.id,
+          billing: billing,
+          email: checkoutForm.email
+        }),
+      });
+
+      const orderData = await res.json();
+      if (!res.ok || orderData.error) {
+        throw new Error(orderData.error || 'Failed to initialize transaction order.');
       }
-    ]
+
+      // 2. Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error('Razorpay client script failed to load. Check your internet connection.');
+      }
+
+      // 3. Launch Razorpay Checkout Overlay
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: 'INR',
+        name: 'TESCA Spoken English',
+        description: `Enrollment - ${selectedPlanForPurchase.title || selectedPlanForPurchase.name}`,
+        order_id: orderData.orderId,
+        handler: async function (response: any) {
+          try {
+            setIsPurchasing(true);
+            setPaymentError(null);
+
+            const verifyRes = await fetch('/api/checkout/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+                name: checkoutForm.name,
+                email: checkoutForm.email,
+                phone: checkoutForm.phone,
+                city: checkoutForm.city,
+                planId: selectedPlanForPurchase.id,
+                billing: billing,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+            if (verifyRes.ok && verifyData.success) {
+              setPaymentSuccess(true);
+            } else {
+              setPaymentError(verifyData.error || 'Payment validation failed.');
+            }
+          } catch (err: any) {
+            setPaymentError(err.message || 'Signature verification call encountered an error.');
+          } finally {
+            setIsPurchasing(false);
+          }
+        },
+        prefill: {
+          name: checkoutForm.name,
+          email: checkoutForm.email,
+          contact: checkoutForm.phone,
+        },
+        notes: {
+          city: checkoutForm.city,
+        },
+        theme: {
+          color: '#0b3336',
+        },
+        modal: {
+          ondismiss: function () {
+            setIsPurchasing(false);
+          },
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+
+    } catch (err: any) {
+      setPaymentError(err.message || 'An error occurred during payment setup.');
+      setIsPurchasing(false);
+    }
   };
 
   return (
@@ -151,8 +184,26 @@ export default function CoursesPage() {
         dangerouslySetInnerHTML={{
           __html: JSON.stringify({
             '@context': 'https://schema.org',
-            '@graph': [breadcrumbSchema, courseListSchema]
-          })
+            '@graph': [
+              {
+                '@type': 'BreadcrumbList',
+                itemListElement: [
+                  { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://tesca.co' },
+                  { '@type': 'ListItem', position: 2, name: 'Courses', item: 'https://tesca.co/courses' },
+                ],
+              },
+              {
+                '@type': 'ItemList',
+                itemListElement: COURSES.map((c, i) => ({
+                  '@type': 'Course',
+                  position: i + 1,
+                  name: c.title,
+                  description: c.benefits.join(', '),
+                  provider: { '@type': 'EducationalOrganization', name: 'TESCA Spoken English', sameAs: 'https://tesca.co' },
+                })),
+              },
+            ],
+          }),
         }}
       />
       <Navbar />
@@ -167,10 +218,9 @@ export default function CoursesPage() {
 
           <div className="container-x relative z-10">
             <div className="grid items-center gap-12 lg:grid-cols-12">
-              {/* Left Column: Text Content */}
               <div className="text-center lg:text-left lg:col-span-7 space-y-6">
                 <span className="inline-flex items-center gap-2 rounded-full bg-primary-50 border border-primary-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
-                  All Courses
+                  Focus on Learning
                 </span>
                 <h1 className="font-heading text-4xl font-bold leading-tight text-ink sm:text-5xl lg:text-6xl">
                   Find Your Perfect
@@ -178,11 +228,10 @@ export default function CoursesPage() {
                   <span className="gradient-text">English Course</span>
                 </h1>
                 <p className="max-w-2xl text-lg leading-relaxed text-ink-muted">
-                  From complete beginners to IELTS aspirants — we have a course designed
-                  exactly for your level, goal, and schedule.
+                  From complete beginners to IELTS aspirants — explore our curriculum,
+                  meet the trainers, and pick the right course for your goals.
                 </p>
 
-                {/* Feature pills */}
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 pt-2">
                   {FEATURES.map((f) => (
                     <div
@@ -196,7 +245,6 @@ export default function CoursesPage() {
                 </div>
               </div>
 
-              {/* Right Column: AI Generated Image */}
               <div className="lg:col-span-5 flex justify-center">
                 <div className="relative w-full max-w-[380px] lg:max-w-none aspect-square overflow-hidden rounded-3xl border border-black/5 bg-white p-4 shadow-soft-lg">
                   <Image
@@ -213,16 +261,126 @@ export default function CoursesPage() {
           </div>
         </section>
 
-        {/* ── Course Cards ── */}
-        <section className="py-20 lg:py-28">
+        {/* ── Course Cards (no pricing) ── */}
+        <section className="py-20 lg:py-28" id="courses">
           <div className="container-x">
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 justify-center max-w-5xl mx-auto">
-              <CoursesList />
+            <div className="text-center mb-14">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">Our Courses</span>
+              <h2 className="font-heading mt-3 text-3xl font-bold text-ink sm:text-4xl">
+                Choose Your Learning Path
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-ink-muted">
+                Each course is designed for a specific goal. Pick the one that matches your needs.
+              </p>
+            </div>
+            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 justify-center max-w-6xl mx-auto">
+              <CoursesList onEnroll={handleEnroll} />
             </div>
           </div>
         </section>
 
-        {/* ── What's included ── */}
+        {/* ── Curriculum Overview ── */}
+        <section className="py-20 lg:py-28 bg-bg-soft">
+          <div className="container-x">
+            <div className="text-center mb-14">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                <Layers className="h-3.5 w-3.5" />
+                Curriculum
+              </span>
+              <h2 className="font-heading mt-3 text-3xl font-bold text-ink sm:text-4xl">
+                What You&apos;ll Learn — Module by Module
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-ink-muted">
+                Every course is structured into focused modules with clear learning outcomes.
+              </p>
+            </div>
+
+            {/* Course selector tabs */}
+            <div className="flex flex-wrap justify-center gap-2 mb-10">
+              {COURSES.map((course, i) => (
+                <button
+                  key={course.title}
+                  onClick={() => setExpandedCurriculum(i)}
+                  className={`rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                    expandedCurriculum === i
+                      ? 'bg-primary text-white shadow-soft'
+                      : 'bg-white border border-black/8 text-ink-muted hover:text-ink hover:border-black/15'
+                  }`}
+                >
+                  {course.title}
+                </button>
+              ))}
+            </div>
+
+            {/* Selected course curriculum */}
+            {COURSES[expandedCurriculum] && (
+              <div className="max-w-4xl mx-auto">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                  <div>
+                    <h3 className="font-heading text-2xl font-bold text-ink">
+                      {COURSES[expandedCurriculum].title}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-2 text-sm text-ink-muted">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4 text-primary" />
+                        {COURSES[expandedCurriculum].duration}
+                      </span>
+                      {COURSES[expandedCurriculum].whoShouldJoin && (
+                        <span className="hidden sm:flex items-center gap-1.5">
+                          <Users className="h-4 w-4 text-primary" />
+                          {COURSES[expandedCurriculum].whoShouldJoin}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={openModal}
+                    className="btn-warm text-sm whitespace-nowrap cursor-pointer"
+                  >
+                    Book Free Demo
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="grid gap-5 sm:grid-cols-2">
+                  {COURSES[expandedCurriculum].curriculum?.map((mod, i) => (
+                    <div
+                      key={mod.module}
+                      className="rounded-2xl border border-black/6 bg-white p-6 shadow-soft hover:shadow-soft-lg transition-all duration-300"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-50 text-primary font-heading text-sm font-bold">
+                          {String(i + 1).padStart(2, '0')}
+                        </div>
+                        <h4 className="font-heading text-base font-bold text-ink">{mod.module}</h4>
+                      </div>
+                      <ul className="space-y-2">
+                        {mod.topics.map((topic) => (
+                          <li key={topic} className="flex items-start gap-2 text-sm text-ink-soft">
+                            <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/60" />
+                            {topic}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                {COURSES[expandedCurriculum].teachingMethod && (
+                  <div className="mt-6 rounded-2xl border border-primary/10 bg-primary-50/50 p-5 flex items-start gap-3">
+                    <BookOpen className="h-5 w-5 shrink-0 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wide text-primary mb-1">Teaching Method</p>
+                      <p className="text-sm text-ink-soft leading-relaxed">{COURSES[expandedCurriculum].teachingMethod}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Teaching Method / What's Included ── */}
         <section className="bg-[#062426] py-20 lg:py-28">
           <div className="container-x">
             <div className="text-center mb-14">
@@ -294,8 +452,135 @@ export default function CoursesPage() {
           </div>
         </section>
 
-        {/* ── CTA ── */}
+        {/* ── Our Trainers ── */}
         <section className="py-20 lg:py-28">
+          <div className="container-x">
+            <div className="text-center mb-14">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
+                <GraduationCap className="h-3.5 w-3.5" />
+                Expert Trainers
+              </span>
+              <h2 className="font-heading mt-3 text-3xl font-bold text-ink sm:text-4xl">
+                Learn From the Best
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-ink-muted">
+                Our trainers hold international certifications and have trained thousands of students across 25+ countries.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
+              {TRAINERS.map((trainer) => (
+                <div
+                  key={trainer.name}
+                  className="group rounded-2xl border border-black/6 bg-white overflow-hidden shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1"
+                >
+                  <div className="relative h-52 overflow-hidden">
+                    <Image
+                      src={trainer.photo}
+                      alt={trainer.name}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-5 space-y-2">
+                    <h3 className="font-heading text-base font-bold text-ink">{trainer.name}</h3>
+                    <p className="text-xs font-semibold text-primary">{trainer.role}</p>
+                    <div className="flex items-center gap-3 text-xs text-ink-muted pt-1">
+                      <span className="flex items-center gap-1">
+                        <Star className="h-3 w-3 text-secondary fill-secondary" />
+                        {trainer.experience}
+                      </span>
+                      <span>{trainer.students} students</span>
+                    </div>
+                    <p className="text-[11px] text-ink-muted">{trainer.certification}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Certification ── */}
+        <section className="py-20 lg:py-28 bg-bg-soft">
+          <div className="container-x">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-50 border border-primary-100 shadow-soft">
+                <Award className="h-10 w-10 text-primary" />
+              </div>
+              <h2 className="font-heading text-3xl font-bold text-ink sm:text-4xl">
+                TESCA Certificate of Completion
+              </h2>
+              <p className="mx-auto mt-4 max-w-xl text-ink-muted leading-relaxed">
+                Every student who completes 80% of their enrolled course receives a verified
+                TESCA Certificate of Completion. IELTS and PTE students also receive a detailed
+                mock score report to share with universities or employers.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-6">
+                {[
+                  'Verified digital certificate',
+                  'Shareable on LinkedIn',
+                  'Includes course details & duration',
+                  'Mock score report for IELTS/PTE',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm text-ink-soft font-medium">
+                    <CheckCircle className="h-4 w-4 text-primary" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Course FAQ ── */}
+        <section className="py-20 lg:py-28">
+          <div className="container-x">
+            <div className="text-center mb-14">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">FAQ</span>
+              <h2 className="font-heading mt-3 text-3xl font-bold text-ink sm:text-4xl">
+                Common Questions About Our Courses
+              </h2>
+              <p className="mx-auto mt-4 max-w-lg text-ink-muted">
+                Everything you need to know before booking your free demo class.
+              </p>
+            </div>
+
+            <div className="max-w-3xl mx-auto space-y-3">
+              {COURSE_FAQS.map((faq, i) => {
+                const isOpen = openFaq === i;
+                return (
+                  <div
+                    key={faq.question}
+                    className="rounded-2xl border border-black/6 bg-white shadow-soft overflow-hidden"
+                  >
+                    <button
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      className="flex w-full items-center justify-between gap-4 p-5 text-left cursor-pointer"
+                    >
+                      <span className="font-heading text-sm font-bold text-ink">{faq.question}</span>
+                      <ChevronDown
+                        className={`h-4 w-4 shrink-0 text-ink-muted transition-transform duration-300 ${
+                          isOpen ? 'rotate-180' : ''
+                        }`}
+                      />
+                    </button>
+                    <div
+                      className={`overflow-hidden transition-all duration-300 ${
+                        isOpen ? 'max-h-60 pb-5' : 'max-h-0'
+                      }`}
+                    >
+                      <p className="px-5 text-sm text-ink-muted leading-relaxed">{faq.answer}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA ── */}
+        <section className="py-20 lg:py-28 bg-bg-soft">
           <div className="container-x">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 to-primary-700 px-8 py-16 text-center">
               <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -307,24 +592,237 @@ export default function CoursesPage() {
                   Not Sure Which Course Is Right for You?
                 </h2>
                 <p className="mx-auto mt-4 max-w-lg text-primary-200">
-                  Take our free English level assessment and we&apos;ll recommend the perfect
-                  course for your current level and goals.
+                  Book a free 45-minute demo class. Meet your trainer, experience our teaching style,
+                  and get a personalized recommendation — no obligations.
                 </p>
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-                  <Link href="/?demo=true" className="btn-warm">
-                    Book Free Counselling
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                  <Link href="/pricing" className="inline-flex items-center gap-2 text-sm font-semibold text-white/80 hover:text-white transition-colors">
-                    View Pricing Plans
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
+                <button onClick={openModal} className="btn-warm mt-8 inline-flex cursor-pointer">
+                  Book Free Demo Class
+                  <ArrowRight className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
         </section>
       </main>
+
+      {/* Checkout Modal */}
+      {selectedPlanForPurchase && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up max-h-[95vh] overflow-y-auto relative">
+            <button
+              onClick={() => setSelectedPlanForPurchase(null)}
+              className="absolute right-4 top-4 p-1.5 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {paymentSuccess ? (
+              <div className="text-center py-6 space-y-4">
+                <div className="mx-auto h-16 w-16 rounded-full bg-green-50 text-green-600 border border-green-100 flex items-center justify-center shadow-soft animate-bounce">
+                  <CheckCircle className="h-8 w-8" />
+                </div>
+                <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight">Payment Successful!</h3>
+                <p className="text-sm text-gray-555 leading-relaxed max-w-sm mx-auto">
+                  Thank you for enrolling in the <strong className="text-gray-800">{selectedPlanForPurchase.title || selectedPlanForPurchase.name}</strong> program! 
+                  A confirmation email has been sent to <span className="font-semibold text-primary">{checkoutForm.email}</span>.
+                </p>
+                <div className="bg-gray-55 rounded-2xl p-4 border border-gray-100/80 text-left space-y-1.5 text-xs text-gray-650 max-w-sm mx-auto">
+                  <p className="font-bold text-gray-800 mb-1">Enrollment Details:</p>
+                  <p><span className="font-semibold text-gray-500">Name:</span> {checkoutForm.name}</p>
+                  <p><span className="font-semibold text-gray-500">City:</span> {checkoutForm.city}</p>
+                  <p><span className="font-semibold text-gray-500">Course:</span> {selectedPlanForPurchase.title || selectedPlanForPurchase.name} ({selectedPlanForPurchase.duration})</p>
+                  <p><span className="font-semibold text-gray-500">Payment Status:</span> Completed via Razorpay</p>
+                </div>
+                <div className="pt-4">
+                  <a
+                    href="/login"
+                    className="btn-primary inline-flex justify-center px-6 py-3 w-full rounded-xl text-sm font-bold shadow-soft"
+                  >
+                    Go to Student Portal
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-secondary uppercase tracking-wider bg-orange-50 px-2.5 py-0.5 rounded-md border border-orange-100 inline-block">
+                    Enrollment Checkout
+                  </span>
+                  <h3 className="text-lg font-heading font-extrabold text-gray-850 tracking-tight">
+                    Join {selectedPlanForPurchase.title || selectedPlanForPurchase.name}
+                  </h3>
+                  <p className="text-xs text-gray-400 font-medium">
+                    Please provide your contact information to initiate the secure payment gateway.
+                  </p>
+                </div>
+
+                {/* Billing toggle inside the modal */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Choose Payment Method</label>
+                  <div className="flex gap-2 p-1 bg-gray-50 border border-gray-100 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setBilling('full')}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        billing === 'full' ? 'bg-primary text-white shadow-soft' : 'text-gray-500 hover:text-gray-800'
+                      }`}
+                    >
+                      Full Payment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBilling('monthly')}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        billing === 'monthly' ? 'bg-primary text-white shadow-soft' : 'text-gray-500 hover:text-gray-800'
+                      }`}
+                    >
+                      Monthly EMI
+                    </button>
+                  </div>
+                </div>
+
+                {paymentError && (
+                  <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold leading-relaxed flex gap-2">
+                    <span className="h-2 w-2 rounded-full bg-rose-500 mt-1.5 flex-shrink-0" />
+                    <span>{paymentError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handlePurchaseSubmit} className="space-y-3.5">
+                  {/* Name */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">Full Name <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. John Doe"
+                      value={checkoutForm.name}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, name: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">Email Address <span className="text-rose-500">*</span></label>
+                    <input
+                      type="email"
+                      placeholder="e.g. john@example.com"
+                      value={checkoutForm.email}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs font-bold text-gray-500">Phone Number <span className="text-rose-500">*</span></label>
+                      <span className={`text-[10px] font-semibold transition-colors ${checkoutForm.phone.length === 10 ? 'text-green-600' : 'text-gray-400'}`}>
+                        {checkoutForm.phone.length} / 10 digits
+                      </span>
+                    </div>
+                    <input
+                      type="tel"
+                      placeholder="Enter 10-digit number"
+                      value={checkoutForm.phone}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                        setCheckoutForm({ ...checkoutForm, phone: val });
+                      }}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* City */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">City <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Mumbai"
+                      value={checkoutForm.city}
+                      onChange={(e) => setCheckoutForm({ ...checkoutForm, city: e.target.value })}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* Pricing Summary */}
+                  <div className="border-t border-b border-gray-100 py-3 mt-4 space-y-1.5">
+                    <div className="flex justify-between text-xs text-gray-500 font-medium">
+                      <span>Subtotal:</span>
+                      <span>
+                        ₹{(billing === 'monthly'
+                          ? Math.ceil(selectedPlanForPurchase.price / (selectedPlanForPurchase.duration?.includes('3') ? 3 : selectedPlanForPurchase.duration?.includes('4') ? 4 : selectedPlanForPurchase.duration?.includes('5') ? 5 : selectedPlanForPurchase.duration?.includes('6') ? 6 : 1))
+                          : selectedPlanForPurchase.price
+                        ).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-500 font-medium">
+                      <span>Taxes & Processing Fees:</span>
+                      <span className="text-green-600 font-semibold">Included</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-800 font-extrabold pt-1">
+                      <span>Total Amount:</span>
+                      <span className="text-primary">
+                        ₹{(billing === 'monthly'
+                          ? Math.ceil(selectedPlanForPurchase.price / (selectedPlanForPurchase.duration?.includes('3') ? 3 : selectedPlanForPurchase.duration?.includes('4') ? 4 : selectedPlanForPurchase.duration?.includes('5') ? 5 : selectedPlanForPurchase.duration?.includes('6') ? 6 : 1))
+                          : selectedPlanForPurchase.price
+                        ).toLocaleString('en-IN')}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Terms & Conditions Checkbox */}
+                  <div className="flex items-start gap-2 pt-1.5 pb-2">
+                    <input
+                      type="checkbox"
+                      id="agreeTerms"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="mt-1 h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                      required
+                    />
+                    <label htmlFor="agreeTerms" className="text-[10px] text-gray-500 font-medium leading-normal cursor-pointer select-none">
+                      I agree to the{' '}
+                      <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Terms of Service</a>,{' '}
+                      <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Privacy Policy</a>, and{' '}
+                      <a href="/refund" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-bold">Refund Policy (Strict No-Refund)</a>.
+                    </label>
+                  </div>
+
+                  <div className="flex gap-3 justify-end pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlanForPurchase(null)}
+                      className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-50"
+                      disabled={isPurchasing}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isPurchasing}
+                      className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft flex items-center justify-center gap-1.5"
+                    >
+                      {isPurchasing ? (
+                        <>
+                          <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                          Processing...
+                        </>
+                      ) : (
+                        'Pay with Razorpay'
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <Footer />
       <FloatingActions />

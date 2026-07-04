@@ -6,7 +6,7 @@ import { WHATSAPP_URL } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
 
 const TRUST_SIGNALS = [
-  { icon: ShieldCheck, label: '7-day money-back guarantee' },
+  { icon: ShieldCheck, label: 'Certified Trainers' },
   { icon: Clock, label: 'Free demo — no card required' },
   { icon: Users, label: 'Join 5000+ successful students' },
 ];

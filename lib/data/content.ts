@@ -10,7 +10,7 @@ export const NAV_LINKS = [
 export const WHATSAPP_URL = 'https://wa.me/919824152731?text=Hi%20TESCA,%20I%20would%20like%20to%20book%20a%20free%20demo%20class.';
 
 export const TRUST_STATS = [
-  { value: 2005, label: 'Since', suffix: '', isYear: true },
+  { value: 2005, label: 'Years of Trust', suffix: '', isYear: true, prefix: 'Since ' },
   { value: 5000, label: 'Students Trained', suffix: '+' },
   { value: 95, label: 'Satisfaction Rate', suffix: '%' },
   { value: 20, label: 'Expert Trainers', suffix: '+' },
@@ -58,6 +58,14 @@ export const COURSES = [
     benefits: ['Grammar foundations', 'Vocabulary building', 'Basic conversation', 'Pronunciation basics'],
     price: '₹7,999',
     originalPrice: '₹11,999',
+    whoShouldJoin: 'Complete beginners, homemakers, students, and anyone who struggles to form basic English sentences.',
+    curriculum: [
+      { module: 'Foundation', topics: ['Alphabets & Phonics', 'Self-introduction', 'Basic greetings & phrases', 'Simple present tense'] },
+      { module: 'Grammar Core', topics: ['Tenses (Past, Present, Future)', 'Question formation', 'Articles & Prepositions', 'Subject-verb agreement'] },
+      { module: 'Vocabulary', topics: ['Daily-use words (500+)', 'Synonyms & Antonyms', 'Common idioms', 'Contextual usage'] },
+      { module: 'Speaking Practice', topics: ['Guided conversations', 'Describing people & places', 'Storytelling exercises', 'Role-play scenarios'] },
+    ],
+    teachingMethod: 'Live interactive group classes (8–12 students) with daily speaking practice, weekly assignments, and recorded session access.',
   },
   {
     title: 'Spoken English Advanced',
@@ -67,6 +75,14 @@ export const COURSES = [
     price: '₹12,999',
     originalPrice: '₹17,999',
     popular: true,
+    whoShouldJoin: 'Working professionals, managers, entrepreneurs, and anyone who can speak basic English but wants fluency and confidence.',
+    curriculum: [
+      { module: 'Fluency Building', topics: ['Advanced sentence structures', 'Filler-free speaking', 'Speed & rhythm training', 'Debate & discussion'] },
+      { module: 'Business English', topics: ['Email writing', 'Meeting communication', 'Presentation skills', 'Corporate vocabulary'] },
+      { module: 'Public Speaking', topics: ['Speech delivery techniques', 'Body language mastery', 'Audience engagement', 'Impromptu speaking'] },
+      { module: 'Accent & Pronunciation', topics: ['Neutral accent training', 'Intonation patterns', 'Stress & linking words', 'Native-like pronunciation'] },
+    ],
+    teachingMethod: 'Intensive live sessions (5 per week) with real-world scenarios, group debates, presentations, and one-on-one feedback.',
   },
   {
     title: 'IELTS Preparation',
@@ -75,6 +91,14 @@ export const COURSES = [
     benefits: ['All 4 modules', '15+ mock tests', 'Band 7.5+ strategies', 'Writing evaluation'],
     price: '₹9,999',
     originalPrice: '₹14,999',
+    whoShouldJoin: 'Students planning to study abroad, professionals seeking PR, and anyone targeting IELTS Academic or General Training.',
+    curriculum: [
+      { module: 'Listening', topics: ['Section-wise strategies', 'Note completion', 'Multiple choice', 'Map labelling & matching'] },
+      { module: 'Reading', topics: ['Skimming & scanning', 'True/False/Not Given', 'Heading matching', 'Paragraph completion'] },
+      { module: 'Writing', topics: ['Task 1 (Graph/Letter)', 'Task 2 Essay structures', 'Coherence & cohesion', 'Band 7+ vocabulary'] },
+      { module: 'Speaking', topics: ['Part 1, 2, 3 strategies', 'Cue card practice', 'Fluency techniques', 'Pronunciation scoring'] },
+    ],
+    teachingMethod: 'Daily intensive sessions covering all 4 modules with weekly full mock tests, individual writing evaluations, and 1-on-1 speaking practice.',
   },
   {
     title: 'PTE Preparation',
@@ -83,6 +107,14 @@ export const COURSES = [
     benefits: ['AI-scored mock tests', 'Speaking templates', 'Writing framework', '65+ score guarantee'],
     price: '₹8,999',
     originalPrice: '₹12,999',
+    whoShouldJoin: 'Students and professionals targeting PTE Academic for Australian, UK, or New Zealand visa/university applications.',
+    curriculum: [
+      { module: 'Speaking & Writing', topics: ['Read aloud templates', 'Repeat sentence drills', 'Describe image framework', 'Summarize written text'] },
+      { module: 'Reading', topics: ['Re-order paragraphs', 'Fill in the blanks', 'Multiple choice strategies', 'Speed reading'] },
+      { module: 'Listening', topics: ['Summarize spoken text', 'Fill in the blanks', 'Highlight correct summary', 'Write from dictation'] },
+      { module: 'Mock Tests & Review', topics: ['Full AI-scored mocks', 'Score analysis sessions', 'Weak area targeting', 'Exam-day strategy'] },
+    ],
+    teachingMethod: 'Template-driven training with AI-scored mock exams every week, computer-based practice, and targeted weak-area coaching.',
   },
   {
     title: 'Interview Preparation',
@@ -91,6 +123,14 @@ export const COURSES = [
     benefits: ['Mock interviews', 'HR question mastery', 'Resume review', 'Confidence coaching'],
     price: '₹5,999',
     originalPrice: '₹8,999',
+    whoShouldJoin: 'Job seekers, freshers, career changers, and professionals preparing for MNC interviews or visa interviews.',
+    curriculum: [
+      { module: 'Self-Presentation', topics: ['Tell me about yourself', 'Strengths & weaknesses', 'Career goals articulation', 'Elevator pitch'] },
+      { module: 'HR Questions', topics: ['Behavioral questions (STAR)', 'Situational questions', 'Salary negotiation', 'Why this company/role?'] },
+      { module: 'Communication', topics: ['Body language & posture', 'Eye contact & gestures', 'Voice modulation', 'Handling nervousness'] },
+      { module: 'Mock Rounds', topics: ['Full mock interviews', 'Panel interview simulation', 'Video interview practice', 'Personalized feedback'] },
+    ],
+    teachingMethod: 'Intensive 1-on-1 and group mock interview sessions with video recording, playback analysis, and HR expert feedback.',
   },
 ];
 
@@ -276,6 +316,72 @@ export const FAQS = [
   {
     question: 'What is the refund policy?',
     answer:
-      'We offer a 7-day money-back guarantee. If you are not satisfied within the first week of your course, you get a full refund — no questions asked. We are confident in our quality and stand behind it.',
+      'We enforce a strict no-refund policy. Once the course fee is paid, it is non-refundable, non-cancellable, and non-transferable. We highly recommend booking our free demo class to experience our teaching quality and format before making a payment.',
+  },
+];
+
+export const COURSE_FAQS = [
+  {
+    question: 'What is the batch size for each course?',
+    answer:
+      'Our spoken English batches have 8–12 students for personalized attention. IELTS and PTE batches are capped at 10 students. Interview preparation can be 1-on-1 or in groups of up to 6.',
+  },
+  {
+    question: 'Can I switch courses midway?',
+    answer:
+      'Yes. If your counsellor agrees that a different course better suits your level, we allow a one-time course switch within the first 2 weeks at no additional cost.',
+  },
+  {
+    question: 'What happens if I miss a class?',
+    answer:
+      'All live sessions are recorded and uploaded to your student dashboard within 2 hours. You can watch them anytime. We also offer make-up sessions on weekends for students who miss more than 3 classes.',
+  },
+  {
+    question: 'Do I get a certificate after completing the course?',
+    answer:
+      'Yes. Every student who completes 80% of the course receives a TESCA Certificate of Completion. IELTS and PTE students also receive a mock score report to share with universities or employers.',
+  },
+  {
+    question: 'Are the trainers qualified?',
+    answer:
+      'Absolutely. Our trainers hold international certifications like CELTA, DELTA, TESOL, and TEFL. They have 10–18 years of teaching experience and have trained thousands of students across 25+ countries.',
+  },
+  {
+    question: 'What study materials are provided?',
+    answer:
+      'Each course includes downloadable PDFs, vocabulary lists, grammar guides, practice worksheets, and recorded video lessons. IELTS and PTE students also get access to full-length mock tests with AI-scoring.',
+  },
+];
+
+export const PRICING_FAQS = [
+  {
+    question: 'What is the difference between Starter, Professional, and Premium plans?',
+    answer:
+      'Starter covers the Spoken English Basic course (3 months). Professional includes the Advanced course with more sessions and mock tests. Premium is the all-access plan with every course, daily sessions, and 1-on-1 trainer coaching.',
+  },
+  {
+    question: 'Can I pay in monthly installments (EMI)?',
+    answer:
+      'Yes. We offer a Monthly EMI option on all plans. You can choose to pay the full amount upfront and save 10%, or split it into monthly payments with zero additional interest.',
+  },
+  {
+    question: 'Is there a free trial before I pay?',
+    answer:
+      'Yes. We offer a completely free 45-minute demo class with no obligation. Experience our teaching style, meet your trainer, and then decide. No credit card required.',
+  },
+  {
+    question: 'What payment methods do you accept?',
+    answer:
+      'We accept UPI, debit/credit cards, net banking, and wallet payments through our secure Razorpay gateway. All transactions are encrypted and PCI-DSS compliant.',
+  },
+  {
+    question: 'What is the refund policy?',
+    answer:
+      'We enforce a strict no-refund policy. Once the course fee is paid, it is non-refundable, non-cancellable, and non-transferable. We highly recommend booking our free demo class before making a payment.',
+  },
+  {
+    question: 'Are there any hidden fees or charges?',
+    answer:
+      'None at all. The price you see is the price you pay. All taxes, study materials, mock tests, and platform access fees are included. No surprises.',
   },
 ];

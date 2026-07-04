@@ -3,14 +3,14 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'TESCA Course Pricing — Affordable Spoken English, IELTS & PTE Batches',
   description:
-    'Check out simple, honest pricing for TESCA Spoken English courses. Starter, Professional, and Premium plans with EMI options and a 7-day money-back guarantee.',
+    'Check out simple, honest pricing for TESCA Spoken English courses. Starter, Professional, and Premium plans with flexible EMI options.',
   alternates: {
     canonical: 'https://tesca.co/pricing',
   },
   openGraph: {
     title: 'TESCA Course Pricing — Affordable Spoken English, IELTS & PTE Batches',
     description:
-      'Check out simple, honest pricing for TESCA Spoken English courses. Starter, Professional, and Premium plans with EMI options and a 7-day money-back guarantee.',
+      'Check out simple, honest pricing for TESCA Spoken English courses. Starter, Professional, and Premium plans with flexible EMI options.',
     url: 'https://tesca.co/pricing',
     images: [
       {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TESCA Course Pricing — Affordable Spoken English, IELTS & PTE Batches',
     description:
-      'Check out simple, honest pricing for TESCA Spoken English courses. Starter, Professional, and Premium plans with EMI options and a 7-day money-back guarantee.',
+      'Check out simple, honest pricing for TESCA Spoken English courses. Starter, Professional, and Premium plans with flexible EMI options.',
     images: ['/og-image.jpg'],
   },
 };

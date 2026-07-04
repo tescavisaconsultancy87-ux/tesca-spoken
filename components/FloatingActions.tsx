@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowUp, HelpCircle, X, ArrowRight } from 'lucide-react';
+import { ArrowUp, HelpCircle, X, ArrowRight, Phone, CalendarCheck } from 'lucide-react';
 import { WHATSAPP_URL } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
 
@@ -13,7 +13,24 @@ export default function FloatingActions() {
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 600);
     window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+
+    // Add safe padding to body on mobile to prevent content overlap with sticky bottom bar
+    const style = document.createElement('style');
+    style.id = 'sticky-bottom-bar-spacer';
+    style.innerHTML = `
+      @media (max-width: 767px) {
+        body {
+          padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      const el = document.getElementById('sticky-bottom-bar-spacer');
+      if (el) el.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -62,7 +79,8 @@ export default function FloatingActions() {
 
   return (
     <>
-      <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3 lg:bottom-8 lg:right-8">
+      {/* Desktop Floating Actions */}
+      <div className="hidden md:flex fixed bottom-5 right-5 z-40 flex-col gap-3 lg:bottom-8 lg:right-8">
         {/* Scroll to top */}
         <button
           type="button"
@@ -80,21 +98,71 @@ export default function FloatingActions() {
           href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-green-500 text-white shadow-soft-lg transition-all duration-300 hover:scale-105 hover:bg-green-600 lg:h-16 lg:w-16"
+          className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.4)] transition-all duration-300 hover:scale-110 hover:shadow-[0_6px_28px_rgba(37,211,102,0.55)] lg:h-[60px] lg:w-[60px]"
           aria-label="Contact us on WhatsApp"
         >
-          <span className="absolute inset-0 animate-ping rounded-full bg-green-400 opacity-30" />
+          {/* Pulse ring */}
+          <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20" />
           <svg
-            viewBox="0 0 24 24"
-            className="relative h-7 w-7 lg:h-8 lg:w-8 fill-current"
+            viewBox="0 0 175.216 175.552"
+            className="relative h-7 w-7 lg:h-8 lg:w-8"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.457L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.625 1.45 5.507 0 9.961-4.45 9.964-9.943.001-2.661-1.019-5.163-2.872-7.015A9.86 9.86 0 0 0 11.3-.008c-5.513 0-10.019 4.504-10.022 9.998-.001 1.73.454 3.42 1.316 4.921L1.6 20.87l6.096-1.599-1.049-.117zM17.9 14.2c-.3-.15-1.78-.88-2.05-.98-.28-.1-.48-.15-.68.15-.2.3-.78.98-.95 1.18-.18.2-.35.23-.65.08-1.12-.56-1.95-1.03-2.72-1.7-1.15-1-.93-1.63-.6-2.15.18-.3.35-.45.5-.6.13-.15.18-.25.28-.43.1-.18.05-.33-.02-.48-.07-.15-.68-1.63-.93-2.23-.24-.58-.49-.5-.68-.5-.18-.01-.38-.01-.58-.01-.2 0-.52.07-.8.38-.28.3-1.07 1.05-1.07 2.56s1.1 2.97 1.25 3.17c.15.2 2.16 3.29 5.23 4.61.73.31 1.3.5 1.74.64.74.23 1.4.2 1.93.12.59-.08 1.78-.73 2.03-1.43.25-.7.25-1.3.18-1.43-.07-.13-.28-.2-.58-.35z" />
+            <path
+              fill="#ffffff"
+              d="M87.184 0C39.04 0 0 39.04 0 87.184c0 16.4 4.544 31.72 12.44 44.84L0 175.552l45.04-11.84c12.56 6.88 26.96 10.84 42.144 10.84 48.144 0 87.184-39.04 87.184-87.184S135.328 0 87.184 0zm0 160.208c-14.64 0-28.24-4.32-39.68-11.72l-2.84-1.68-29.44 7.72 7.84-28.64-1.84-2.92c-8.12-12.92-12.4-27.84-12.4-43.16 0-40.28 32.76-73.04 73.04-73.04 40.28 0 73.04 32.76 73.04 73.04-.72 40.28-33.48 73.04-73.72 73.04v-.6z"
+            />
+            <path
+              fill="#ffffff"
+              d="M126.82 105.4c-2.16-1.08-12.84-6.32-14.82-7.04-1.98-.72-3.42-1.08-4.86 1.08-1.44 2.16-5.58 7.04-6.84 8.46-1.26 1.44-2.52 1.62-4.68.54-2.16-1.08-9.12-3.36-17.4-10.74-6.42-5.74-10.74-12.84-12-15-1.26-2.16-.12-3.34 .96-4.42 .96-1.08 2.16-2.52 3.24-3.78 1.08-1.26 1.44-2.16 2.16-3.6.72-1.44.36-2.7-.18-3.78-.54-1.08-4.86-11.7-6.66-16.02-1.76-4.2-3.54-3.6-4.86-3.66-1.26-.06-2.7-.06-4.14-.06-1.44 0-3.78.54-5.76 2.7-1.98 2.16-7.56 7.38-7.56 18s7.74 20.88 8.82 22.32c1.08 1.44 15.24 23.28 36.9 32.64 5.16 2.22 9.18 3.54 12.32 4.56 5.18 1.62 9.9 1.38 13.62.84 4.14-.6 12.84-5.22 14.64-10.26 1.8-5.04 1.8-9.36 1.26-10.26-.54-.9-1.98-1.44-4.14-2.52z"
+            />
           </svg>
           <span className="absolute right-full mr-3 hidden whitespace-nowrap rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100 lg:block">
             Chat with us on WhatsApp
           </span>
         </a>
+      </div>
+
+      {/* Mobile Sticky Bottom Bar */}
+      <div
+        className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 px-6 py-3 flex items-center justify-between gap-6 shadow-[0_-4px_16px_rgba(0,0,0,0.06)]"
+        style={{ paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))' }}
+      >
+        {/* Call Us */}
+        <a
+          href="tel:+919824152731"
+          className="flex flex-col items-center gap-1 text-[#334155] hover:text-slate-800 transition-colors"
+        >
+          <Phone className="h-5 w-5 stroke-[2] text-[#334155]" />
+          <span className="text-[9px] font-bold uppercase tracking-wider text-[#334155]">Call Us</span>
+        </a>
+
+        {/* WhatsApp */}
+        <a
+          href={WHATSAPP_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex flex-col items-center gap-1 text-[#25D366] hover:text-green-600 transition-colors"
+        >
+          <svg
+            viewBox="0 0 175.216 175.552"
+            className="h-5 w-5 fill-current"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M87.184 0C39.04 0 0 39.04 0 87.184c0 16.4 4.544 31.72 12.44 44.84L0 175.552l45.04-11.84c12.56 6.88 26.96 10.84 42.144 10.84 48.144 0 87.184-39.04 87.184-87.184S135.328 0 87.184 0zm0 160.208c-14.64 0-28.24-4.32-39.68-11.72l-2.84-1.68-29.44 7.72 7.84-28.64-1.84-2.92c-8.12-12.92-12.4-27.84-12.4-43.16 0-40.28 32.76-73.04 73.04-73.04 40.28 0 73.04 32.76 73.04 73.04-.72 40.28-33.48 73.04-73.72 73.04v-.6z" />
+            <path d="M126.82 105.4c-2.16-1.08-12.84-6.32-14.82-7.04-1.98-.72-3.42-1.08-4.86 1.08-1.44 2.16-5.58 7.04-6.84 8.46-1.26 1.44-2.52 1.62-4.68.54-2.16-1.08-9.12-3.36-17.4-10.74-6.42-5.74-10.74-12.84-12-15-1.26-2.16-.12-3.34 .96-4.42 .96-1.08 2.16-2.52 3.24-3.78 1.08-1.26 1.44-2.16 2.16-3.6.72-1.44.36-2.7-.18-3.78-.54-1.08-4.86-11.7-6.66-16.02-1.76-4.2-3.54-3.6-4.86-3.66-1.26-.06-2.7-.06-4.14-.06-1.44 0-3.78.54-5.76 2.7-1.98 2.16-7.56 7.38-7.56 18s7.74 20.88 8.82 22.32c1.08 1.44 15.24 23.28 36.9 32.64 5.16 2.22 9.18 3.54 12.32 4.56 5.18 1.62 9.9 1.38 13.62.84 4.14-.6 12.84-5.22 14.64-10.26 1.8-5.04 1.8-9.36 1.26-10.26-.54-.9-1.98-1.44-4.14-2.52z" />
+          </svg>
+          <span className="text-[9px] font-bold uppercase tracking-wider">WhatsApp</span>
+        </a>
+
+        {/* Book Call Button */}
+        <button
+          onClick={openModal}
+          className="flex-grow flex items-center justify-center gap-2 bg-[#067779] text-white py-3 px-6 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all hover:bg-[#056365]"
+        >
+          <CalendarCheck className="h-4.5 w-4.5 text-white" />
+          <span>Book Call</span>
+        </button>
       </div>
 
       {/* Engagement Popup Modal */}

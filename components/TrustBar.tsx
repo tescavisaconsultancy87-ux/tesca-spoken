@@ -25,8 +25,9 @@ function StatItem({
   const count = useCounter(stat.value, active);
   const Icon = STAT_ICONS[index] ?? Award;
 
-  const formattedValue = stat.isYear ? stat.value.toLocaleString() : count.toLocaleString();
-  const displayValue = stat.suffix === '+' ? `${formattedValue} +` : `${formattedValue}${stat.suffix}`;
+  const formattedValue = stat.isYear ? stat.value.toString() : count.toLocaleString();
+  const prefix = (stat as any).prefix || '';
+  const displayValue = stat.suffix === '+' ? `${prefix}${formattedValue} +` : `${prefix}${formattedValue}${stat.suffix}`;
 
   return (
     <div className="group/stat flex flex-col items-center px-4 py-3 text-center">

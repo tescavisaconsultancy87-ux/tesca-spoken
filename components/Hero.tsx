@@ -11,32 +11,33 @@ export default function Hero() {
 
   const stats = [
     {
-      value: '200+',
+      value: '6000+',
       label: 'Expert Trainers',
       icon: GraduationCap,
-      numericEnd: 200,
+      numericEnd: 6000,
       suffix: '+',
     },
     {
-      value: '30K+',
+      value: '7Lac+',
       label: 'Successful Students',
       icon: Users,
-      numericEnd: 30,
-      suffix: 'K+',
+      numericEnd: 7,
+      suffix: 'Lac+',
     },
     {
-      value: '95%',
+      value: '98%',
       label: 'Success Rate',
       icon: TrendingUp,
       numericEnd: 95,
       suffix: '%',
     },
     {
-      value: '10+',
+      value: 'Since 2005',
       label: 'Years of Trust',
       icon: ShieldCheck,
-      numericEnd: 10,
-      suffix: '+',
+      numericEnd: 2005,
+      suffix: '',
+      prefix: 'Since ',
     },
   ];
 
@@ -209,7 +210,7 @@ function CountUp({ end, suffix, duration = 2000 }: { end: number; suffix: string
 }
 
 /* ─── Stats bar section ─── */
-function StatsBar({ stats }: { stats: { value: string; label: string; icon: React.ComponentType<{ className?: string }>; numericEnd: number; suffix: string }[] }) {
+function StatsBar({ stats }: { stats: { value: string; label: string; icon: React.ComponentType<{ className?: string }>; numericEnd: number; suffix: string; prefix?: string }[] }) {
   return (
     <div className="relative z-30 bg-[#F4FBFB] border-y border-[#E6F3F3]/80 py-12 md:py-16">
       <div className="container-x">
@@ -222,7 +223,7 @@ function StatsBar({ stats }: { stats: { value: string; label: string; icon: Reac
                   <Icon className="h-8 w-8 stroke-[1.5]" />
                 </div>
                 <span className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight leading-none">
-                  <CountUp end={stat.numericEnd} suffix={stat.suffix} />
+                  {stat.prefix || ''}<CountUp end={stat.numericEnd} suffix={stat.suffix} />
                 </span>
                 <span className="text-xs text-slate-500 font-medium tracking-wide">
                   {stat.label}

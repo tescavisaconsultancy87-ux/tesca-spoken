@@ -4,85 +4,38 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
-import { CheckCircle, X, ArrowRight, Clock, Star, Zap } from 'lucide-react';
+import { CheckCircle, X, ArrowRight, Clock, Star, Zap, ChevronDown } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
+import { PRICING_FAQS, COURSES } from '@/lib/data/content';
 
-const PLANS = [
-  {
-    id: 'starter',
-    name: 'Starter',
-    tagline: 'Perfect for beginners',
-    price: 7999,
-    originalPrice: 11999,
-    duration: '3 Months',
-    features: [
-      { text: 'Spoken English Basic Course', included: true },
-      { text: '3 Live sessions per week', included: true },
-      { text: 'Recorded lesson access', included: true },
-      { text: 'Study materials PDF', included: true },
-      { text: 'WhatsApp group access', included: true },
-      { text: 'Monthly progress report', included: true },
-      { text: 'IELTS / PTE preparation', included: false },
-      { text: 'Mock tests (15+)', included: false },
-      { text: 'Interview coaching', included: false },
-      { text: 'Trainer one-on-one sessions', included: false },
-    ],
-    color: 'primary',
-    popular: false,
-  },
-  {
-    id: 'professional',
-    name: 'Professional',
-    tagline: 'Most popular choice',
-    price: 12999,
-    originalPrice: 17999,
-    duration: '4 Months',
-    features: [
-      { text: 'Spoken English Advanced Course', included: true },
-      { text: '5 Live sessions per week', included: true },
-      { text: 'Lifetime recorded access', included: true },
-      { text: 'Complete study kit + PDFs', included: true },
-      { text: 'Priority WhatsApp support', included: true },
-      { text: 'Weekly + monthly reports', included: true },
-      { text: '5 Mock tests included', included: true },
-      { text: 'Peer practice groups', included: true },
-      { text: 'Interview coaching module', included: false },
-      { text: 'Trainer one-on-one sessions', included: false },
-    ],
-    color: 'secondary',
-    popular: true,
-  },
-  {
-    id: 'premium',
-    name: 'Premium',
-    tagline: 'Maximum transformation',
-    price: 22999,
-    originalPrice: 32999,
-    duration: '6 Months',
-    features: [
-      { text: 'All courses (Basic + Advanced)', included: true },
-      { text: 'Daily live sessions', included: true },
-      { text: 'Lifetime access to all content', included: true },
-      { text: 'Full study kit + premium resources', included: true },
-      { text: '24/7 trainer WhatsApp support', included: true },
-      { text: 'Comprehensive progress tracking', included: true },
-      { text: 'IELTS/PTE prep included', included: true },
-      { text: '15+ full mock tests', included: true },
-      { text: 'Interview coaching (5 sessions)', included: true },
-      { text: '4 Trainer one-on-one sessions', included: true },
-    ],
-    color: 'ink',
-    popular: false,
-  },
-];
 
-const ADD_ONS = [
-  { name: 'IELTS Intensive (6 Weeks)', price: '₹9,999', description: 'All 4 modules + 15 mock tests' },
-  { name: 'PTE Mastery (5 Weeks)', price: '₹8,999', description: 'AI-scored mocks + templates' },
-  { name: 'Interview Prep (4 Weeks)', price: '₹5,999', description: 'Mock interviews + HR coaching' },
-  { name: 'One-on-One Coaching (10 hrs)', price: '₹4,999', description: 'Personalized training sessions' },
-];
+
+function PricingFaqItem({ faq, index }: { faq: { question: string; answer: string }; index: number }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-black/6 bg-white shadow-soft overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between gap-4 p-5 text-left cursor-pointer"
+      >
+        <span className="font-heading text-sm font-bold text-ink">{faq.question}</span>
+        <ChevronDown
+          className={`h-4 w-4 shrink-0 text-ink-muted transition-transform duration-300 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+      <div
+        className={`overflow-hidden transition-all duration-300 ${
+          isOpen ? 'max-h-60 pb-5' : 'max-h-0'
+        }`}
+      >
+        <p className="px-5 text-sm text-ink-muted leading-relaxed">{faq.answer}</p>
+      </div>
+    </div>
+  );
+}
 
 function CountdownTimer({ expiryType, fixedExpiry }: { expiryType: string; fixedExpiry: string }) {
   const getTimeLeft = () => {
@@ -159,6 +112,8 @@ export default function PricingPage() {
     progressBarText: '🔥 [percentage]% of promotional seats claimed',
   });
 
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedPlanForPurchase, setSelectedPlanForPurchase] = useState<any | null>(null);
   const [checkoutForm, setCheckoutForm] = useState({
     name: '',
@@ -296,27 +251,80 @@ export default function PricingPage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await db.getSystemSettings();
-        setSettings(data);
+        const settingsData = await db.getSystemSettings();
+        setSettings(settingsData);
       } catch (err) {
         console.error('Failed to load settings in PricingPage', err);
+      }
+
+      try {
+        const data = await db.getCourses();
+        if (data && data.length > 0) {
+          const mapped = data.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            duration: c.duration || '3 Months',
+            accent: c.accent || 'primary',
+            benefits: c.benefits
+              ? c.benefits.split(',').map((b: string) => b.trim())
+              : ['Grammar foundations', 'Vocabulary building', 'Basic conversation'],
+            price: Number(c.price || 0),
+            originalPrice: Number(c.original_price || c.price || 0),
+            popular: !!c.popular,
+          }));
+          setCourses(mapped);
+        } else {
+          setCourses(
+            COURSES.map((c) => ({
+              id: c.title.toLowerCase().replace(/\s+/g, '-'),
+              title: c.title,
+              duration: c.duration,
+              accent: c.accent,
+              benefits: c.benefits,
+              price: Number(c.price.replace(/[₹,]/g, '')),
+              originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+              popular: c.popular,
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load courses on pricing page:', err);
+        setCourses(
+          COURSES.map((c) => ({
+            id: c.title.toLowerCase().replace(/\s+/g, '-'),
+            title: c.title,
+            duration: c.duration,
+            accent: c.accent,
+            benefits: c.benefits,
+            price: Number(c.price.replace(/[₹,]/g, '')),
+            originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+            popular: c.popular,
+          }))
+        );
+      } finally {
+        setLoading(false);
       }
     }
     load();
   }, []);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && courses.length > 0) {
       const params = new URLSearchParams(window.location.search);
       const planParam = params.get('plan');
       if (planParam) {
-        const match = PLANS.find(p => p.id === planParam);
+        const match = courses.find(
+          (p) =>
+            p.id === planParam ||
+            p.id.toLowerCase().includes(planParam.toLowerCase()) ||
+            p.title.toLowerCase().includes(planParam.toLowerCase())
+        );
         if (match) {
           setSelectedPlanForPurchase(match);
         }
       }
     }
-  }, []);
+  }, [courses]);
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -365,8 +373,8 @@ export default function PricingPage() {
                   <span className="gradient-text">No Hidden Fees</span>
                 </h1>
                 <p className="max-w-xl text-lg leading-relaxed text-ink-muted">
-                  Choose the plan that fits your goals. All plans include a 7-day money-back
-                  guarantee and a free demo class before you commit.
+                  Choose the plan that fits your goals. Try a free demo class before you commit
+                  to experience our teaching quality first-hand.
                 </p>
 
                 {/* Billing toggle */}
@@ -457,264 +465,333 @@ export default function PricingPage() {
               </div>
             )}
 
-            <div className="grid gap-8 lg:grid-cols-3 items-stretch">
-              {PLANS.map((plan) => {
-                const displayPrice =
-                  billing === 'monthly'
-                    ? Math.ceil(plan.price / (plan.duration === '3 Months' ? 3 : plan.duration === '4 Months' ? 4 : 6))
-                    : plan.price;
-                const savings = Math.round(
-                  ((plan.originalPrice - plan.price) / plan.originalPrice) * 100
-                );
+            {loading ? (
+              <div className="col-span-full py-12 text-center text-ink-muted">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="mt-2 text-xs font-semibold">Loading courses...</p>
+              </div>
+            ) : (
+              <div className="grid gap-8 lg:grid-cols-3 items-stretch">
+                {courses.map((plan) => {
+                  const divisor = plan.duration.includes('3') ? 3 : plan.duration.includes('4') ? 4 : plan.duration.includes('5') ? 5 : plan.duration.includes('6') ? 6 : 1;
+                  const displayPrice =
+                    billing === 'monthly'
+                      ? Math.ceil(plan.price / divisor)
+                      : plan.price;
+                  const savings = Math.round(
+                    ((plan.originalPrice - plan.price) / plan.originalPrice) * 100
+                  );
 
-                return (
-                  <div
-                    key={plan.id}
-                    className={`relative flex flex-col h-full overflow-hidden rounded-3xl border shadow-soft transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 ${
-                      plan.popular
-                        ? 'border-secondary/40 ring-2 ring-secondary/20'
-                        : 'border-black/6 bg-white'
-                    }`}
-                  >
-                    {plan.popular && (
-                      <div className="bg-secondary py-2 text-center">
-                        <span className="flex items-center justify-center gap-1.5 text-xs font-bold text-white uppercase tracking-wide">
-                          <Star className="h-3.5 w-3.5 fill-current" />
-                          Most Popular
-                        </span>
-                      </div>
-                    )}
+                  const tagline = plan.title.toLowerCase().includes('basic')
+                    ? 'Perfect for beginners'
+                    : plan.title.toLowerCase().includes('advanced') || plan.title.toLowerCase().includes('professional') || plan.popular
+                    ? 'Most popular choice'
+                    : 'Maximum transformation';
 
+                  return (
                     <div
-                      className={`p-8 ${
+                      key={plan.id}
+                      className={`relative flex flex-col h-full overflow-hidden rounded-3xl border shadow-soft transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 ${
                         plan.popular
-                          ? 'bg-gradient-to-br from-secondary-50 to-orange-50'
-                          : plan.color === 'ink'
-                          ? 'bg-gradient-to-br from-primary-900 to-primary-800'
-                          : 'bg-white'
+                          ? 'border-secondary/40 ring-2 ring-secondary/20 shadow-soft-lg'
+                          : 'border-black/6 bg-white'
                       }`}
                     >
-                      <h2
-                        className={`font-heading text-2xl font-bold ${
-                          plan.color === 'ink' ? 'text-white' : 'text-ink'
-                        }`}
-                      >
-                        {plan.name}
-                      </h2>
-                      <p
-                        className={`text-sm mt-1 ${
-                          plan.color === 'ink' ? 'text-primary-200' : 'text-ink-muted'
-                        }`}
-                      >
-                        {plan.tagline}
-                      </p>
-
-                      <div className="mt-6">
-                        <div className="flex items-end gap-2">
-                          <span
-                            className={`font-heading text-4xl font-bold ${
-                              plan.color === 'ink' ? 'text-white' : 'text-ink'
-                            }`}
-                          >
-                            ₹{displayPrice.toLocaleString('en-IN')}
+                      {plan.popular && (
+                        <div className="bg-secondary py-2 text-center">
+                          <span className="flex items-center justify-center gap-1.5 text-xs font-bold text-white uppercase tracking-wide">
+                            <Star className="h-3.5 w-3.5 fill-current" />
+                            Most Popular
                           </span>
-                          {billing === 'monthly' && (
+                        </div>
+                      )}
+
+                      <div
+                        className={`p-8 ${
+                          plan.popular
+                            ? 'bg-gradient-to-br from-secondary-50 to-orange-50'
+                            : plan.accent === 'ink'
+                            ? 'bg-gradient-to-br from-primary-900 to-primary-800'
+                            : 'bg-white'
+                        }`}
+                      >
+                        <h2
+                          className={`font-heading text-2xl font-bold ${
+                            plan.accent === 'ink' ? 'text-white' : 'text-ink'
+                          }`}
+                        >
+                          {plan.title}
+                        </h2>
+                        <p
+                          className={`text-sm mt-1 ${
+                            plan.accent === 'ink' ? 'text-primary-200' : 'text-ink-muted'
+                          }`}
+                        >
+                          {tagline}
+                        </p>
+
+                        <div className="mt-6">
+                          <div className="flex items-end gap-2">
                             <span
-                              className={`text-sm mb-1 ${
-                                plan.color === 'ink' ? 'text-primary-200' : 'text-ink-muted'
+                              className={`font-heading text-4xl font-bold ${
+                                plan.accent === 'ink' ? 'text-white' : 'text-ink'
                               }`}
                             >
-                              /month
+                              ₹{displayPrice.toLocaleString('en-IN')}
                             </span>
-                          )}
-                        </div>
-                        <div className="mt-2 flex items-center gap-2">
-                          <span
-                            className={`text-sm line-through ${
-                              plan.color === 'ink' ? 'text-primary-300' : 'text-ink-muted'
-                            }`}
-                          >
-                            ₹{plan.originalPrice.toLocaleString('en-IN')}
-                          </span>
-                          <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
-                            Save {savings}%
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-3">
-                          <Clock
-                            className={`h-3.5 w-3.5 ${
-                              plan.color === 'ink' ? 'text-primary-300' : 'text-ink-muted'
-                            }`}
-                          />
-                          <span
-                            className={`text-xs ${
-                              plan.color === 'ink' ? 'text-primary-200' : 'text-ink-muted'
-                            }`}
-                          >
-                            {plan.duration} program
-                          </span>
+                            {billing === 'monthly' && (
+                              <span
+                                className={`text-sm mb-1 ${
+                                  plan.accent === 'ink' ? 'text-primary-200' : 'text-ink-muted'
+                                }`}
+                              >
+                                /month
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <span
+                              className={`text-sm line-through ${
+                                plan.accent === 'ink' ? 'text-primary-300' : 'text-ink-muted'
+                              }`}
+                            >
+                              ₹{plan.originalPrice.toLocaleString('en-IN')}
+                            </span>
+                            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
+                              Save {savings}%
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-3">
+                            <Clock
+                              className={`h-3.5 w-3.5 ${
+                                plan.accent === 'ink' ? 'text-primary-300' : 'text-ink-muted'
+                              }`}
+                            />
+                            <span
+                              className={`text-xs ${
+                                plan.accent === 'ink' ? 'text-primary-200' : 'text-ink-muted'
+                              }`}
+                            >
+                              {plan.duration} program
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Features */}
-                    <div className={`flex-1 p-8 ${plan.color === 'ink' ? 'bg-primary-900' : 'bg-white'}`}>
-                      <ul className="space-y-3">
-                        {plan.features.map((feature) => (
-                          <li key={feature.text} className="flex items-start gap-3">
-                            {feature.included ? (
+                      {/* Features */}
+                      <div className={`flex-1 p-8 ${plan.accent === 'ink' ? 'bg-primary-900' : 'bg-white'}`}>
+                        <ul className="space-y-3">
+                          {plan.benefits.map((benefit: string) => (
+                            <li key={benefit} className="flex items-start gap-3">
                               <CheckCircle
                                 className={`mt-0.5 h-4 w-4 shrink-0 ${
-                                  plan.color === 'ink' ? 'text-secondary' : 'text-primary'
+                                  plan.accent === 'ink' ? 'text-secondary' : 'text-primary'
                                 }`}
                               />
-                            ) : (
-                              <X className="mt-0.5 h-4 w-4 shrink-0 text-black/20" />
-                            )}
-                            <span
-                              className={`text-sm ${
-                                feature.included
-                                  ? plan.color === 'ink'
-                                    ? 'text-primary-100'
-                                    : 'text-ink-soft'
-                                  : plan.color === 'ink'
-                                  ? 'text-primary-400 line-through'
-                                  : 'text-ink-muted line-through'
-                              }`}
-                            >
-                              {feature.text}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                              <span
+                                className={`text-sm ${
+                                  plan.accent === 'ink' ? 'text-primary-100' : 'text-ink-soft'
+                                }`}
+                              >
+                                {benefit}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
 
-                    {/* CTA */}
+                      {/* CTA */}
+                      <div
+                        className={`mt-auto p-8 pt-0 ${plan.accent === 'ink' ? 'bg-primary-900' : 'bg-white'}`}
+                      >
+                        <button
+                          onClick={() => handleGetStarted(plan)}
+                          className={`flex w-full items-center justify-center cursor-pointer ${
+                            plan.popular
+                              ? 'btn-warm'
+                              : plan.accent === 'ink'
+                              ? 'btn-secondary border-white/20 text-white hover:bg-white hover:text-primary'
+                              : 'btn-primary'
+                          }`}
+                        >
+                          Enroll Now
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* ── Feature Comparison Table ── */}
+        {!loading && courses.length > 0 && (
+          <section className="bg-[#062426] py-20 lg:py-28">
+            <div className="container-x">
+              <div className="text-center mb-12">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
+                  Compare Plans
+                </span>
+                <h2 className="font-heading mt-3 text-3xl font-bold text-white sm:text-4xl">
+                  Side-by-Side Comparison
+                </h2>
+                <p className="mx-auto mt-4 max-w-lg text-primary-100/85">
+                  See exactly what&apos;s included in each plan to find the best fit.
+                </p>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] text-left">
+                  <thead>
+                    <tr className="border-b border-white/10">
+                      <th className="py-4 pr-4 text-sm font-bold text-primary-200 w-1/4">Feature</th>
+                      {courses.map((plan) => (
+                        <th key={plan.id} className="py-4 px-4 text-center">
+                          <span className={`text-sm font-bold ${plan.popular ? 'text-secondary' : 'text-white'}`}>
+                            {plan.title}
+                          </span>
+                          {plan.popular && (
+                            <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-bold text-secondary bg-secondary/20 px-2 py-0.5 rounded-full">
+                              <Star className="h-2.5 w-2.5 fill-current" />
+                              Popular
+                            </span>
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-white/5 bg-white/[0.02]">
+                      <td className="py-3.5 pr-4 text-sm font-semibold text-primary-100">Duration</td>
+                      {courses.map((c) => (
+                        <td key={c.id} className="py-3.5 px-4 text-center text-sm text-white/80">{c.duration}</td>
+                      ))}
+                    </tr>
+                    
+                    {/* Benefits comparison dynamically */}
+                    {Array.from(new Set(courses.flatMap(c => c.benefits))).map((benefit, i) => (
+                      <tr key={benefit} className={`border-b border-white/5 ${i % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
+                        <td className="py-3.5 pr-4 text-sm font-semibold text-primary-100">{benefit}</td>
+                        {courses.map((c) => (
+                          <td key={c.id} className="py-3.5 px-4 text-center text-sm text-white/80">
+                            {c.benefits.includes(benefit) ? (
+                              <CheckCircle className="h-4 w-4 text-green-400 mx-auto" />
+                            ) : (
+                              <span className="text-white/20">—</span>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Payment Options / EMI ── */}
+        <section className="py-20 lg:py-28">
+          <div className="container-x">
+            <div className="grid gap-12 lg:grid-cols-2 items-center">
+              <div className="space-y-6">
+                <span className="text-xs font-bold uppercase tracking-widest text-primary">
+                  Flexible Payments
+                </span>
+                <h2 className="font-heading text-3xl font-bold text-ink sm:text-4xl">
+                  Pay Your Way — EMI or Full Payment
+                </h2>
+                <p className="text-ink-muted leading-relaxed">
+                  We understand that investing in education is a big decision. That&apos;s why we offer
+                  flexible payment options so you can start learning without financial stress.
+                </p>
+
+                <div className="space-y-4 pt-2">
+                  {[
+                    {
+                      title: 'Monthly EMI (0% Interest)',
+                      desc: 'Split your fee into equal monthly installments. No extra charges, no hidden interest.',
+                      tag: 'Flexible',
+                    },
+                    {
+                      title: 'Full Payment (Save 10%)',
+                      desc: 'Pay the complete amount upfront and enjoy an instant 10% discount on any plan.',
+                      tag: 'Best Value',
+                    },
+                    {
+                      title: 'Secure Razorpay Checkout',
+                      desc: 'UPI, cards, net banking, wallets — all accepted. PCI-DSS compliant and encrypted.',
+                      tag: 'Secure',
+                    },
+                  ].map((item) => (
                     <div
-                      className={`mt-auto p-8 pt-0 ${plan.color === 'ink' ? 'bg-primary-900' : 'bg-white'}`}
+                      key={item.title}
+                      className="flex gap-4 rounded-2xl border border-black/5 bg-bg-soft p-5"
                     >
-                      <button
-                        onClick={() => handleGetStarted(plan)}
-                        className={`flex w-full items-center justify-center cursor-pointer ${
-                          plan.popular
-                            ? 'btn-warm'
-                            : plan.color === 'ink'
-                            ? 'btn-secondary border-white/20 text-white hover:bg-white hover:text-primary'
-                            : 'btn-primary'
-                        }`}
-                      >
-                        Get Started
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                      <p
-                        className={`mt-3 text-center text-xs ${
-                          plan.color === 'ink' ? 'text-primary-300' : 'text-ink-muted'
-                        }`}
-                      >
-                        7-day money-back guarantee
-                      </p>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary shrink-0">
+                        <CheckCircle className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-heading text-sm font-bold text-ink">{item.title}</h3>
+                          <span className="rounded-full bg-secondary/10 px-2 py-0.5 text-[10px] font-bold text-secondary uppercase">
+                            {item.tag}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-ink-muted">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex justify-center">
+                <div className="relative w-full max-w-md rounded-3xl bg-gradient-to-br from-primary-50 to-secondary-50 border border-black/5 p-8 shadow-soft-lg">
+                  <h3 className="font-heading text-xl font-bold text-ink mb-6">Payment Example</h3>
+                  <div className="space-y-4">
+                    <div className="rounded-2xl bg-white p-5 border border-black/5 shadow-soft">
+                      <p className="text-xs font-bold text-ink-muted uppercase tracking-wide mb-2">Professional Plan — Full Payment</p>
+                      <p className="text-3xl font-bold font-heading text-ink">₹12,999</p>
+                      <p className="text-sm text-ink-muted mt-1">One-time payment • Save 10%</p>
+                    </div>
+                    <div className="text-center text-xs font-bold text-ink-muted uppercase tracking-wide">or</div>
+                    <div className="rounded-2xl bg-white p-5 border border-black/5 shadow-soft">
+                      <p className="text-xs font-bold text-ink-muted uppercase tracking-wide mb-2">Professional Plan — Monthly EMI</p>
+                      <p className="text-3xl font-bold font-heading text-ink">₹3,250<span className="text-base font-medium text-ink-muted">/mo</span></p>
+                      <p className="text-sm text-ink-muted mt-1">4 months • 0% interest</p>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* ── Add-ons ── */}
-        <section className="bg-[#062426] py-20 lg:py-28">
+        {/* ── Pricing FAQ ── */}
+        <section className="py-20 lg:py-28 bg-bg-soft">
           <div className="container-x">
-            <div className="text-center mb-12">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
-                Optional Add-ons
-              </span>
-              <h2 className="font-heading mt-3 text-3xl font-bold text-white sm:text-4xl">
-                Customize Your Learning
+            <div className="text-center mb-14">
+              <span className="text-xs font-bold uppercase tracking-widest text-primary">FAQ</span>
+              <h2 className="font-heading mt-3 text-3xl font-bold text-ink sm:text-4xl">
+                Pricing & Payment Questions
               </h2>
-              <p className="mx-auto mt-4 max-w-lg text-primary-100/85">
-                Add specialized courses to any plan. Mix and match to build your perfect
-                English learning path.
+              <p className="mx-auto mt-4 max-w-lg text-ink-muted">
+                Everything you need to know about our plans, payments, and refund policy.
               </p>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {ADD_ONS.map((addon) => (
-                <div
-                  key={addon.name}
-                  className="group rounded-2xl bg-white/5 border border-white/10 p-6 shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1 hover:bg-white/10"
-                >
-                  <h3 className="font-heading text-base font-bold text-white">{addon.name}</h3>
-                  <p className="mt-2 text-sm text-primary-100/80">{addon.description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xl font-bold font-heading text-secondary">{addon.price}</span>
-                    <button
-                      onClick={openModal}
-                      className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-white/20 cursor-pointer"
-                    >
-                      Add
-                      <ArrowRight className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
+            <div className="max-w-3xl mx-auto space-y-3">
+              {PRICING_FAQS.map((faq, i) => (
+                <PricingFaqItem key={faq.question} faq={faq} index={i} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* ── FAQ style guarantees ── */}
-        <section className="py-20 lg:py-28">
-          <div className="container-x">
-            <div className="grid gap-8 lg:grid-cols-2 items-center">
-              <div>
-                <span className="text-xs font-bold uppercase tracking-widest text-primary">
-                  Our Guarantees
-                </span>
-                <h2 className="font-heading mt-3 text-3xl font-bold text-ink sm:text-4xl">
-                  Risk-Free Learning
-                </h2>
-                <p className="mt-4 text-ink-muted leading-relaxed">
-                  We&apos;re so confident in our teaching quality that we offer ironclad guarantees.
-                  Your success is our success.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {[
-                  {
-                    title: '7-Day Money Back',
-                    desc: 'Not satisfied within the first week? Full refund. No questions, no hassle.',
-                  },
-                  {
-                    title: 'Free Demo Class',
-                    desc: 'Experience our teaching style before paying anything. Book a free 45-min class.',
-                  },
-                  {
-                    title: 'Score Improvement Guarantee',
-                    desc: 'IELTS & PTE students who follow the program get extended coaching at no extra cost.',
-                  },
-                  {
-                    title: 'Lifetime Access to Materials',
-                    desc: 'All study materials, PDFs, and recorded lessons are yours forever.',
-                  },
-                ].map((g) => (
-                  <div
-                    key={g.title}
-                    className="flex gap-4 rounded-2xl border border-black/5 bg-bg-soft p-5"
-                  >
-                    <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-                    <div>
-                      <h3 className="font-heading text-sm font-bold text-ink">{g.title}</h3>
-                      <p className="mt-1 text-sm text-ink-muted">{g.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ── CTA ── */}
-        <section className="py-20 lg:py-28 bg-bg-soft">
+        <section className="py-20 lg:py-28">
           <div className="container-x">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 to-primary-700 px-8 py-16 text-center">
               <div className="pointer-events-none absolute inset-0" aria-hidden="true">

@@ -1,56 +1,81 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { CheckCircle, Clock, BarChart3, ArrowRight } from 'lucide-react';
+import { CheckCircle, Clock, Users, ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
 import { COURSES } from '@/lib/data/content';
-
-
+import { useDemoModal } from '@/context/DemoModalContext';
 
 interface ClientCourse {
-  id?: string;
+  id: string;
   title: string;
   duration: string;
   accent: string;
   benefits: string[];
-  price: string;
-  originalPrice: string;
+  whoShouldJoin?: string;
   popular?: boolean;
+  price?: number;
+  originalPrice?: number;
 }
 
-export default function CoursesList() {
+interface CoursesListProps {
+  onEnroll?: (course: ClientCourse) => void;
+}
+
+export default function CoursesList({ onEnroll }: CoursesListProps) {
   const [courses, setCourses] = useState<ClientCourse[]>([]);
   const [loading, setLoading] = useState(true);
+  const { openModal } = useDemoModal();
 
   useEffect(() => {
     async function load() {
       try {
         const data = await db.getCourses();
         if (data && data.length > 0) {
-          const mapped = data.map((c: any) => {
-            const priceVal = Number(c.price || 0);
-            const origVal = Number(c.original_price || priceVal * 1.5);
-            return {
-              id: c.id,
-              title: c.title,
-              duration: c.duration || '3 Months',
-              accent: c.accent || 'primary',
-              benefits: c.benefits 
-                ? c.benefits.split(',').map((b: string) => b.trim()) 
-                : ['Grammar foundations', 'Vocabulary building', 'Basic conversation'],
-              price: `₹${priceVal.toLocaleString('en-IN')}`,
-              originalPrice: `₹${origVal.toLocaleString('en-IN')}`,
-              popular: !!c.popular
-            };
-          });
+          const mapped = data.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            duration: c.duration || '3 Months',
+            accent: c.accent || 'primary',
+            benefits: c.benefits
+              ? c.benefits.split(',').map((b: string) => b.trim())
+              : ['Grammar foundations', 'Vocabulary building', 'Basic conversation'],
+            whoShouldJoin: c.who_should_join || '',
+            popular: !!c.popular,
+            price: Number(c.price || 0),
+            originalPrice: Number(c.original_price || c.price || 0),
+          }));
           setCourses(mapped);
         } else {
-          setCourses(COURSES);
+          setCourses(
+            COURSES.map((c) => ({
+              id: c.title.toLowerCase().replace(/\s+/g, '-'),
+              title: c.title,
+              duration: c.duration,
+              accent: c.accent,
+              benefits: c.benefits,
+              whoShouldJoin: c.whoShouldJoin || '',
+              popular: c.popular,
+              price: Number(c.price.replace(/[₹,]/g, '')),
+              originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+            }))
+          );
         }
       } catch (err) {
         console.error('Failed to load courses from DB, using fallback', err);
-        setCourses(COURSES);
+        setCourses(
+          COURSES.map((c) => ({
+            id: c.title.toLowerCase().replace(/\s+/g, '-'),
+            title: c.title,
+            duration: c.duration,
+            accent: c.accent,
+            benefits: c.benefits,
+            whoShouldJoin: c.whoShouldJoin || '',
+            popular: c.popular,
+            price: Number(c.price.replace(/[₹,]/g, '')),
+            originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+          }))
+        );
       } finally {
         setLoading(false);
       }
@@ -95,18 +120,23 @@ export default function CoursesList() {
                   : 'bg-gradient-to-br from-primary-50 to-teal-50'
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="font-heading text-xl font-bold text-ink leading-snug">
-                  {course.title}
-                </h2>
-              </div>
+              <h2 className="font-heading text-xl font-bold text-ink leading-snug">
+                {course.title}
+              </h2>
 
-              <div className="mt-4 flex items-center gap-4 text-sm text-ink-muted">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="h-4 w-4" />
+              <div className="mt-3 flex items-center gap-4 text-sm text-ink-muted">
+                <span className="flex items-center gap-1.5 rounded-full bg-white/80 border border-black/5 px-3 py-1 text-xs font-semibold">
+                  <Clock className="h-3.5 w-3.5 text-primary" />
                   {course.duration}
                 </span>
               </div>
+
+              {course.whoShouldJoin && (
+                <div className="mt-3 flex items-start gap-2 text-xs text-ink-muted leading-relaxed">
+                  <Users className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary" />
+                  <span>{course.whoShouldJoin}</span>
+                </div>
+              )}
             </div>
 
             {/* Benefits */}
@@ -124,60 +154,26 @@ export default function CoursesList() {
               </ul>
             </div>
 
-            {/* Price & CTA */}
-            <div className="border-t border-black/5 p-6">
-              <div className="flex items-end justify-between mb-4">
-                <div>
-                  <p className="text-2xl font-bold font-heading text-ink">{course.price}</p>
-                  {course.originalPrice && (
-                    <p className="text-sm text-ink-muted line-through">{course.originalPrice}</p>
-                  )}
-                </div>
-                {course.originalPrice && course.price && (
-                  <div className="rounded-lg bg-green-50 border border-green-200 px-3 py-1.5 text-center">
-                    <p className="text-xs font-semibold text-green-700">
-                      Save{' '}
-                      {Math.round(
-                        ((parseInt(course.originalPrice.replace(/[₹,]/g, '')) -
-                          parseInt(course.price.replace(/[₹,]/g, ''))) /
-                          parseInt(course.originalPrice.replace(/[₹,]/g, ''))) *
-                          100
-                      )}
-                      %
-                    </p>
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3">
-                {(() => {
-                  const planParam = course.id === 'spoken-english-basic' ? 'starter' :
-                                    course.id === 'business-communication' ? 'professional' :
-                                    course.id === 'vocabulary-accelerator' ? 'premium' :
-                                    course.title.toLowerCase().includes('basic') ? 'starter' :
-                                    course.title.toLowerCase().includes('business') || course.title.toLowerCase().includes('interview') ? 'professional' :
-                                    course.title.toLowerCase().includes('vocabulary') || course.title.toLowerCase().includes('idioms') ? 'premium' : '';
-                  const enrollHref = planParam ? `/pricing?plan=${planParam}` : '/pricing';
-                  
-                  return (
-                    <Link
-                      href={enrollHref}
-                      className={`flex-1 btn-warm text-sm ${
-                        isPopular ? '' : 'btn-primary'
-                      }`}
-                      style={isPopular ? {} : { background: 'var(--color-primary)' }}
-                    >
-                      Enroll Now
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                  );
-                })()}
-                <Link
-                  href="/?demo=true"
-                  className="btn-secondary text-sm"
+            {/* CTA — Book Demo and Enroll Now */}
+            <div className="border-t border-black/5 p-6 flex gap-2">
+              <button
+                onClick={openModal}
+                className="flex-1 btn-secondary text-xs whitespace-nowrap cursor-pointer py-3 text-center rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Book Demo
+              </button>
+              {onEnroll && (
+                <button
+                  onClick={() => onEnroll(course)}
+                  className={`flex-1 btn-warm text-xs whitespace-nowrap cursor-pointer font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-1 ${
+                    isPopular ? '' : 'btn-primary'
+                  }`}
+                  style={isPopular ? {} : { background: 'var(--color-primary)' }}
                 >
-                  Free Demo
-                </Link>
-              </div>
+                  Enroll Now
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
           </div>
         );

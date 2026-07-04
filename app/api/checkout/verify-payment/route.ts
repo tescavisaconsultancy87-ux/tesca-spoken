@@ -69,8 +69,32 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const plan = PLAN_PRICES[planId];
-    const amountInRupees = billing === 'monthly' ? plan.monthly : plan.full;
+    let amountInRupees = 0;
+    if (PLAN_PRICES[planId]) {
+      const plan = PLAN_PRICES[planId];
+      amountInRupees = billing === 'monthly' ? plan.monthly : plan.full;
+    } else {
+      const { data: course } = await adminSupabase
+        .from('courses')
+        .select('*')
+        .eq('id', planId)
+        .maybeSingle();
+      if (course) {
+        const price = Number(course.price || 0);
+        if (billing === 'monthly') {
+          const durationStr = course.duration || '3 Months';
+          let divisor = 3;
+          if (durationStr.includes('3')) divisor = 3;
+          else if (durationStr.includes('4')) divisor = 4;
+          else if (durationStr.includes('5')) divisor = 5;
+          else if (durationStr.includes('6')) divisor = 6;
+          else if (durationStr.toLowerCase().includes('week')) divisor = 1;
+          amountInRupees = Math.ceil(price / divisor);
+        } else {
+          amountInRupees = price;
+        }
+      }
+    }
 
     // 4. Save to payments table
     const { error: paymentError } = await adminSupabase.from('payments').insert({
@@ -169,7 +193,7 @@ export async function POST(request: NextRequest) {
               <p>Your payment of <strong>₹${amountInRupees.toLocaleString('en-IN')}</strong> has been successfully verified, and your enrollment is now active.</p>
               
               ${credentialsSection}
-
+              
               <div style="text-align: center; margin: 30px 0 10px 0;">
                 <a href="${origin}/login" style="background-color: #0b3336; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">Log In to Student Portal</a>
               </div>
@@ -190,7 +214,9 @@ export async function POST(request: NextRequest) {
           ? 'spoken-english-intermediate'
           : planId === 'professional'
           ? 'business-communication'
-          : 'vocabulary-accelerator';
+          : planId === 'premium'
+          ? 'vocabulary-accelerator'
+          : planId;
 
       // Insert enrollment record
       const { error: enrollError } = await adminSupabase.from('enrollments').upsert({

@@ -4,7 +4,7 @@ import Reveal from '@/components/Reveal';
 
 const TEST_PERKS = [
   { icon: Clock, label: 'Takes only 5 minutes' },
-  { icon: ListChecks, label: '30 smart questions' },
+  { icon: ListChecks, label: '10 smart questions' },
   { icon: Award, label: 'Instant detailed report' },
   { icon: Sparkles, label: '100% free, no signup' },
 ];

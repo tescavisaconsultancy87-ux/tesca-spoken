@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { createClient } from '@supabase/supabase-js';
+
 const PLAN_PRICES: Record<string, { full: number; monthly: number }> = {
   starter: { full: 7999, monthly: 2667 },
   professional: { full: 12999, monthly: 3250 },
@@ -11,12 +13,57 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { planId, billing = 'full', email } = body;
 
-    if (!planId || !PLAN_PRICES[planId]) {
-      return NextResponse.json({ error: 'Invalid or missing plan selection.' }, { status: 400 });
+    if (!planId) {
+      return NextResponse.json({ error: 'Missing plan selection.' }, { status: 400 });
     }
 
-    const plan = PLAN_PRICES[planId];
-    const amountInRupees = billing === 'monthly' ? plan.monthly : plan.full;
+    let amountInRupees = 0;
+    
+    // Check if it's a hardcoded plan
+    if (PLAN_PRICES[planId]) {
+      const plan = PLAN_PRICES[planId];
+      amountInRupees = billing === 'monthly' ? plan.monthly : plan.full;
+    } else {
+      // Fetch from Supabase courses table
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+      
+      if (!url || !key) {
+        return NextResponse.json({ error: 'Supabase configuration is missing on the server.' }, { status: 500 });
+      }
+      
+      const adminSupabase = createClient(url, key, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      });
+      
+      const { data: course, error } = await adminSupabase
+        .from('courses')
+        .select('*')
+        .eq('id', planId)
+        .maybeSingle();
+        
+      if (error || !course) {
+        return NextResponse.json({ error: 'Selected course not found.' }, { status: 400 });
+      }
+      
+      const price = Number(course.price || 0);
+      if (billing === 'monthly') {
+        const durationStr = course.duration || '3 Months';
+        let divisor = 3;
+        if (durationStr.includes('3')) divisor = 3;
+        else if (durationStr.includes('4')) divisor = 4;
+        else if (durationStr.includes('5')) divisor = 5;
+        else if (durationStr.includes('6')) divisor = 6;
+        else if (durationStr.toLowerCase().includes('week')) divisor = 1;
+        amountInRupees = Math.ceil(price / divisor);
+      } else {
+        amountInRupees = price;
+      }
+    }
+
     const amountInPaise = amountInRupees * 100;
 
     const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
