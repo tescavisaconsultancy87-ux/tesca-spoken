@@ -161,7 +161,7 @@ export default function FloatingActions() {
           className="flex-grow flex items-center justify-center gap-2 bg-[#067779] text-white py-3 px-6 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all hover:bg-[#056365]"
         >
           <CalendarCheck className="h-4.5 w-4.5 text-white" />
-          <span>Book Call</span>
+          <span>Book Free Demo class</span>
         </button>
       </div>
 
