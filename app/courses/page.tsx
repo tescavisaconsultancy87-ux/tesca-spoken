@@ -198,7 +198,11 @@ export default function CoursesPage() {
       rzp.open();
 
     } catch (err: any) {
-      setPaymentError(err.message || 'An error occurred during payment setup.');
+      let msg = err.message || 'An error occurred during payment setup.';
+      if (msg.includes('receipt') || msg.includes('validation') || msg.includes('Razorpay') || msg.includes('400') || msg.includes('500')) {
+        msg = 'Unable to initialize secure checkout. Please refresh the page or try again in a few moments.';
+      }
+      setPaymentError(msg);
       setIsPurchasing(false);
     }
   };

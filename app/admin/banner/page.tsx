@@ -26,9 +26,11 @@ function CountdownTimerPreview({ expiryType, fixedExpiry }: { expiryType: string
     return { hours, minutes, seconds, isExpired: diff <= 0 };
   };
 
-  const [time, setTime] = useState(getTimeLeft());
+  const [mounted, setMounted] = useState(false);
+  const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0, isExpired: false });
 
   useEffect(() => {
+    setMounted(true);
     setTime(getTimeLeft());
     const interval = setInterval(() => {
       setTime(getTimeLeft());
@@ -37,6 +39,28 @@ function CountdownTimerPreview({ expiryType, fixedExpiry }: { expiryType: string
   }, [expiryType, fixedExpiry]);
 
   const pad = (n: number) => String(n).padStart(2, '0');
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-2">
+        {[
+          { value: '00', label: 'Hrs' },
+          { value: '00', label: 'Min' },
+          { value: '00', label: 'Sec' },
+        ].map((unit, i) => (
+          <div key={unit.label} className="flex items-center gap-2">
+            <div className="flex flex-col items-center">
+              <span className="font-heading text-xl font-bold text-white tabular-nums">
+                {unit.value}
+              </span>
+              <span className="text-[10px] text-teal-200 uppercase tracking-wide">{unit.label}</span>
+            </div>
+            {i < 2 && <span className="text-xl font-bold text-teal-300 mb-3">:</span>}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (expiryType === 'fixed' && time.isExpired) {
     return (

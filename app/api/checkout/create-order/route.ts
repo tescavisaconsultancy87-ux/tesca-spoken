@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify({
         amount: amountInPaise,
         currency: 'INR',
-        receipt: `rcpt_${Date.now()}_${planId}`,
+        receipt: `rcpt_${Date.now()}_${String(planId).replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 15)}`.slice(0, 40),
         notes: {
           planId,
           billing,
@@ -97,7 +97,16 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       console.error('[Razorpay Order Creation Failed]:', data);
-      return NextResponse.json({ error: data.error?.description || 'Failed to create order with Razorpay.' }, { status: response.status });
+      const rawError = data.error?.description || '';
+      let friendlyError = 'Failed to create order with the payment gateway.';
+      if (rawError) {
+        if (rawError.includes('receipt') || rawError.includes('key') || rawError.includes('auth')) {
+          friendlyError = 'Unable to initialize checkout. Please contact support or try again later.';
+        } else {
+          friendlyError = rawError;
+        }
+      }
+      return NextResponse.json({ error: friendlyError }, { status: response.status });
     }
 
     return NextResponse.json({
