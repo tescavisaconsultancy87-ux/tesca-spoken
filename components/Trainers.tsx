@@ -72,14 +72,6 @@ export default function Trainers() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                    {/* Verified badge */}
-                    {trainer.verified && (
-                      <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-bold text-primary shadow-soft backdrop-blur-sm">
-                        <BadgeCheck className="h-3.5 w-3.5" />
-                        Verified
-                      </span>
-                    )}
-
                     {/* Name overlay */}
                     <div className="absolute bottom-0 left-0 right-0 p-4">
                       <h3 className="font-heading text-base font-bold text-white">
@@ -98,28 +90,6 @@ export default function Trainers() {
                       <span className="font-medium">Experience:</span>
                       <span>{trainer.experience}</span>
                     </div>
-                    {trainer.certification && (
-                      <div className="flex items-center gap-2 text-xs text-ink-soft">
-                        <Award className="h-3.5 w-3.5 text-secondary" />
-                        <span className="font-medium">Cert:</span>
-                        <span>{trainer.certification}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-ink-soft">
-                      <Users className="h-3.5 w-3.5 text-accent" />
-                      <span className="font-medium">Trained:</span>
-                      <span>{trainer.students}</span>
-                    </div>
-                  </div>
-
-                  {/* Specialization bar */}
-                  <div className="border-t border-black/5 px-4 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-wide text-ink-muted">
-                      Specializes in
-                    </p>
-                    <p className="mt-0.5 text-xs font-semibold text-primary">
-                      {trainer.specialization}
-                    </p>
                   </div>
                 </article>
               </Reveal>

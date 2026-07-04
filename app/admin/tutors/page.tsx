@@ -91,10 +91,10 @@ export default function AdminTutorsPage() {
     setFormData({
       name: '',
       role: '',
-      experience: '10 years',
-      certification: 'TEFL, TESOL',
-      students: '1,000+',
-      specialization: 'Spoken English & Grammar',
+      experience: '1 year',
+      certification: '',
+      students: '100+',
+      specialization: 'Spoken English',
       photo: 'https://images.pexels.com/photos/5212343/pexels-photo-5212343.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop',
       verified: true,
       show_on_homepage: true,
@@ -239,24 +239,13 @@ export default function AdminTutorsPage() {
               className="bg-white border border-gray-100 rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col justify-between h-full space-y-4 group"
             >
               <div className="space-y-3 relative">
-                {/* Photo & Verified Badge */}
+                {/* Photo */}
                 <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-50 border border-gray-100">
                   <img
                     src={trainer.photo || 'https://images.pexels.com/photos/5212343/pexels-photo-5212343.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop'}
                     alt={trainer.name}
                     className="w-full h-full object-cover transition-transform duration-550 group-hover:scale-[1.02]"
                   />
-                  {trainer.verified && (
-                    <span className="absolute right-2.5 top-2.5 flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-bold text-primary shadow-soft backdrop-blur-sm">
-                      <BadgeCheck className="h-3.5 w-3.5" />
-                      Verified
-                    </span>
-                  )}
-                  {trainer.show_on_homepage && (
-                    <span className="absolute left-2.5 top-2.5 flex items-center gap-1 rounded-full bg-emerald-500 text-white px-2 py-0.5 text-[9px] font-bold shadow-soft">
-                      Homepage
-                    </span>
-                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -270,20 +259,6 @@ export default function AdminTutorsPage() {
                     <Briefcase className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span>Exp: {trainer.experience}</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Award className="h-3.5 w-3.5 text-secondary shrink-0" />
-                    <span>Cert: {trainer.certification || 'None'}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Users className="h-3.5 w-3.5 text-accent shrink-0" />
-                    <span>Trained: {trainer.students}</span>
-                  </div>
-                </div>
-
-                {/* Specialization */}
-                <div className="border-t border-gray-50 pt-2 text-[10px] font-semibold">
-                  <p className="uppercase tracking-wide text-gray-400">Specializes in</p>
-                  <p className="text-primary mt-0.5">{trainer.specialization}</p>
                 </div>
               </div>
 
@@ -364,95 +339,16 @@ export default function AdminTutorsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Experience</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 10 years, 8+ years"
-                    value={formData.experience}
-                    onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Certifications (Optional)</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. CELTA, TESOL, TEFL"
-                    value={formData.certification}
-                    onChange={(e) => setFormData({ ...formData, certification: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Students Trained</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. 1,500+, 2,000"
-                    value={formData.students}
-                    onChange={(e) => setFormData({ ...formData, students: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Specialization</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. IELTS Writing, Accent neutralization"
-                    value={formData.specialization}
-                    onChange={(e) => setFormData({ ...formData, specialization: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Verified Badge Checkbox */}
-              <div className="flex items-center justify-between p-3 bg-gray-50/50 border border-gray-100 rounded-xl">
-                <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-gray-800">Verified Badge / Certificate Badge</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">Enable badge verifying certification status</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, verified: !formData.verified })}
-                  className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${
-                    formData.verified ? 'bg-primary' : 'bg-gray-250'
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-all duration-300 ${
-                      formData.verified ? 'translate-x-4' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Show on Homepage Checkbox */}
-              <div className="flex items-center justify-between p-3 bg-gray-50/50 border border-gray-100 rounded-xl">
-                <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-gray-800">Show on Homepage</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">Display this trainer card in homepage slideshow/list</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, show_on_homepage: !formData.show_on_homepage })}
-                  className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${
-                    formData.show_on_homepage ? 'bg-primary' : 'bg-gray-250'
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-all duration-300 ${
-                      formData.show_on_homepage ? 'translate-x-4' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Experience</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 10 years, 8+ years"
+                  value={formData.experience}
+                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
               </div>
 
               <div className="flex gap-3 justify-end pt-4 border-t border-gray-50">
