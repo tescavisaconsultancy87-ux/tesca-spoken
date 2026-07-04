@@ -123,13 +123,10 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     let studentId = existingProfile?.id;
-    let isNewUser = false;
-    let tempPassword = '';
+    let tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
 
     if (!studentId) {
-      isNewUser = true;
       // Create user auth account
-      tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
       const { data: authUser, error: authError } = await adminSupabase.auth.admin.createUser({
         email: email,
         email_confirm: true,
@@ -157,30 +154,43 @@ export async function POST(request: NextRequest) {
           console.error('[Verify API] Failed to create profile:', profileError.message);
         }
       }
+    } else {
+      // Existing user: Update password and set needs_password_change flag
+      const { error: updateError } = await adminSupabase.auth.admin.updateUserById(studentId, {
+        password: tempPassword,
+      });
+
+      if (updateError) {
+        console.error('[Verify API] Failed to update existing user password:', updateError.message);
+      } else {
+        const { error: profileUpdateError } = await adminSupabase
+          .from('profiles')
+          .update({ needs_password_change: true })
+          .eq('id', studentId);
+
+        if (profileUpdateError) {
+          console.error('[Verify API] Failed to update profile needs_password_change flag:', profileUpdateError.message);
+        }
+      }
     }
 
     // Send Welcome Email
     try {
       const origin = request.nextUrl.origin || 'http://localhost:3000';
-      const emailSubject = isNewUser 
-        ? 'Welcome to TESCA Spoken English! Your Student Account is Ready'
-        : 'Course Enrollment Activated - TESCA Spoken English';
+      const emailSubject = 'Welcome to TESCA Spoken English! Your Student Account is Ready';
 
-      let credentialsSection = '';
-      if (isNewUser) {
-        credentialsSection = `
-          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 25px; margin: 25px 0;">
-            <p style="margin: 0 0 10px 0; font-size: 14px; color: #4b5563;"><strong>Login Credentials:</strong></p>
-            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Email Address:</strong> ${email}</p>
-            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Temporary Password:</strong> <code style="background: #e5e7eb; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 13px; color: #b91c1c;">${tempPassword}</code></p>
+      const credentialsSection = `
+        <div style="background: #fff8f8; border: 1px solid #fee2e2; border-radius: 12px; padding: 25px; margin: 25px 0;">
+          <p style="margin: 0 0 12px 0; font-size: 14px; color: #991b1b; font-weight: bold;">⚠️ IMPORTANT SECURITY DISCLAIMER:</p>
+          <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
+            Do not share these credentials with anyone. For your security, when you log in with this temporary password for the first time, you will be required to change it to a password of your choice.
+          </p>
+          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Student Log In ID (Email):</strong> ${email}</p>
+            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Temporary Password:</strong> <code style="background: #fee2e2; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 14px; color: #b91c1c;">${tempPassword}</code></p>
           </div>
-          <p style="font-size: 13px; color: #6b7280; margin-bottom: 25px;">For security, you will be prompted to change this password on your first login.</p>
-        `;
-      } else {
-        credentialsSection = `
-          <p style="margin: 20px 0; font-size: 14px; color: #4b5563;">You can log in to your existing account using your registered password.</p>
-        `;
-      }
+        </div>
+      `;
 
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 40px 10px; color: #1f2937;">
