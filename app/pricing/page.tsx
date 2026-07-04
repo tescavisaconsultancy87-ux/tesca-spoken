@@ -895,6 +895,31 @@ export default function PricingPage() {
                   </p>
                 </div>
 
+                {/* Billing toggle inside the modal */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Choose Payment Method</label>
+                  <div className="flex gap-2 p-1 bg-gray-50 border border-gray-100 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setBilling('full')}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        billing === 'full' ? 'bg-primary text-white shadow-soft' : 'text-gray-500 hover:text-gray-800'
+                      }`}
+                    >
+                      Full Payment
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setBilling('monthly')}
+                      className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                        billing === 'monthly' ? 'bg-primary text-white shadow-soft' : 'text-gray-500 hover:text-gray-800'
+                      }`}
+                    >
+                      Monthly EMI
+                    </button>
+                  </div>
+                </div>
+
                 {paymentError && (
                   <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold leading-relaxed flex gap-2">
                     <span className="h-2 w-2 rounded-full bg-rose-500 mt-1.5 flex-shrink-0" />
