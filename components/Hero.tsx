@@ -1,9 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { useEffect, useState, useRef, useCallback } from 'react';
-import { CalendarCheck, BookOpen, Star, Users, Award, GraduationCap, TrendingUp, ShieldCheck } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { CalendarCheck, Users, GraduationCap, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
 
 export default function Hero() {
@@ -45,106 +43,68 @@ export default function Hero() {
     <>
       <section
         id="home"
-        className="relative min-h-[90vh] flex flex-col justify-center items-center bg-white text-slate-800 overflow-hidden pt-28 pb-20 lg:pt-32 lg:pb-24"
+        className="relative min-h-[80vh] flex flex-col justify-center items-center bg-cover bg-center bg-no-repeat text-slate-800 overflow-hidden pt-24 pb-20 lg:pt-30 lg:pb-22"
+        style={{ backgroundImage: "url('/hero%20section%20background.png')" }}
       >
-        {/* Decorative large teal circular blob */}
-        <div className="absolute top-1/4 right-[5%] w-[450px] h-[450px] rounded-full bg-primary-50/45 filter blur-3xl z-[1] pointer-events-none select-none" />
-
-        {/* Decorative Dots Pattern */}
-        <div className="absolute top-24 right-12 w-28 h-36 opacity-35 pointer-events-none select-none z-[15] hidden lg:block">
-          <div className="grid grid-cols-6 gap-4">
-            {Array.from({ length: 48 }).map((_, i) => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#F97823]" />
-            ))}
-          </div>
-        </div>
-
-        {/* Orange circle ring */}
-        <div className="absolute top-[35%] right-[38%] w-4.5 h-4.5 rounded-full border-2 border-[#F97823] opacity-50 z-[15] hidden lg:block animate-pulse" />
-
-        {/* Background illustration on the right */}
-        <div className="absolute top-0 right-0 bottom-0 w-full lg:w-[48%] xl:w-[44%] z-[5] pointer-events-none select-none flex items-end lg:items-center justify-end hidden lg:flex">
-          <Image
-            src="/hero_image.png"
-            alt="TESCA Students"
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 50vw"
-            className="object-contain object-bottom lg:object-right"
-          />
-          {/* Soft fade overlay on the left to blend with the text section */}
-          <div className="absolute inset-y-0 left-0 w-full lg:w-48 bg-gradient-to-r from-white via-white/80 to-transparent hidden lg:block" />
-          {/* Bottom fade to remove hard edge */}
-          <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-white via-white/70 to-transparent hidden lg:block" />
-          {/* Mobile fade overlay (bottom-up) */}
-          <div className="absolute bottom-0 inset-x-0 h-48 bg-gradient-to-t from-white via-white/95 to-transparent lg:hidden" />
-        </div>
-
-        <div className="container-x relative z-20 w-full flex-1 flex flex-col justify-center">
-          {/* Content restricted to max-w-2xl so it stays on the left and does not layer over the students on the right */}
-          <div className="max-w-2xl space-y-7 text-left">
+        <div className="container-x relative z-10 w-full flex-1 flex flex-col justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
             
-            {/* Trust Tags */}
-            <div className="flex flex-wrap items-center justify-start gap-2.5">
-              <span className="inline-flex items-center gap-1.5 bg-[#FFF3EC] border border-[#FFE2D1] text-[#D95A14] text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-sm">
-                <Award className="h-3.5 w-3.5 text-[#D95A14]" />
-                Cambridge Certified Trainers
+            {/* Left Column: Typography & CTA (Restricted width to prevent overlap with background shapes) */}
+            <div className="lg:col-span-5 max-w-[420px] space-y-7 text-left order-2 lg:order-1 z-10">
+              
+              {/* Eyebrow Tag */}
+              <span className="inline-block text-primary text-sm font-semibold tracking-wider mb-1">
+                Start Your Spoken English Journey
               </span>
-              <span className="inline-flex items-center gap-1.5 bg-[#E6F7F7] border border-[#C5ECEE] text-[#067779] text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-sm">
-                <Users className="h-3.5 w-3.5 text-[#067779]" />
-                5000+ Students
-              </span>
-              <span className="inline-flex items-center gap-1.5 bg-[#FEF9E7] border border-[#FCEEC5] text-[#B7950B] text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded-full shadow-sm">
-                <Star className="h-3.5 w-3.5 text-[#B7950B] fill-current" />
-                4.9/5 Student Rating
-              </span>
+
+              {/* Heading */}
+              <h1 className="font-heading text-4xl sm:text-5xl lg:text-[56px] font-extrabold leading-[1.2] tracking-tight text-slate-900 text-balance">
+                Speak English from <br />
+                anywhere, and build <br />
+                your{' '}
+                <span className="relative inline-block text-primary">
+                  bright future.
+                  {/* Custom hand-drawn SVG wave underline */}
+                  <svg
+                    className="absolute -bottom-2.5 left-0 w-full h-3 text-primary pointer-events-none select-none"
+                    viewBox="0 0 100 10"
+                    preserveAspectRatio="none"
+                  >
+                    <path
+                      d="M3,7 Q50,2 97,5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+              </h1>
+
+              {/* Subheadline / Description */}
+              <p className="max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
+                Unlock global career paths and test success (IELTS/PTE). Join thousands of professionals speaking with clarity, confidence, and authority under guidance from expert tutors.
+              </p>
+
+              {/* CTA Button */}
+              <div className="pt-2">
+                <button 
+                  onClick={openModal} 
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-600 hover:shadow-soft-lg active:translate-y-0 cursor-pointer"
+                >
+                  Book Free Demo Class
+                </button>
+              </div>
+
             </div>
 
-            {/* Headline */}
-            <h1 className="font-heading text-4xl font-extrabold leading-[1.15] tracking-tight text-slate-800 sm:text-5xl lg:text-[56px] text-balance">
-              Speak English <br />
-              <span className="gradient-text">Confidently.</span> <br />
-              Transform Your Future.
-            </h1>
+            {/* Right Column: Spacer to let the background graphics show cleanly */}
+            <div className="lg:col-span-7 h-[150px] lg:h-[450px] order-1 lg:order-2 pointer-events-none" />
 
-            {/* Subheadline / Subtitle */}
-            <p className="max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-              Unlock global career paths and test success (IELTS/PTE). Join thousands of professionals speaking with clarity, confidence, and authority under guidance from expert tutors.
-            </p>
-
-            {/* Mobile Hero Image */}
-            <div className="relative w-full max-w-sm mx-auto aspect-[4/3] pointer-events-none select-none lg:hidden mt-4">
-              <Image
-                src="/hero_image.png"
-                alt="TESCA Students"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 400px"
-                className="object-contain"
-              />
-            </div>
-
-            {/* CTA Buttons Row */}
-            <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-start pt-2">
-              <button 
-                onClick={openModal} 
-                className="btn-warm w-full sm:w-auto px-8 py-3.5 rounded-full font-bold text-sm transition-transform hover:scale-[1.03] cursor-pointer shadow-lg hover:shadow-warm flex items-center justify-center gap-2"
-              >
-                <CalendarCheck className="h-4.5 w-4.5" />
-                Book Free Demo Class
-              </button>
-              <Link 
-                href="/courses" 
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full border border-slate-200 bg-white text-slate-800 font-bold text-sm hover:bg-slate-50 transition-all duration-300 hover:scale-[1.03]"
-              >
-                <BookOpen className="h-4.5 w-4.5 text-slate-600" />
-                Explore Courses
-              </Link>
-            </div>
           </div>
         </div>
 
-        {/* Wave shape at the bottom */}
+        {/* Curve effect at the bottom transition */}
         <div className="absolute bottom-0 inset-x-0 z-20 pointer-events-none translate-y-[2px]">
           <svg
             viewBox="0 0 1440 120"
