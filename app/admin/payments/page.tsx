@@ -325,125 +325,138 @@ export default function AdminPaymentsPage() {
       </div>
 
       {/* Edit Payment Modal */}
-      {editingPayment && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
-            <div className="flex justify-between items-center pb-4 border-b border-gray-50">
-              <h3 className="text-base font-bold text-gray-800">Edit Payment Record</h3>
-              <button onClick={() => { setEditingPayment(null); setEditValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {editValidationError && (
-              <div className="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">
-                {editValidationError}
-              </div>
-            )}
-            <form onSubmit={handleEditPayment} className="space-y-4 pt-4">
-              {/* TXN ID */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Transaction ID</label>
-                <div className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-500 font-bold select-all">
-                  {editingPayment.id}
-                </div>
-              </div>
+      {(() => {
+        const originalPayment = editingPayment ? transactions.find(t => t.id === editingPayment.id) : null;
+        const isEditUnchanged = originalPayment && editingPayment ? (
+          editingPayment.student === originalPayment.student &&
+          editingPayment.email === originalPayment.email &&
+          editingPayment.amount === originalPayment.amount &&
+          editingPayment.date === originalPayment.date &&
+          editingPayment.method === originalPayment.method &&
+          editingPayment.status === originalPayment.status
+        ) : false;
 
-              {/* Student Name */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Student Name</label>
-                <input
-                  type="text"
-                  value={editingPayment.student}
-                  onChange={(e) => setEditingPayment({ ...editingPayment, student: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
-              </div>
-
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Email Address</label>
-                <input
-                  type="email"
-                  value={editingPayment.email}
-                  onChange={(e) => setEditingPayment({ ...editingPayment, email: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
-              </div>
-
-              {/* Amount */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Amount (INR)</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={editingPayment.amount}
-                  onChange={(e) => setEditingPayment({ ...editingPayment, amount: Number(e.target.value) })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
-              </div>
-
-              {/* Date */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Date</label>
-                <input
-                  type="text"
-                  value={editingPayment.date}
-                  onChange={(e) => setEditingPayment({ ...editingPayment, date: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
-              </div>
-
-              {/* Method */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Method</label>
-                <input
-                  type="text"
-                  value={editingPayment.method}
-                  onChange={(e) => setEditingPayment({ ...editingPayment, method: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
-              </div>
-
-              {/* Status */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Status</label>
-                <select
-                  value={editingPayment.status}
-                  onChange={(e) => setEditingPayment({ ...editingPayment, status: e.target.value as any })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                >
-                  <option value="success">Success</option>
-                  <option value="failed">Failed</option>
-                  <option value="refunded">Refunded</option>
-                </select>
-              </div>
-
-              <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
-                <button
-                  type="button"
-                  onClick={() => { setEditingPayment(null); setEditValidationError(''); }}
-                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
-                >
-                  Cancel
+        return editingPayment && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-55">
+                <h3 className="text-base font-bold text-gray-800">Edit Payment Record</h3>
+                <button onClick={() => { setEditingPayment(null); setEditValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
+                  <X className="h-5 w-5" />
                 </button>
-                <SaveToggle
-                  type="submit"
-                  status={saveStatus}
-                  setStatus={setSaveStatus}
-                  size="sm"
-                  idleText="Save Changes"
-                  savedText="Saved"
-                />
               </div>
-            </form>
+              {editValidationError && (
+                <div className="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">
+                  {editValidationError}
+                </div>
+              )}
+              <form onSubmit={handleEditPayment} className="space-y-4 pt-4">
+                {/* TXN ID */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Transaction ID</label>
+                  <div className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-500 font-bold select-all">
+                    {editingPayment.id}
+                  </div>
+                </div>
+
+                {/* Student Name */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Student Name</label>
+                  <input
+                    type="text"
+                    value={editingPayment.student}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, student: e.target.value })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Email Address</label>
+                  <input
+                    type="email"
+                    value={editingPayment.email}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, email: e.target.value })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Amount */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Amount (INR)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editingPayment.amount}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, amount: Number(e.target.value) })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Date */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Date</label>
+                  <input
+                    type="text"
+                    value={editingPayment.date}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, date: e.target.value })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Method */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Method</label>
+                  <input
+                    type="text"
+                    value={editingPayment.method}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, method: e.target.value })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Status */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Status</label>
+                  <select
+                    value={editingPayment.status}
+                    onChange={(e) => setEditingPayment({ ...editingPayment, status: e.target.value as any })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  >
+                    <option value="success">Success</option>
+                    <option value="failed">Failed</option>
+                    <option value="refunded">Refunded</option>
+                  </select>
+                </div>
+
+                <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
+                  <button
+                    type="button"
+                    onClick={() => { setEditingPayment(null); setEditValidationError(''); }}
+                    className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <SaveToggle
+                    type="submit"
+                    status={saveStatus}
+                    setStatus={setSaveStatus}
+                    size="sm"
+                    idleText="Save Changes"
+                    savedText="Saved"
+                    disabled={isEditUnchanged}
+                  />
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Delete Confirmation Alert Dialog */}
       <AlertDialog open={deleteConfirmId !== null} onOpenChange={(open) => { if (!open) { setDeleteConfirmId(null); setDeleteError(''); } }}>

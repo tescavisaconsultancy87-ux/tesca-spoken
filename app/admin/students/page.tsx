@@ -1038,102 +1038,119 @@ export default function AdminStudentsPage() {
       </AlertDialog>
 
       {/* Edit User Modal overlay */}
-      {editingUser && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
-            <div className="flex justify-between items-center pb-4 border-b border-gray-50">
-              <h3 className="text-base font-bold text-gray-800">Edit User Account</h3>
-              <button onClick={() => { setEditingUser(null); setEditValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {editValidationError && (
-              <div className="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">
-                {editValidationError}
-              </div>
-            )}
-            <form onSubmit={handleEditUser} className="space-y-4 pt-4">
-              {/* Role Display */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Account Role</label>
-                <div className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-500 capitalize">
-                  {editingUser.role} (Use "Change Role" button to modify)
-                </div>
-              </div>
+      {(() => {
+        const originalUser = editingUser
+          ? (editingUser.role === 'student'
+              ? students.find(s => s.id === editingUser.id)
+              : editingUser.role === 'tutor'
+              ? tutors.find(t => t.id === editingUser.id)
+              : admins.find(a => a.id === editingUser.id))
+          : null;
+        const isEditUnchanged = originalUser && editingUser ? (
+          editingUser.name === originalUser.name &&
+          editingUser.email === originalUser.email &&
+          editingUser.phone === (originalUser.phone || '') &&
+          (editingUser.role !== 'student' || editingUser.course === ((originalUser as any).course || 'Spoken English Mastery'))
+        ) : false;
 
-              {/* Name */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Full Name</label>
-                <input
-                  type="text"
-                  value={editingUser.name}
-                  onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
+        return editingUser && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white border border-gray-100 rounded-3xl p-6 w-full max-w-md shadow-2xl animate-scale-up">
+              <div className="flex justify-between items-center pb-4 border-b border-gray-55">
+                <h3 className="text-base font-bold text-gray-800">Edit User Account</h3>
+                <button onClick={() => { setEditingUser(null); setEditValidationError(''); }} className="p-1 rounded-lg text-gray-400 hover:bg-gray-55 cursor-pointer">
+                  <X className="h-5 w-5" />
+                </button>
               </div>
-
-              {/* Email */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Email Address</label>
-                <input
-                  type="email"
-                  value={editingUser.email}
-                  onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
-              </div>
-
-              {/* Phone */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Phone Number (10 digits)</label>
-                <input
-                  type="tel"
-                  value={editingUser.phone}
-                  onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  required
-                />
-              </div>
-
-              {/* Course Selection (Only for Student) */}
-              {editingUser.role === 'student' && (
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Select Course</label>
-                  <select
-                    value={editingUser.course}
-                    onChange={(e) => setEditingUser({ ...editingUser, course: e.target.value })}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                  >
-                    <option>Spoken English Mastery</option>
-                    <option>Business Communication</option>
-                    <option>Vocabulary Accelerator</option>
-                  </select>
+              {editValidationError && (
+                <div className="mt-4 p-3 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold">
+                  {editValidationError}
                 </div>
               )}
+              <form onSubmit={handleEditUser} className="space-y-4 pt-4">
+                {/* Role Display */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Account Role</label>
+                  <div className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-500 capitalize">
+                    {editingUser.role} (Use "Change Role" button to modify)
+                  </div>
+                </div>
 
-              <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
-                <button
-                  type="button"
-                  onClick={() => { setEditingUser(null); setEditValidationError(''); }}
-                  className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <SaveToggle
-                  type="submit"
-                  status={editStatus}
-                  setStatus={setEditStatus}
-                  size="sm"
-                  idleText="Save Changes"
-                  savedText="Saved"
-                />
-              </div>
-            </form>
+                {/* Name */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Full Name</label>
+                  <input
+                    type="text"
+                    value={editingUser.name}
+                    onChange={(e) => setEditingUser({ ...editingUser, name: e.target.value })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Email Address</label>
+                  <input
+                    type="email"
+                    value={editingUser.email}
+                    onChange={(e) => setEditingUser({ ...editingUser, email: e.target.value })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Phone */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-gray-500">Phone Number (10 digits)</label>
+                  <input
+                    type="tel"
+                    value={editingUser.phone}
+                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                    className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    required
+                  />
+                </div>
+
+                {/* Course Selection (Only for Student) */}
+                {editingUser.role === 'student' && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500">Select Course</label>
+                    <select
+                      value={editingUser.course}
+                      onChange={(e) => setEditingUser({ ...editingUser, course: e.target.value })}
+                      className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                    >
+                      <option>Spoken English Mastery</option>
+                      <option>Business Communication</option>
+                      <option>Vocabulary Accelerator</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="flex gap-3 justify-end pt-4 border-t border-gray-55">
+                  <button
+                    type="button"
+                    onClick={() => { setEditingUser(null); setEditValidationError(''); }}
+                    className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-55 cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <SaveToggle
+                    type="submit"
+                    status={editStatus}
+                    setStatus={setEditStatus}
+                    size="sm"
+                    idleText="Save Changes"
+                    savedText="Saved"
+                    disabled={isEditUnchanged}
+                  />
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Change Role Modal */}
       {roleChange && (

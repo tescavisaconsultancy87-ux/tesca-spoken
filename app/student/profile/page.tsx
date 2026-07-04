@@ -22,6 +22,7 @@ export default function StudentProfilePage() {
     joinedDate: '',
     currentLevel: 'Intermediate (B1)',
   });
+  const [initialProfileData, setInitialProfileData] = useState<any>(null);
 
   useEffect(() => {
     setProfileSaveStatus('idle');
@@ -36,7 +37,7 @@ export default function StudentProfilePage() {
     async function loadProfile() {
       const data = await db.getProfile(userId);
       if (data) {
-        setProfileData({
+        const p = {
           name: data.name || userName || '',
           email: data.email || userEmail || '',
           phone: data.phone || '',
@@ -45,18 +46,31 @@ export default function StudentProfilePage() {
             ? new Date(data.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
             : 'July 2026',
           currentLevel: data.level || 'Intermediate (B1)',
-        });
+        };
+        setProfileData(p);
+        setInitialProfileData(p);
       } else {
-        setProfileData((prev) => ({
-          ...prev,
+        const p = {
           name: userName || '',
           email: userEmail || '',
+          phone: '',
+          location: '',
           joinedDate: 'July 2026',
-        }));
+          currentLevel: 'Intermediate (B1)',
+        };
+        setProfileData(p);
+        setInitialProfileData(p);
       }
     }
     loadProfile();
   }, [user]);
+
+  const isProfileUnchanged = initialProfileData ? (
+    profileData.name === initialProfileData.name &&
+    profileData.email === initialProfileData.email &&
+    profileData.phone === initialProfileData.phone &&
+    profileData.location === initialProfileData.location
+  ) : false;
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,6 +95,14 @@ export default function StudentProfilePage() {
 
       if (success) {
         setProfileSaveStatus('success');
+        setInitialProfileData({
+          name: profileData.name,
+          email: profileData.email,
+          phone: profileData.phone,
+          location: profileData.location,
+          joinedDate: profileData.joinedDate,
+          currentLevel: profileData.currentLevel
+        });
         setSaveSuccess(true);
         setTimeout(() => {
           setProfileSaveStatus('saved');
@@ -251,6 +273,7 @@ export default function StudentProfilePage() {
                     size="sm"
                     idleText="Save Changes"
                     savedText="Saved"
+                    disabled={isProfileUnchanged}
                   />
                 </div>
               </form>

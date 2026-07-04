@@ -205,6 +205,14 @@ export default function TutorMaterialsPage() {
     m.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const isEditUnchanged = editingMaterial ? (
+    formData.name === editingMaterial.name &&
+    formData.category === editingMaterial.category &&
+    formData.format === editingMaterial.format &&
+    formData.size === editingMaterial.size &&
+    formData.download_url === editingMaterial.download_url
+  ) : false;
+
   const getFormatIcon = (format: string) => {
     switch (format) {
       case 'MP3': return Headphones;
@@ -330,6 +338,7 @@ export default function TutorMaterialsPage() {
                   size="sm"
                   idleText={editingMaterial ? 'Save Changes' : 'Upload'}
                   savedText="Saved"
+                  disabled={isEditUnchanged}
                 />
               </div>
             </form>

@@ -152,6 +152,13 @@ export default function TutorBatchesPage() {
     b.time_period.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const isEditUnchanged = editingBatch ? (
+    formData.name === editingBatch.name &&
+    formData.time_period === editingBatch.time_period &&
+    formData.student_ids.length === editingBatch.student_ids.length &&
+    formData.student_ids.every((id) => editingBatch.student_ids.includes(id))
+  ) : false;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -352,6 +359,7 @@ export default function TutorBatchesPage() {
                   size="sm"
                   idleText={editingBatch ? 'Save Changes' : 'Create Batch'}
                   savedText="Saved"
+                  disabled={isEditUnchanged}
                 />
               </div>
             </form>

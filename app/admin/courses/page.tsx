@@ -192,6 +192,16 @@ export default function AdminCoursesPage() {
       c.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const isEditUnchanged = editingCourse ? (
+    formData.title === editingCourse.title &&
+    formData.price === editingCourse.price &&
+    formData.originalPrice === editingCourse.originalPrice &&
+    formData.duration === editingCourse.duration &&
+    formData.accent === editingCourse.accent &&
+    formData.popular === editingCourse.popular &&
+    formData.benefits.map((b) => b.trim()).filter(Boolean).join(', ') === (editingCourse.benefits || '')
+  ) : false;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -379,6 +389,7 @@ export default function AdminCoursesPage() {
                   size="sm"
                   idleText={editingCourse ? 'Save Changes' : 'Create Course'}
                   savedText="Saved"
+                  disabled={isEditUnchanged}
                 />
               </div>
             </form>

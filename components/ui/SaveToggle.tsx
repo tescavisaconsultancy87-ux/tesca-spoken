@@ -118,19 +118,21 @@ export const SaveToggle: React.FC<SaveToggleProps> = ({
     if (onClick) {
       const result = onClick(e) as any;
       if (result && typeof result.then === 'function') {
-        if (status === 'idle') {
-          setStatus('loading');
-          try {
-            await result;
-            setStatus('success');
-            setTimeout(() => {
-              setStatus('saved');
-            }, successDuration);
-          } catch (err) {
+        if (propStatus === undefined) {
+          if (status === 'idle') {
+            setStatus('loading');
+            try {
+              await result;
+              setStatus('success');
+              setTimeout(() => {
+                setStatus('saved');
+              }, successDuration);
+            } catch (err) {
+              setStatus('idle');
+            }
+          } else if (status === 'saved') {
             setStatus('idle');
           }
-        } else if (status === 'saved') {
-          setStatus('idle');
         }
       } else {
         if (propStatus === undefined) {
@@ -148,16 +150,18 @@ export const SaveToggle: React.FC<SaveToggleProps> = ({
         }
       }
     } else {
-      if (status === 'idle') {
-        setStatus('loading');
-        setTimeout(() => {
-          setStatus('success');
+      if (propStatus === undefined) {
+        if (status === 'idle') {
+          setStatus('loading');
           setTimeout(() => {
-            setStatus('saved');
-          }, successDuration);
-        }, loadingDuration);
-      } else if (status === 'saved') {
-        setStatus('idle');
+            setStatus('success');
+            setTimeout(() => {
+              setStatus('saved');
+            }, successDuration);
+          }, loadingDuration);
+        } else if (status === 'saved') {
+          setStatus('idle');
+        }
       }
     }
   };
@@ -165,6 +169,9 @@ export const SaveToggle: React.FC<SaveToggleProps> = ({
   const isCircle = status === 'loading' || status === 'success';
 
   const getBackgroundColor = () => {
+    if (disabled) {
+      return theme === 'dark' ? '#1f1f23' : '#e4e4e7';
+    }
     if (status === 'loading' || status === 'success') {
       return theme === 'dark' ? '#ffffff' : '#18181b';
     }
@@ -222,7 +229,7 @@ export const SaveToggle: React.FC<SaveToggleProps> = ({
             },
           }}
           className={cn(
-            'relative z-0 flex cursor-pointer items-center justify-center overflow-hidden rounded-full select-none focus:outline-none active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed',
+            'relative z-0 flex cursor-pointer items-center justify-center overflow-hidden rounded-full select-none focus:outline-none active:scale-[0.97] disabled:cursor-not-allowed',
           )}
         >
           <AnimatePresence mode="popLayout">
@@ -233,7 +240,10 @@ export const SaveToggle: React.FC<SaveToggleProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -15, x: -20 }}
                 className={cn(
-                  "absolute inset-0 flex items-center justify-center font-bold tracking-tight text-[#2C2A26] dark:text-zinc-200",
+                  "absolute inset-0 flex items-center justify-center font-bold tracking-tight",
+                  disabled
+                    ? "text-zinc-400 dark:text-zinc-500"
+                    : "text-[#2C2A26] dark:text-zinc-200",
                   cfg.text
                 )}
               >

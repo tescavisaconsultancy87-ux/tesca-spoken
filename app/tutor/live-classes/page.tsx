@@ -227,6 +227,18 @@ export default function TutorLiveClassesPage() {
 
   const showCredentialFields = formData.platform === 'zoom' || formData.platform === 'other';
 
+  const isEditUnchanged = editingClass ? (
+    formData.topic === editingClass.topic &&
+    formData.trainer === editingClass.trainer &&
+    formData.date_time === editingClass.date_time &&
+    formData.duration === editingClass.duration &&
+    formData.join_url === (editingClass.join_url || '') &&
+    formData.platform === (editingClass.platform || 'google_meet') &&
+    formData.meeting_id === (editingClass.meeting_id || '') &&
+    formData.meeting_password === (editingClass.meeting_password || '') &&
+    formData.batch_id === (editingClass.batch_id || '')
+  ) : false;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -435,6 +447,7 @@ export default function TutorLiveClassesPage() {
                   size="sm"
                   idleText={editingClass ? 'Save Changes' : 'Create Class'}
                   savedText="Saved"
+                  disabled={isEditUnchanged}
                 />
               </div>
             </form>

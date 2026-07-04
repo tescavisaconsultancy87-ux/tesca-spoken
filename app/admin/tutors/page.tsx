@@ -204,6 +204,18 @@ export default function AdminTutorsPage() {
       t.role.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const isEditUnchanged = editingTrainer ? (
+    formData.name === editingTrainer.name &&
+    formData.role === editingTrainer.role &&
+    formData.experience === (editingTrainer.experience || '') &&
+    formData.certification === (editingTrainer.certification || '') &&
+    formData.students === (editingTrainer.students || '') &&
+    formData.specialization === (editingTrainer.specialization || '') &&
+    formData.photo === (editingTrainer.photo || '') &&
+    formData.verified === !!editingTrainer.verified &&
+    formData.show_on_homepage === !!editingTrainer.show_on_homepage
+  ) : false;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -272,7 +284,7 @@ export default function AdminTutorsPage() {
                 </div>
 
                 {/* Details */}
-                <div className="space-y-1.5 pt-1 text-[11px] font-medium text-gray-500 border-t border-gray-50">
+                <div className="space-y-1.5 pt-1 text-[11px] font-medium text-gray-500 border-t border-gray-55">
                   <div className="flex items-center gap-1.5">
                     <Briefcase className="h-3.5 w-3.5 text-primary shrink-0" />
                     <span>Exp: {trainer.experience}</span>
@@ -280,7 +292,7 @@ export default function AdminTutorsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 text-xs font-bold pt-2 border-t border-gray-50">
+              <div className="flex items-center justify-end gap-2 text-xs font-bold pt-2 border-t border-gray-55">
                 <button
                   onClick={() => handleDeleteTrainer(trainer.id)}
                   className="inline-flex items-center justify-center p-2.5 rounded-xl border border-gray-100 hover:border-rose-100 hover:bg-rose-50 text-rose-600 transition-colors"
@@ -320,7 +332,7 @@ export default function AdminTutorsPage() {
                   placeholder="e.g. Dr. Avadh Patel"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                   required
                 />
               </div>
@@ -332,7 +344,7 @@ export default function AdminTutorsPage() {
                   placeholder="e.g. Lead IELTS Trainer, Pronunciation Expert"
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                   required
                 />
               </div>
@@ -341,7 +353,7 @@ export default function AdminTutorsPage() {
                 <label className="text-xs font-bold text-gray-500">Tutor Photo (JPG, Max 600KB)</label>
                 <div className="flex items-center gap-4">
                   {formData.photo && (
-                    <div className="h-16 w-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
+                    <div className="h-16 w-16 rounded-xl overflow-hidden border border-gray-100 bg-gray-55 shrink-0">
                       <img src={formData.photo} alt="Preview" className="h-full w-full object-cover" />
                     </div>
                   )}
@@ -364,7 +376,7 @@ export default function AdminTutorsPage() {
                   placeholder="e.g. 10 years, 8+ years"
                   value={formData.experience}
                   onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                   required
                 />
               </div>
@@ -384,6 +396,7 @@ export default function AdminTutorsPage() {
                   size="sm"
                   idleText={editingTrainer ? 'Save Changes' : 'Add Tutor'}
                   savedText="Saved"
+                  disabled={isEditUnchanged}
                 />
               </div>
             </form>
