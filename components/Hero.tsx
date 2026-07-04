@@ -16,11 +16,11 @@ export default function Hero() {
       suffix: '+',
     },
     {
-      value: '7Lac+',
+      value: '7M+',
       label: 'Successful Students',
       icon: Users,
       numericEnd: 7,
-      suffix: 'Lac+',
+      suffix: 'L+',
     },
     {
       value: '98%',
