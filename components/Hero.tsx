@@ -107,11 +107,12 @@ export default function Hero() {
               
               {/* Mobile/Tablet Graphic: Clean student graphic, hidden on desktop */}
               <div className="block lg:hidden w-full max-w-[320px] sm:max-w-[360px] mt-8 pointer-events-none select-none relative z-10 px-4">
-                <div className="relative rounded-3xl overflow-hidden shadow-soft-lg border border-black/5 bg-[#F4FBFB] aspect-[1.1] w-full">
+                <div className="relative rounded-3xl overflow-hidden shadow-soft-lg border border-black/5 bg-white aspect-[1.1] w-full">
                   <img 
                     src="/hero-section-background.png" 
                     alt="TESCA Student" 
                     className="w-full h-full object-cover object-[95%_center]"
+                    style={{ transform: 'scale(1.25)', transformOrigin: '95% 50%' }}
                   />
                 </div>
               </div>
