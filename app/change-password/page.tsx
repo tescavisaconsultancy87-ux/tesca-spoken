@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 
 export default function ChangePasswordPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshUser } = useAuth();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -70,11 +70,15 @@ export default function ChangePasswordPage() {
         if (profileError) {
           console.warn('[ChangePassword] Failed to update profile column (it might not exist in this database schema yet):', profileError.message);
         }
+
+        // 3. Refresh user profile in Auth Context
+        await refreshUser();
       } else {
         // Dev Sandbox Mock Logic
         console.log('[Mock ChangePassword] Updating password in mock session');
         const updatedProfile = { ...user, needsPasswordChange: false };
         sessionStorage.setItem('tesca_dev_session', JSON.stringify(updatedProfile));
+        await refreshUser();
       }
 
       setSuccess(true);

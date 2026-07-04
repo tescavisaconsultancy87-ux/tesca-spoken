@@ -18,6 +18,7 @@ interface AuthContextType {
   loading: boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; role?: 'student' | 'admin' | 'tutor'; needsPasswordChange?: boolean; error?: string }>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -280,8 +281,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push('/login');
   };
 
+  const refreshUser = async () => {
+    try {
+      await ensureSupabaseClient();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const email = session.user.email || '';
+          const { data: profile } = await supabase.from('profiles').select('role, name, needs_password_change').eq('id', session.user.id).single();
+          if (profile) {
+            let resolvedRole: 'student' | 'admin' | 'tutor' = 'student';
+            if (isAdminEmail(email)) {
+              resolvedRole = 'admin';
+            } else if (isTutorEmail(email)) {
+              resolvedRole = 'tutor';
+            } else {
+              resolvedRole = (profile.role as 'student' | 'admin' | 'tutor') || 'student';
+            }
+            setUser({
+              id: session.user.id,
+              email,
+              role: resolvedRole,
+              name: profile.name || email.split('@')[0] || 'User',
+              needsPasswordChange: !!profile.needs_password_change,
+            });
+          }
+        }
+      } else {
+        const savedSession = sessionStorage.getItem('tesca_dev_session');
+        if (savedSession) {
+          setUser(JSON.parse(savedSession));
+        }
+      }
+    } catch (err) {
+      console.error('[Auth] Failed to refresh user profile:', err);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
