@@ -50,7 +50,7 @@ export function middleware(request: NextRequest) {
     img-src 'self' data: blob: https://images.pexels.com https://*.supabase.co https://*.supabase.in;
     font-src 'self' https://fonts.gstatic.com;
     connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.razorpay.com https://api.indexnow.org;
-    frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://www.youtube.com https://player.vimeo.com;
+    frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://www.youtube.com https://player.vimeo.com https://www.google.com;
     media-src 'self' blob: https://*.supabase.co;
     object-src 'none';
     base-uri 'self';
