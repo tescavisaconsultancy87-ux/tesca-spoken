@@ -200,3 +200,20 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ─── Hero Custom Background ─── */
+.hero-bg {
+  background: #F4FBFB;
+  background: linear-gradient(180deg, #F4FBFB 0%, #E8F7F7 50%, #FFFFFF 100%);
+}
+
+@media (min-width: 1024px) {
+  .hero-bg {
+    background-color: #F4FBFB;
+    background-image: url('/hero-section-background.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+}
+

@@ -43,27 +43,29 @@ export default function Hero() {
     <>
       <section
         id="home"
-        className="relative min-h-[80vh] flex flex-col justify-center items-center bg-cover bg-center bg-no-repeat text-slate-800 overflow-hidden pt-24 pb-20 lg:pt-30 lg:pb-22"
-        style={{ backgroundImage: "url('/hero%20section%20background.png')" }}
+        className="relative min-h-[90vh] lg:min-h-[92vh] flex flex-col justify-center items-center hero-bg text-slate-800 overflow-hidden pt-24 pb-20 sm:pt-28 sm:pb-24 lg:pt-40 lg:pb-36"
       >
+        {/* Background decorative glow blobs */}
+        <div className="absolute top-1/4 left-[-10%] w-72 h-72 bg-primary/5 rounded-full blur-3xl pointer-events-none lg:w-96 lg:h-96" />
+        <div className="absolute bottom-1/4 right-[-10%] w-80 h-80 bg-secondary/5 rounded-full blur-3xl pointer-events-none lg:w-[480px] lg:h-[480px]" />
+
         <div className="container-x relative z-10 w-full flex-1 flex flex-col justify-center">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
             
-            {/* Left Column: Typography & CTA (Restricted width to prevent overlap with background shapes) */}
-            <div className="lg:col-span-5 max-w-[420px] space-y-7 text-left order-2 lg:order-1 z-10">
+            {/* Left Column: Typography & CTA */}
+            <div className="lg:col-span-6 xl:col-span-5 max-w-md sm:max-w-lg lg:max-w-xl space-y-7 text-left order-1 lg:order-1 z-10">
               
               {/* Eyebrow Tag */}
-              <span className="inline-block text-primary text-sm font-semibold tracking-wider mb-1">
-                Start Your Spoken English Journey
+              <span className="inline-block text-primary text-xs sm:text-sm font-bold tracking-widest uppercase mb-1">
+                Cambridge-Certified English Training
               </span>
 
               {/* Heading */}
-              <h1 className="font-heading text-4xl sm:text-5xl lg:text-[56px] font-extrabold leading-[1.2] tracking-tight text-slate-900 text-balance">
-                Speak English from <br />
-                anywhere, and build <br />
-                your{' '}
-                <span className="relative inline-block text-primary">
-                  bright future.
+              <h1 className="font-heading text-3xl sm:text-4xl lg:text-[44px] xl:text-[52px] font-extrabold leading-[1.15] lg:leading-[1.2] tracking-tight text-slate-900">
+                Speak English Confidently. <br className="hidden sm:inline" />
+                Shape Your{' '}
+                <span className="relative inline-block text-primary whitespace-nowrap">
+                  Global Future.
                   {/* Custom hand-drawn SVG wave underline */}
                   <svg
                     className="absolute -bottom-2.5 left-0 w-full h-3 text-primary pointer-events-none select-none"
@@ -83,7 +85,7 @@ export default function Hero() {
 
               {/* Subheadline / Description */}
               <p className="max-w-xl text-base leading-relaxed text-slate-600 sm:text-lg">
-                Unlock global career paths and test success (IELTS/PTE). Join thousands of professionals speaking with clarity, confidence, and authority under guidance from expert tutors.
+                Master fluent communication, ace international exams (IELTS/PTE), and accelerate your career. Learn 1-on-1 from expert trainers with interactive live practice.
               </p>
 
               {/* CTA Button */}
@@ -98,8 +100,22 @@ export default function Hero() {
 
             </div>
 
-            {/* Right Column: Spacer to let the background graphics show cleanly */}
-            <div className="lg:col-span-7 h-[150px] lg:h-[450px] order-1 lg:order-2 pointer-events-none" />
+            {/* Right Column: Spacer on Desktop, Image on Mobile */}
+            <div className="lg:col-span-6 xl:col-span-7 order-2 lg:order-2 w-full flex justify-center items-center">
+              {/* Desktop Spacer: background graphic shown via CSS background */}
+              <div className="hidden lg:block h-[550px] pointer-events-none" />
+              
+              {/* Mobile/Tablet Graphic: Clean student graphic, hidden on desktop */}
+              <div className="block lg:hidden w-full max-w-[320px] sm:max-w-[360px] mt-8 pointer-events-none select-none relative z-10 px-4">
+                <div className="relative rounded-3xl overflow-hidden shadow-soft-lg border border-black/5 bg-[#F4FBFB] aspect-[1.1] w-full">
+                  <img 
+                    src="/hero-section-background.png" 
+                    alt="TESCA Student" 
+                    className="w-full h-full object-cover object-[95%_center]"
+                  />
+                </div>
+              </div>
+            </div>
 
           </div>
         </div>
