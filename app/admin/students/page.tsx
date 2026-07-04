@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, UserPlus, Filter, ShieldAlert, Check, X, Trash2, UserCog, Loader2, Pencil } from 'lucide-react';
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import { useAuth } from '@/context/AuthContext';
 import { CopyButton } from '@/components/animate-ui/components/buttons/copy';
 import {
@@ -96,6 +97,20 @@ export default function AdminStudentsPage() {
   } | null>(null);
   const [editValidationError, setEditValidationError] = useState('');
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [createStatus, setCreateStatus] = useState<ButtonStatus>('idle');
+  const [editStatus, setEditStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (isAdding) {
+      setCreateStatus('idle');
+    }
+  }, [isAdding]);
+
+  useEffect(() => {
+    if (editingUser) {
+      setEditStatus('idle');
+    }
+  }, [editingUser]);
 
   const handleOpenEditModal = (user: any, role: 'student' | 'tutor' | 'admin') => {
     setEditingUser({
@@ -113,12 +128,14 @@ export default function AdminStudentsPage() {
     e.preventDefault();
     if (!editingUser) return;
     setEditValidationError('');
+    setEditStatus('loading');
     setEditSubmitting(true);
 
     const cleanedPhone = editingUser.phone.replace(/\D/g, '');
     if (cleanedPhone.length !== 10) {
       setEditValidationError('Phone number must be exactly 10 digits.');
       setEditSubmitting(false);
+      setEditStatus('idle');
       return;
     }
 
@@ -175,9 +192,16 @@ export default function AdminStudentsPage() {
         } : a));
       }
 
-      setEditingUser(null);
+      setEditStatus('success');
+      setTimeout(() => {
+        setEditStatus('saved');
+        setTimeout(() => {
+          setEditingUser(null);
+        }, 500);
+      }, 800);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
+      setEditStatus('idle');
     } finally {
       setEditSubmitting(false);
     }
@@ -216,6 +240,7 @@ export default function AdminStudentsPage() {
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setValidationError('');
+    setCreateStatus('loading');
     setSubmitting(true);
 
     // Validate phone number: exactly 10 digits
@@ -223,6 +248,7 @@ export default function AdminStudentsPage() {
     if (cleanedPhone.length !== 10) {
       setValidationError('Phone number must be exactly 10 digits.');
       setSubmitting(false);
+      setCreateStatus('idle');
       return;
     }
 
@@ -289,24 +315,31 @@ export default function AdminStudentsPage() {
         setAdmins([newAdminObj, ...admins]);
       }
 
-      // Show success popup with the generated password
-      setSuccessCredentials({
-        email: newForm.email,
-        password: result.password,
-        warning: result.warning
-      });
+      setCreateStatus('success');
+      setTimeout(() => {
+        setCreateStatus('saved');
+        setTimeout(() => {
+          // Show success popup with the generated password
+          setSuccessCredentials({
+            email: newForm.email,
+            password: result.password,
+            warning: result.warning
+          });
 
-      // Clear Form and close addition modal
-      setNewForm({
-        name: '',
-        email: '',
-        role: 'student',
-        phone: '',
-        course: 'Spoken English Mastery'
-      });
-      setIsAdding(false);
+          // Clear Form and close addition modal
+          setNewForm({
+            name: '',
+            email: '',
+            role: 'student',
+            phone: '',
+            course: 'Spoken English Mastery'
+          });
+          setIsAdding(false);
+        }, 500);
+      }, 800);
     } catch (err: any) {
       setValidationError(err.message || 'An error occurred. Please try again.');
+      setCreateStatus('idle');
     } finally {
       setSubmitting(false);
     }
@@ -572,13 +605,14 @@ export default function AdminStudentsPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  {submitting ? 'Creating...' : 'Create Account'}
-                </button>
+                  status={createStatus}
+                  setStatus={setCreateStatus}
+                  size="sm"
+                  idleText="Create Account"
+                  savedText="Created"
+                />
               </div>
             </form>
           </div>
@@ -1090,13 +1124,14 @@ export default function AdminStudentsPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  disabled={editSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  {editSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
+                  status={editStatus}
+                  setStatus={setEditStatus}
+                  size="sm"
+                  idleText="Save Changes"
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>

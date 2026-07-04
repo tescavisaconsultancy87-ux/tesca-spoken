@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Users, Award, Briefcase, X, BadgeCheck } from 'lucide-react';
 import { db } from '@/lib/db';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -35,6 +36,13 @@ export default function AdminTutorsPage() {
   const [trainers, setTrainers] = useState<Trainer[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteTrainerId, setDeleteTrainerId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setSaveStatus('idle');
+    }
+  }, [isModalOpen]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -120,60 +128,72 @@ export default function AdminTutorsPage() {
 
   const handleSaveTrainer = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveStatus('loading');
 
-    if (editingTrainer) {
-      // Edit Mode
-      const updatedObj = {
-        name: formData.name,
-        role: formData.role,
-        experience: formData.experience,
-        certification: formData.certification,
-        students: formData.students,
-        specialization: formData.specialization,
-        photo: formData.photo,
-        verified: formData.verified,
-        show_on_homepage: formData.show_on_homepage,
-      };
+    try {
+      if (editingTrainer) {
+        // Edit Mode
+        const updatedObj = {
+          name: formData.name,
+          role: formData.role,
+          experience: formData.experience,
+          certification: formData.certification,
+          students: formData.students,
+          specialization: formData.specialization,
+          photo: formData.photo,
+          verified: formData.verified,
+          show_on_homepage: formData.show_on_homepage,
+        };
 
-      await db.updateTrainer(editingTrainer.id, updatedObj);
+        await db.updateTrainer(editingTrainer.id, updatedObj);
 
-      setTrainers(
-        trainers.map((t) =>
-          t.id === editingTrainer.id
-            ? {
-                ...t,
-                ...updatedObj,
-              }
-            : t
-        )
-      );
-    } else {
-      // Create Mode
-      const newId = `trainer-${Date.now()}`;
-      const createdObj = {
-        id: newId,
-        name: formData.name,
-        role: formData.role,
-        experience: formData.experience,
-        certification: formData.certification,
-        students: formData.students,
-        specialization: formData.specialization,
-        photo: formData.photo,
-        verified: formData.verified,
-        show_on_homepage: formData.show_on_homepage,
-      };
+        setTrainers(
+          trainers.map((t) =>
+            t.id === editingTrainer.id
+              ? {
+                  ...t,
+                  ...updatedObj,
+                }
+              : t
+          )
+        );
+      } else {
+        // Create Mode
+        const newId = `trainer-${Date.now()}`;
+        const createdObj = {
+          id: newId,
+          name: formData.name,
+          role: formData.role,
+          experience: formData.experience,
+          certification: formData.certification,
+          students: formData.students,
+          specialization: formData.specialization,
+          photo: formData.photo,
+          verified: formData.verified,
+          show_on_homepage: formData.show_on_homepage,
+        };
 
-      await db.createTrainer(createdObj);
+        await db.createTrainer(createdObj);
 
-      setTrainers([
-        ...trainers,
-        {
-          ...createdObj,
-        },
-      ]);
+        setTrainers([
+          ...trainers,
+          {
+            ...createdObj,
+          },
+        ]);
+      }
+
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setIsModalOpen(false);
+        }, 500);
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('idle');
     }
-
-    setIsModalOpen(false);
   };
 
   const handleDeleteTrainer = (id: string) => {
@@ -359,12 +379,14 @@ export default function AdminTutorsPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft"
-                >
-                  {editingTrainer ? 'Save Changes' : 'Add Tutor'}
-                </button>
+                  status={saveStatus}
+                  setStatus={setSaveStatus}
+                  size="sm"
+                  idleText={editingTrainer ? 'Save Changes' : 'Add Tutor'}
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>

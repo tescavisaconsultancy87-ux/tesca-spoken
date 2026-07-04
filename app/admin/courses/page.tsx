@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Users, BookOpen, X } from 'lucide-react';
 import { db } from '@/lib/db';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -34,6 +35,13 @@ export default function AdminCoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setSaveStatus('idle');
+    }
+  }, [isModalOpen]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -97,72 +105,84 @@ export default function AdminCoursesPage() {
 
   const handleSaveCourse = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveStatus('loading');
     const formattedBenefits = formData.benefits.map((b) => b.trim()).filter(Boolean).join(', ');
 
-    if (editingCourse) {
-      // Edit Mode
-      const updatedObj = {
-        title: formData.title,
-        price: Number(formData.price),
-        original_price: Number(formData.originalPrice),
-        duration: formData.duration,
-        accent: formData.accent,
-        benefits: formattedBenefits,
-        popular: formData.popular,
-      };
+    try {
+      if (editingCourse) {
+        // Edit Mode
+        const updatedObj = {
+          title: formData.title,
+          price: Number(formData.price),
+          original_price: Number(formData.originalPrice),
+          duration: formData.duration,
+          accent: formData.accent,
+          benefits: formattedBenefits,
+          popular: formData.popular,
+        };
 
-      await db.updateCourse(editingCourse.id, updatedObj);
+        await db.updateCourse(editingCourse.id, updatedObj);
 
-      setCourses(
-        courses.map((c) =>
-          c.id === editingCourse.id
-            ? {
-                ...c,
-                title: formData.title,
-                price: Number(formData.price),
-                originalPrice: Number(formData.originalPrice),
-                duration: formData.duration,
-                accent: formData.accent,
-                benefits: formattedBenefits,
-                popular: formData.popular,
-              }
-            : c
-        )
-      );
-    } else {
-      // Create Mode
-      const newId = `course-${Date.now()}`;
-      const createdObj = {
-        id: newId,
-        title: formData.title,
-        price: Number(formData.price),
-        students_count: 0,
-        original_price: Number(formData.originalPrice),
-        duration: formData.duration,
-        accent: formData.accent,
-        benefits: formattedBenefits,
-        popular: formData.popular,
-      };
+        setCourses(
+          courses.map((c) =>
+            c.id === editingCourse.id
+              ? {
+                  ...c,
+                  title: formData.title,
+                  price: Number(formData.price),
+                  originalPrice: Number(formData.originalPrice),
+                  duration: formData.duration,
+                  accent: formData.accent,
+                  benefits: formattedBenefits,
+                  popular: formData.popular,
+                }
+              : c
+          )
+        );
+      } else {
+        // Create Mode
+        const newId = `course-${Date.now()}`;
+        const createdObj = {
+          id: newId,
+          title: formData.title,
+          price: Number(formData.price),
+          students_count: 0,
+          original_price: Number(formData.originalPrice),
+          duration: formData.duration,
+          accent: formData.accent,
+          benefits: formattedBenefits,
+          popular: formData.popular,
+        };
 
-      await db.createCourse(createdObj);
+        await db.createCourse(createdObj);
 
-      setCourses([
-        ...courses,
-        {
-          id: createdObj.id,
-          title: createdObj.title,
-          price: createdObj.price,
-          studentsCount: createdObj.students_count,
-          originalPrice: createdObj.original_price,
-          duration: createdObj.duration,
-          accent: createdObj.accent,
-          benefits: createdObj.benefits,
-          popular: createdObj.popular,
-        },
-      ]);
+        setCourses([
+          ...courses,
+          {
+            id: createdObj.id,
+            title: createdObj.title,
+            price: createdObj.price,
+            studentsCount: createdObj.students_count,
+            originalPrice: createdObj.original_price,
+            duration: createdObj.duration,
+            accent: createdObj.accent,
+            benefits: createdObj.benefits,
+            popular: createdObj.popular,
+          },
+        ]);
+      }
+
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setIsModalOpen(false);
+        }, 500);
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('idle');
     }
-
-    setIsModalOpen(false);
   };
 
   const handleDeleteCourse = (id: string) => {
@@ -354,12 +374,14 @@ export default function AdminCoursesPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft"
-                >
-                  {editingCourse ? 'Save Changes' : 'Create Course'}
-                </button>
+                  status={saveStatus}
+                  setStatus={setSaveStatus}
+                  size="sm"
+                  idleText={editingCourse ? 'Save Changes' : 'Create Course'}
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>

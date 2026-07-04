@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Phone, MessageSquare, Check, X, PhoneCall, CheckCircle, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -35,6 +36,13 @@ export default function AdminLeadsPage() {
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [editValidationError, setEditValidationError] = useState('');
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (editingLead) {
+      setSaveStatus('idle');
+    }
+  }, [editingLead]);
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
@@ -49,6 +57,7 @@ export default function AdminLeadsPage() {
     e.preventDefault();
     if (!editingLead) return;
     setEditValidationError('');
+    setSaveStatus('loading');
     setEditSubmitting(true);
 
     try {
@@ -81,9 +90,17 @@ export default function AdminLeadsPage() {
 
       // Update state locally
       setLeads(leads.map(l => l.id === editingLead.id ? { ...editingLead } : l));
-      setEditingLead(null);
+      
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setEditingLead(null);
+        }, 500);
+      }, 800);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
+      setSaveStatus('idle');
     } finally {
       setEditSubmitting(false);
     }
@@ -378,13 +395,14 @@ export default function AdminLeadsPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  disabled={editSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  {editSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
+                  status={saveStatus}
+                  setStatus={setSaveStatus}
+                  size="sm"
+                  idleText="Save Changes"
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>

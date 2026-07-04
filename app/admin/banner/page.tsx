@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, CheckCircle, Megaphone, Eye } from 'lucide-react';
+import { CheckCircle, Megaphone, Eye } from 'lucide-react';
 import { db } from '@/lib/db';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 
 function CountdownTimerPreview({ expiryType, fixedExpiry }: { expiryType: string; fixedExpiry: string }) {
   const getTimeLeft = () => {
@@ -69,6 +70,7 @@ function CountdownTimerPreview({ expiryType, fixedExpiry }: { expiryType: string
 export default function OfferBannerSettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
   const [settings, setSettings] = useState({
     showOfferBanner: true,
     showTimer: true,
@@ -99,18 +101,25 @@ export default function OfferBannerSettingsPage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveSuccess(false);
+    setSaveStatus('loading');
 
     const success = await db.updateSystemSettings(settings);
     if (success) {
       const currentFullSettings = JSON.parse(localStorage.getItem('tesca_school_settings') || '{}');
       const updatedFullSettings = { ...currentFullSettings, ...settings };
       localStorage.setItem('tesca_school_settings', JSON.stringify(updatedFullSettings));
+      
+      setSaveStatus('success');
       setSaveSuccess(true);
+      setTimeout(() => {
+        setSaveStatus('saved');
+      }, 800);
       setTimeout(() => {
         setSaveSuccess(false);
       }, 3000);
     } else {
       alert('Failed to save banner configuration to the database.');
+      setSaveStatus('idle');
     }
   };
 
@@ -300,13 +309,14 @@ export default function OfferBannerSettingsPage() {
                   Changes will propagate immediately to the student-facing pricing page.
                 </span>
               )}
-              <button
+              <SaveToggle
                 type="submit"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 transition-all hover:shadow-soft"
-              >
-                <Save className="h-4 w-4" />
-                Save Changes
-              </button>
+                status={saveStatus}
+                setStatus={setSaveStatus}
+                size="sm"
+                idleText="Save Changes"
+                savedText="Saved"
+              />
             </div>
           </form>
         </div>

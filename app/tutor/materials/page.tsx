@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Edit2, FileText, Headphones, FileCheck, X } from 'lucide-react';
 import { db } from '@/lib/db';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -41,6 +42,13 @@ export default function TutorMaterialsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState<StudyMaterial | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setSaveStatus('idle');
+    }
+  }, [isModalOpen]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -151,28 +159,40 @@ export default function TutorMaterialsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveStatus('loading');
 
     const payload = {
       ...formData,
       added_date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
     };
 
-    if (editingMaterial) {
-      await db.updateStudyMaterial(editingMaterial.id, payload);
-    } else {
-      const newId = `mat-${Date.now()}`;
-      await db.createStudyMaterial({ id: newId, ...payload });
-      await triggerNotification('material-create', {
-        name: payload.name,
-        category: payload.category,
-        format: payload.format,
-        size: payload.size,
-        downloadUrl: payload.download_url
-      });
-    }
+    try {
+      if (editingMaterial) {
+        await db.updateStudyMaterial(editingMaterial.id, payload);
+      } else {
+        const newId = `mat-${Date.now()}`;
+        await db.createStudyMaterial({ id: newId, ...payload });
+        await triggerNotification('material-create', {
+          name: payload.name,
+          category: payload.category,
+          format: payload.format,
+          size: payload.size,
+          downloadUrl: payload.download_url
+        });
+      }
 
-    setIsModalOpen(false);
-    loadData();
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setIsModalOpen(false);
+          loadData();
+        }, 500);
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('idle');
+    }
   };
 
   const handleDelete = async () => {
@@ -305,12 +325,14 @@ export default function TutorMaterialsPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft"
-                >
-                  {editingMaterial ? 'Save Changes' : 'Upload'}
-                </button>
+                  status={saveStatus}
+                  setStatus={setSaveStatus}
+                  size="sm"
+                  idleText={editingMaterial ? 'Save Changes' : 'Upload'}
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>

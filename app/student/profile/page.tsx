@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Shield, CreditCard, Save, CheckCircle } from 'lucide-react';
+import { User, Shield, CreditCard, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 
 export default function StudentProfilePage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'billing'>('profile');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [validationError, setValidationError] = useState('');
+  const [profileSaveStatus, setProfileSaveStatus] = useState<ButtonStatus>('idle');
+  const [passwordSaveStatus, setPasswordSaveStatus] = useState<ButtonStatus>('idle');
 
   const [profileData, setProfileData] = useState({
     name: 'Aarav Patel',
@@ -19,6 +22,11 @@ export default function StudentProfilePage() {
     joinedDate: 'May 2026',
     currentLevel: 'Intermediate (B1)',
   });
+
+  useEffect(() => {
+    setProfileSaveStatus('idle');
+    setPasswordSaveStatus('idle');
+  }, [activeTab]);
 
   useEffect(() => {
     if (!user) return;
@@ -55,15 +63,36 @@ export default function StudentProfilePage() {
       return;
     }
     
-    const success = await db.updateProfile(user.id, {
-      name: profileData.name,
-      email: profileData.email,
-      phone: profileData.phone,
-      location: profileData.location
-    });
+    if (activeTab === 'profile') {
+      setProfileSaveStatus('loading');
+      const success = await db.updateProfile(user.id, {
+        name: profileData.name,
+        email: profileData.email,
+        phone: profileData.phone,
+        location: profileData.location
+      });
 
-    if (success) {
+      if (success) {
+        setProfileSaveStatus('success');
+        setSaveSuccess(true);
+        setTimeout(() => {
+          setProfileSaveStatus('saved');
+        }, 800);
+        setTimeout(() => {
+          setSaveSuccess(false);
+        }, 3000);
+      } else {
+        setProfileSaveStatus('idle');
+      }
+    } else if (activeTab === 'security') {
+      setPasswordSaveStatus('loading');
+      // Simulate API call for password update
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setPasswordSaveStatus('success');
       setSaveSuccess(true);
+      setTimeout(() => {
+        setPasswordSaveStatus('saved');
+      }, 800);
       setTimeout(() => {
         setSaveSuccess(false);
       }, 3000);
@@ -208,13 +237,14 @@ export default function StudentProfilePage() {
                   ) : (
                     <span className="text-[11px] text-gray-400 font-medium">Fields are editable. Changes will be saved locally in this state.</span>
                   )}
-                  <button
+                  <SaveToggle
                     type="submit"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 transition-all hover:shadow-soft"
-                  >
-                    <Save className="h-4 w-4" />
-                    Save Changes
-                  </button>
+                    status={profileSaveStatus}
+                    setStatus={setProfileSaveStatus}
+                    size="sm"
+                    idleText="Save Changes"
+                    savedText="Saved"
+                  />
                 </div>
               </form>
             )}
@@ -264,13 +294,14 @@ export default function StudentProfilePage() {
                   ) : (
                     <span className="text-[11px] text-gray-400 font-medium">Keep password complex to keep your account safe.</span>
                   )}
-                  <button
+                  <SaveToggle
                     type="submit"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-6 py-3 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 transition-all hover:shadow-soft"
-                  >
-                    <Save className="h-4 w-4" />
-                    Update Password
-                  </button>
+                    status={passwordSaveStatus}
+                    setStatus={setPasswordSaveStatus}
+                    size="sm"
+                    idleText="Update Password"
+                    savedText="Updated"
+                  />
                 </div>
               </form>
             )}

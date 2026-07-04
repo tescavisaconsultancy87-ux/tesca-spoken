@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Edit2, Users, Calendar, Clock, User, X, ChevronDown, UserPlus, Trash } from 'lucide-react';
 import { db } from '@/lib/db';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -38,6 +39,13 @@ export default function TutorBatchesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setSaveStatus('idle');
+    }
+  }, [isModalOpen]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -93,6 +101,7 @@ export default function TutorBatchesPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveStatus('loading');
 
     const payload = {
       name: formData.name,
@@ -100,15 +109,26 @@ export default function TutorBatchesPage() {
       student_ids: formData.student_ids, // Supabase client takes care of encoding JSON/JSONB
     };
 
-    if (editingBatch) {
-      await db.updateBatch(editingBatch.id, payload);
-    } else {
-      const newId = `batch-${Date.now()}`;
-      await db.createBatch({ id: newId, ...payload });
-    }
+    try {
+      if (editingBatch) {
+        await db.updateBatch(editingBatch.id, payload);
+      } else {
+        const newId = `batch-${Date.now()}`;
+        await db.createBatch({ id: newId, ...payload });
+      }
 
-    setIsModalOpen(false);
-    loadData();
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setIsModalOpen(false);
+          loadData();
+        }, 500);
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('idle');
+    }
   };
 
   const handleDelete = async () => {
@@ -327,12 +347,14 @@ export default function TutorBatchesPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft"
-                >
-                  {editingBatch ? 'Save Changes' : 'Create Batch'}
-                </button>
+                  status={saveStatus}
+                  setStatus={setSaveStatus}
+                  size="sm"
+                  idleText={editingBatch ? 'Save Changes' : 'Create Batch'}
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>

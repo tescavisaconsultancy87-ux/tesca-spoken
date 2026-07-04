@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Download, CreditCard, IndianRupee, ArrowUpRight, CheckCircle2, AlertCircle, Pencil, Trash2, X, Loader2 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -37,6 +38,13 @@ export default function AdminPaymentsPage() {
   const [editingPayment, setEditingPayment] = useState<Transaction | null>(null);
   const [editValidationError, setEditValidationError] = useState('');
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (editingPayment) {
+      setSaveStatus('idle');
+    }
+  }, [editingPayment]);
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState('');
@@ -51,6 +59,7 @@ export default function AdminPaymentsPage() {
     e.preventDefault();
     if (!editingPayment) return;
     setEditValidationError('');
+    setSaveStatus('loading');
     setEditSubmitting(true);
 
     try {
@@ -84,9 +93,17 @@ export default function AdminPaymentsPage() {
 
       // Update state locally
       setTransactions(transactions.map(t => t.id === editingPayment.id ? { ...editingPayment } : t));
-      setEditingPayment(null);
+      
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setEditingPayment(null);
+        }, 500);
+      }, 800);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
+      setSaveStatus('idle');
     } finally {
       setEditSubmitting(false);
     }
@@ -416,13 +433,14 @@ export default function AdminPaymentsPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  disabled={editSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5"
-                >
-                  {editSubmitting ? 'Saving...' : 'Save Changes'}
-                </button>
+                  status={saveStatus}
+                  setStatus={setSaveStatus}
+                  size="sm"
+                  idleText="Save Changes"
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>

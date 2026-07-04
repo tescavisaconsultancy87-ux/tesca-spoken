@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Edit2, Video, Calendar, Clock, User, X, Link as LinkIcon, Key, Hash, ChevronDown, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -54,6 +55,13 @@ export default function TutorLiveClassesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClass, setEditingClass] = useState<LiveClass | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  useEffect(() => {
+    if (isModalOpen) {
+      setSaveStatus('idle');
+    }
+  }, [isModalOpen]);
 
   const [formData, setFormData] = useState({
     topic: '',
@@ -141,42 +149,54 @@ export default function TutorLiveClassesPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveStatus('loading');
 
-    const status = db.computeStatus(formData.date_time, formData.duration);
+    const statusVal = db.computeStatus(formData.date_time, formData.duration);
     const payload = {
       ...formData,
-      status,
+      status: statusVal,
       // Only include meeting_id/password if they have values
       meeting_id: formData.meeting_id.trim() || null,
       meeting_password: formData.meeting_password.trim() || null,
       batch_id: formData.batch_id || null,
     };
 
-    if (editingClass) {
-      await db.updateLiveClass(editingClass.id, payload);
-      await triggerNotification('live-class-update', {
-        topic: formData.topic,
-        trainer: formData.trainer,
-        dateTime: formData.date_time,
-        duration: formData.duration,
-        joinUrl: formData.join_url,
-        batch_id: formData.batch_id
-      });
-    } else {
-      const newId = `lc-${Date.now()}`;
-      await db.createLiveClass({ id: newId, ...payload });
-      await triggerNotification('live-class-create', {
-        topic: formData.topic,
-        trainer: formData.trainer,
-        dateTime: formData.date_time,
-        duration: formData.duration,
-        joinUrl: formData.join_url,
-        batch_id: formData.batch_id
-      });
-    }
+    try {
+      if (editingClass) {
+        await db.updateLiveClass(editingClass.id, payload);
+        await triggerNotification('live-class-update', {
+          topic: formData.topic,
+          trainer: formData.trainer,
+          dateTime: formData.date_time,
+          duration: formData.duration,
+          joinUrl: formData.join_url,
+          batch_id: formData.batch_id
+        });
+      } else {
+        const newId = `lc-${Date.now()}`;
+        await db.createLiveClass({ id: newId, ...payload });
+        await triggerNotification('live-class-create', {
+          topic: formData.topic,
+          trainer: formData.trainer,
+          dateTime: formData.date_time,
+          duration: formData.duration,
+          joinUrl: formData.join_url,
+          batch_id: formData.batch_id
+        });
+      }
 
-    setIsModalOpen(false);
-    loadData();
+      setSaveStatus('success');
+      setTimeout(() => {
+        setSaveStatus('saved');
+        setTimeout(() => {
+          setIsModalOpen(false);
+          loadData();
+        }, 500);
+      }, 800);
+    } catch (err) {
+      console.error(err);
+      setSaveStatus('idle');
+    }
   };
 
   const handleDelete = async () => {
@@ -410,12 +430,14 @@ export default function TutorLiveClassesPage() {
                 >
                   Cancel
                 </button>
-                <button
+                <SaveToggle
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft"
-                >
-                  {editingClass ? 'Save Changes' : 'Create Class'}
-                </button>
+                  status={saveStatus}
+                  setStatus={setSaveStatus}
+                  size="sm"
+                  idleText={editingClass ? 'Save Changes' : 'Create Class'}
+                  savedText="Saved"
+                />
               </div>
             </form>
           </div>
