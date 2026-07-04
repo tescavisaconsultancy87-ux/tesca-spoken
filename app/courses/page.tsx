@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import CoursesList from '@/components/CoursesList';
 import { useDemoModal } from '@/context/DemoModalContext';
+import { db } from '@/lib/db';
 import { COURSES, TRAINERS, COURSE_FAQS } from '@/lib/data/content';
 import { useState, useEffect } from 'react';
 import {
@@ -39,6 +40,31 @@ export default function CoursesPage() {
   const { openModal } = useDemoModal();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [expandedCurriculum, setExpandedCurriculum] = useState<number>(0);
+
+  // Dynamic trainers state
+  const [trainers, setTrainers] = useState<any[]>([]);
+  const [loadingTrainers, setLoadingTrainers] = useState(true);
+
+  useEffect(() => {
+    async function loadTrainers() {
+      try {
+        const data = await db.getTrainers();
+        if (data && data.length > 0) {
+          // Filter to show only active trainers configured for homepage/courses display
+          const active = data.filter((t: any) => !!t.show_on_homepage);
+          setTrainers(active);
+        } else {
+          setTrainers(TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true })));
+        }
+      } catch (err) {
+        console.error('Failed to fetch trainers, using mock fallback', err);
+        setTrainers(TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true })));
+      } finally {
+        setLoadingTrainers(false);
+      }
+    }
+    loadTrainers();
+  }, []);
 
   // Enrollment checkout states
   const [selectedPlanForPurchase, setSelectedPlanForPurchase] = useState<any | null>(null);
@@ -469,34 +495,60 @@ export default function CoursesPage() {
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-5xl mx-auto">
-              {TRAINERS.map((trainer) => (
-                <div
-                  key={trainer.name}
-                  className="group rounded-2xl border border-black/6 bg-white overflow-hidden shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div className="relative h-52 overflow-hidden">
-                    <Image
-                      src={trainer.photo}
-                      alt={trainer.name}
-                      fill
-                      sizes="(max-width: 768px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="p-5 space-y-2">
-                    <h3 className="font-heading text-base font-bold text-ink">{trainer.name}</h3>
-                    <p className="text-xs font-semibold text-primary">{trainer.role}</p>
-                    <div className="flex items-center gap-3 text-xs text-ink-muted pt-1">
-                      <span className="flex items-center gap-1">
-                        <Star className="h-3 w-3 text-secondary fill-secondary" />
-                        {trainer.experience}
-                      </span>
-                      <span>{trainer.students} students</span>
-                    </div>
-                    <p className="text-[11px] text-ink-muted">{trainer.certification}</p>
-                  </div>
+              {loadingTrainers ? (
+                <div className="col-span-full py-12 text-center text-gray-400">
+                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  <p className="mt-2 text-xs font-semibold text-ink-muted">Loading trainers...</p>
                 </div>
-              ))}
+              ) : trainers.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-gray-400">
+                  <p className="text-sm font-semibold text-ink-muted">No trainers configured.</p>
+                </div>
+              ) : (
+                trainers.map((trainer) => (
+                  <div
+                    key={trainer.id || trainer.name}
+                    className="group rounded-2xl border border-black/6 bg-white overflow-hidden shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1"
+                  >
+                    <div className="relative h-52 overflow-hidden">
+                      {trainer.photo ? (
+                        <Image
+                          src={trainer.photo}
+                          alt={trainer.name}
+                          fill
+                          sizes="(max-width: 768px) 50vw, 25vw"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-primary-50 flex items-center justify-center">
+                          <GraduationCap className="h-12 w-12 text-primary" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-5 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-heading text-base font-bold text-ink">{trainer.name}</h3>
+                        {trainer.verified && (
+                          <span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
+                            Verified
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold text-primary">{trainer.role}</p>
+                      <div className="flex items-center gap-3 text-xs text-ink-muted pt-1">
+                        <span className="flex items-center gap-1">
+                          <Star className="h-3 w-3 text-secondary fill-secondary" />
+                          {trainer.experience}
+                        </span>
+                        {trainer.students && <span>{trainer.students} students</span>}
+                      </div>
+                      {trainer.certification && (
+                        <p className="text-[11px] text-ink-muted">{trainer.certification}</p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>
