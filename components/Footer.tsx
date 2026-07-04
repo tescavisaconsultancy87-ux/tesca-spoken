@@ -10,8 +10,10 @@ import {
   ArrowRight,
   Check,
   Send,
+  Bell,
 } from 'lucide-react';
 import { WHATSAPP_URL } from '@/lib/data/content';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const Facebook = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -73,17 +75,22 @@ const SOCIAL_LINKS = [
 ];
 
 export default function Footer() {
-  const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribeToggle = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (email.trim()) {
+    if (!subscribed) {
       setSubscribed(true);
-      setEmail('');
       setTimeout(() => setSubscribed(false), 4000);
     }
   };
+
+  const springConfig = {
+    type: 'spring',
+    stiffness: 240,
+    damping: 18,
+    mass: 1.1,
+  } as const;
 
   return (
     <footer id="contact" className="relative overflow-hidden bg-primary-900 text-white">
@@ -106,35 +113,66 @@ export default function Footer() {
             </p>
           </div>
 
-          <form onSubmit={handleSubscribe} className="w-full max-w-md">
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="relative flex-1">
-                <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full rounded-full border-2 border-white/15 bg-white/10 px-5 py-3.5 pl-11 text-sm text-white placeholder:text-primary-200/60 focus:border-secondary focus:outline-none focus:ring-2 focus:ring-secondary/30"
-                  aria-label="Email address"
-                />
-              </div>
-              <button type="submit" className="btn-warm whitespace-nowrap">
-                {subscribed ? (
-                  <>
-                    <Check className="h-4 w-4" />
-                    Subscribed
-                  </>
-                ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Subscribe
-                  </>
+          <div className="flex w-full max-w-md items-center justify-center lg:justify-end">
+            <motion.div
+              layout
+              transition={springConfig}
+              style={{ borderRadius: 32 }}
+              className={`relative flex items-center overflow-hidden border border-white/15 transition-colors duration-300 ${
+                subscribed
+                  ? 'w-72 bg-white/5 p-1 shadow-lg'
+                  : 'w-auto bg-transparent p-0'
+              }`}
+            >
+              <AnimatePresence mode="popLayout">
+                {subscribed && (
+                  <motion.div
+                    key="success-container"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={springConfig}
+                    className="flex flex-1 items-center px-4"
+                  >
+                    <span className="text-xs font-semibold text-white whitespace-nowrap">
+                      Subscribed! 🎉
+                    </span>
+                  </motion.div>
                 )}
-              </button>
-            </div>
-          </form>
+              </AnimatePresence>
+
+              <motion.button
+                layout
+                onClick={handleSubscribeToggle}
+                transition={springConfig}
+                className={`relative flex items-center justify-center gap-2 rounded-full font-bold whitespace-nowrap transition-colors duration-300 cursor-pointer ${
+                  subscribed
+                    ? 'bg-white px-4 py-2.5 text-primary-900 text-xs hover:bg-[#fafafa]'
+                    : 'bg-secondary px-6 py-3.5 text-white hover:bg-secondary-600'
+                }`}
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  {!subscribed && (
+                    <motion.span
+                      key="bell-icon"
+                      layout
+                      className="origin-right"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0 }}
+                      transition={springConfig}
+                    >
+                      <Bell className="h-4 w-4" />
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+
+                <motion.span layout="position" className="text-sm tracking-tight">
+                  {subscribed ? 'Done' : 'Subscribe'}
+                </motion.span>
+              </motion.button>
+            </motion.div>
+          </div>
         </div>
 
         {/* Main footer grid */}
