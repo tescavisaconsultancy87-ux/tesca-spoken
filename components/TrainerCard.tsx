@@ -35,7 +35,7 @@ export default function TrainerCard({ trainer }: TrainerCardProps) {
           <h3 className="font-heading text-lg font-bold text-ink leading-snug transition-colors duration-300 group-hover:text-primary">
             {trainer.name}
           </h3>
-          <p className="text-xs font-bold uppercase tracking-wider text-primary">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary min-h-[2rem] line-clamp-2">
             {trainer.role}
           </p>
         </div>

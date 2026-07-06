@@ -46,7 +46,7 @@ function getCourseMeta(courseId: string, courseTitle: string) {
       students: '6,400+',
       liveClasses: '64 Live Classes',
       certificate: 'Certificate Included',
-      imageUrl: 'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=600',
+      imageUrl: 'https://images.pexels.com/photos/1181534/pexels-photo-1181534.jpeg?auto=compress&cs=tinysrgb&w=600',
       bgGradient: 'from-orange-500/10 via-amber-500/5 to-transparent',
     };
   }
