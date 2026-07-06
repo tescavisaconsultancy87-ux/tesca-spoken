@@ -724,53 +724,51 @@ export default function CoursesPage() {
                 Our trainers hold international certifications and have trained thousands of students across 25+ countries.
               </p>
             </div>
+          </div>
 
-            <div className="relative mt-12 lg:mt-16 w-full">
-              {loadingTrainers ? (
-                <div className="py-12 text-center text-gray-400">
-                  <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                  <p className="mt-2 text-xs font-semibold text-ink-muted">Loading trainers...</p>
-                </div>
-              ) : trainers.length === 0 ? (
-                <div className="py-12 text-center text-gray-400">
-                  <p className="text-sm font-semibold text-ink-muted">No trainers configured.</p>
-                </div>
-              ) : (
-                <>
-                  <div className="relative">
-                    {/* Scrollable list */}
-                    <div
-                      ref={trainersScrollContainerRef}
-                      className={`flex gap-6 py-4 px-4 items-stretch scroll-smooth no-scrollbar ${
-                        trainersShowControls
-                          ? 'overflow-x-auto snap-x snap-mandatory justify-start'
-                          : 'overflow-x-visible justify-center'
-                      }`}
-                    >
-                      {trainers.map((trainer, i) => (
-                        <Reveal
-                          key={trainer.id || trainer.name}
-                          delay={i * 80}
-                          className="flex flex-col items-stretch shrink-0 snap-start w-[245px] sm:w-[270px] h-full"
-                        >
-                          <TrainerCard trainer={trainer} />
-                        </Reveal>
-                      ))}
-                      {trainersShowControls && <div className="shrink-0 w-4" />}
-                    </div>
-
-                    {/* Gradient Overlays */}
-                    {trainersShowControls && trainersCanScrollLeft && (
-                      <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-12 bg-gradient-to-r from-white via-white/70 to-transparent" />
-                    )}
-                    {trainersShowControls && trainersCanScrollRight && (
-                      <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-12 bg-gradient-to-l from-white via-white/70 to-transparent" />
-                    )}
+          <div className="relative mt-12 lg:mt-16 w-full">
+            {loadingTrainers ? (
+              <div className="container-x py-12 text-center text-gray-400">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="mt-2 text-xs font-semibold text-ink-muted">Loading trainers...</p>
+              </div>
+            ) : trainers.length === 0 ? (
+              <div className="container-x py-12 text-center text-gray-400">
+                <p className="text-sm font-semibold text-ink-muted">No trainers configured.</p>
+              </div>
+            ) : (
+              <>
+                <div className="relative">
+                  {/* Scrollable list */}
+                  <div
+                    ref={trainersScrollContainerRef}
+                    className="flex gap-6 py-4 items-stretch scroll-smooth no-scrollbar trainers-slider overflow-x-auto snap-x snap-mandatory justify-start mx-auto w-max max-w-full"
+                  >
+                    {trainers.map((trainer, i) => (
+                      <Reveal
+                        key={trainer.id || trainer.name}
+                        delay={i * 80}
+                        className="flex flex-col items-stretch shrink-0 snap-start w-[calc(100vw-2.5rem)] sm:w-[270px] h-full"
+                      >
+                        <TrainerCard trainer={trainer} />
+                      </Reveal>
+                    ))}
+                    {trainersShowControls && <div className="shrink-0 w-4" />}
                   </div>
 
-                  {/* Controls */}
-                  {trainersShowControls && (
-                    <div className="mt-8 flex items-center justify-between">
+                  {/* Gradient Overlays */}
+                  {trainersShowControls && trainersCanScrollLeft && (
+                    <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-12 bg-gradient-to-r from-white via-white/70 to-transparent" />
+                  )}
+                  {trainersShowControls && trainersCanScrollRight && (
+                    <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-12 bg-gradient-to-l from-white via-white/70 to-transparent" />
+                  )}
+                </div>
+
+                {/* Controls */}
+                {trainersShowControls && (
+                  <div className="container-x mt-8">
+                    <div className="flex items-center justify-between">
                       <button
                         type="button"
                         onClick={handleTrainersPrev}
@@ -817,10 +815,10 @@ export default function CoursesPage() {
                         <ChevronRight className="h-5 w-5" />
                       </button>
                     </div>
-                  )}
-                </>
-              )}
-            </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </section>
 

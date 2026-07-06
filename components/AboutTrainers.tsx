@@ -140,21 +140,17 @@ export default function AboutTrainers() {
 
   return (
     <div className="relative w-full">
-      <div className="relative">
+      <div className="relative -mx-5 px-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
         {/* Scrollable list */}
         <div
           ref={scrollContainerRef}
-          className={`flex gap-6 py-4 px-4 items-stretch scroll-smooth no-scrollbar ${
-            showControls
-              ? 'overflow-x-auto snap-x snap-mandatory justify-start'
-              : 'overflow-x-visible justify-center'
-          }`}
+          className="flex gap-6 py-4 items-stretch scroll-smooth no-scrollbar overflow-x-auto snap-x snap-mandatory justify-start mx-auto w-max max-w-full"
         >
           {trainers.map((trainer, i) => (
             <Reveal
               key={trainer.id || trainer.name}
               delay={i * 80}
-              className="flex flex-col items-stretch shrink-0 snap-start w-[245px] sm:w-[270px] h-full"
+              className="flex flex-col items-stretch shrink-0 snap-start w-[calc(100vw-2.5rem)] sm:w-[270px] h-full"
             >
               <TrainerCard trainer={trainer} />
             </Reveal>
