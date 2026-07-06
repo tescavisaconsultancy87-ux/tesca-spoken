@@ -45,6 +45,72 @@ export default function CoursesPage() {
   const [trainers, setTrainers] = useState<any[]>([]);
   const [loadingTrainers, setLoadingTrainers] = useState(true);
 
+  // Dynamic courses state
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+
+  useEffect(() => {
+    async function loadCourses() {
+      try {
+        const data = await db.getCourses();
+        if (data && data.length > 0) {
+          const mapped = data.map((c: any) => ({
+            id: c.id,
+            title: c.title,
+            duration: c.duration || '3 Months',
+            accent: c.accent || 'primary',
+            benefits: c.benefits
+              ? c.benefits.split(',').map((b: string) => b.trim())
+              : ['Grammar foundations', 'Vocabulary building', 'Basic conversation'],
+            whoShouldJoin: c.who_should_join || '',
+            popular: !!c.popular,
+            price: Number(c.price || 0),
+            originalPrice: Number(c.original_price || c.price || 0),
+          }));
+          setCourses(mapped);
+        } else {
+          setCourses(
+            COURSES.map((c) => ({
+              id: c.title.toLowerCase().replace(/\s+/g, '-'),
+              title: c.title,
+              duration: c.duration,
+              accent: c.accent,
+              benefits: c.benefits,
+              whoShouldJoin: c.whoShouldJoin || '',
+              popular: c.popular,
+              price: Number(c.price.replace(/[₹,]/g, '')),
+              originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load courses from DB, using fallback', err);
+        setCourses(
+          COURSES.map((c) => ({
+            id: c.title.toLowerCase().replace(/\s+/g, '-'),
+            title: c.title,
+            duration: c.duration,
+            accent: c.accent,
+            benefits: c.benefits,
+            whoShouldJoin: c.whoShouldJoin || '',
+            popular: c.popular,
+            price: Number(c.price.replace(/[₹,]/g, '')),
+            originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+          }))
+        );
+      } finally {
+        setLoadingCourses(false);
+      }
+    }
+    loadCourses();
+  }, []);
+
+  useEffect(() => {
+    if (courses.length > 0 && expandedCurriculum >= courses.length) {
+      setExpandedCurriculum(0);
+    }
+  }, [courses, expandedCurriculum]);
+
   useEffect(() => {
     async function loadTrainers() {
       try {
@@ -304,7 +370,52 @@ export default function CoursesPage() {
               </p>
             </div>
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 justify-center max-w-6xl mx-auto">
-              <CoursesList onEnroll={handleEnroll} />
+              <CoursesList courses={courses} loading={loadingCourses} onEnroll={handleEnroll} />
+            </div>
+          </div>
+        </section>
+
+        {/* ── Who is this program for ── */}
+        <section className="py-20 lg:py-24 bg-slate-50/30 relative overflow-hidden border-y border-[#E8EDF3]">
+          {/* Faint blueprint grid background */}
+          <div className="absolute inset-0 opacity-[0.2]" style={{
+            backgroundImage: `linear-gradient(to right, #CBD5E1 1px, transparent 1px), linear-gradient(to bottom, #CBD5E1 1px, transparent 1px)`,
+            backgroundSize: '24px 24px'
+          }} />
+          
+          <div className="container-x relative z-10">
+            <div className="text-center mb-14">
+              <h2 className="font-heading text-3xl font-extrabold text-[#1E3A8A] sm:text-4xl tracking-tight">
+                Who&apos;s This Program For?
+              </h2>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+              {[
+                "Software Engineers",
+                "Teachers and educators",
+                "Homemakers",
+                "Working Professionals",
+                "Corporate Trainers and public speakers",
+                "Team leaders and managers",
+                "Entrepreneurs and freelancers",
+                "Individuals pursuing personal growth",
+                "Sales professionals and content creators"
+              ].map((audience, idx) => (
+                <div 
+                  key={idx}
+                  className="flex items-center gap-4 bg-white border border-slate-200 rounded-lg p-5 shadow-2xs hover:shadow-xs hover:border-[#1E3A8A]/30 transition-all duration-200"
+                >
+                  {/* Custom SVG Double Checkmark representing the visual in the user screenshot */}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E3A8A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                    <path d="M2 12l3 3L13 7" />
+                    <path d="M9 15l3 3L21 10" />
+                  </svg>
+                  <span className="font-bold text-sm text-slate-800 leading-tight">
+                    {audience}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -326,86 +437,110 @@ export default function CoursesPage() {
             </div>
 
             {/* Course selector tabs */}
-            <div className="flex flex-wrap justify-center gap-2 mb-10">
-              {COURSES.map((course, i) => (
-                <button
-                  key={course.title}
-                  onClick={() => setExpandedCurriculum(i)}
-                  className={`rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
-                    expandedCurriculum === i
-                      ? 'bg-primary text-white shadow-soft'
-                      : 'bg-white border border-black/8 text-ink-muted hover:text-ink hover:border-black/15'
-                  }`}
-                >
-                  {course.title}
-                </button>
-              ))}
-            </div>
+            {!loadingCourses && courses.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2 mb-10">
+                {courses.map((course, i) => (
+                  <button
+                    key={course.title}
+                    onClick={() => setExpandedCurriculum(i)}
+                    className={`rounded-full px-5 py-2.5 text-xs font-bold transition-all cursor-pointer ${
+                      expandedCurriculum === i
+                        ? 'bg-primary text-white shadow-soft'
+                        : 'bg-white border border-black/8 text-ink-muted hover:text-ink hover:border-black/15'
+                    }`}
+                  >
+                    {course.title}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Selected course curriculum */}
-            {COURSES[expandedCurriculum] && (
-              <div className="max-w-4xl mx-auto">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                  <div>
-                    <h3 className="font-heading text-2xl font-bold text-ink">
-                      {COURSES[expandedCurriculum].title}
-                    </h3>
-                    <div className="flex items-center gap-3 mt-2 text-sm text-ink-muted">
-                      <span className="flex items-center gap-1.5">
-                        <Clock className="h-4 w-4 text-primary" />
-                        {COURSES[expandedCurriculum].duration}
-                      </span>
-                      {COURSES[expandedCurriculum].whoShouldJoin && (
-                        <span className="hidden sm:flex items-center gap-1.5">
-                          <Users className="h-4 w-4 text-primary" />
-                          {COURSES[expandedCurriculum].whoShouldJoin}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <button
-                    onClick={openModal}
-                    className="btn-warm text-sm whitespace-nowrap cursor-pointer"
-                  >
-                    Book Free Demo
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-
-                <div className="grid gap-5 sm:grid-cols-2">
-                  {COURSES[expandedCurriculum].curriculum?.map((mod, i) => (
-                    <div
-                      key={mod.module}
-                      className="rounded-2xl border border-black/6 bg-white p-6 shadow-soft hover:shadow-soft-lg transition-all duration-300"
-                    >
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-50 text-primary font-heading text-sm font-bold">
-                          {String(i + 1).padStart(2, '0')}
-                        </div>
-                        <h4 className="font-heading text-base font-bold text-ink">{mod.module}</h4>
-                      </div>
-                      <ul className="space-y-2">
-                        {mod.topics.map((topic) => (
-                          <li key={topic} className="flex items-start gap-2 text-sm text-ink-soft">
-                            <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/60" />
-                            {topic}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-
-                {COURSES[expandedCurriculum].teachingMethod && (
-                  <div className="mt-6 rounded-2xl border border-primary/10 bg-primary-50/50 p-5 flex items-start gap-3">
-                    <BookOpen className="h-5 w-5 shrink-0 text-primary mt-0.5" />
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-wide text-primary mb-1">Teaching Method</p>
-                      <p className="text-sm text-ink-soft leading-relaxed">{COURSES[expandedCurriculum].teachingMethod}</p>
-                    </div>
-                  </div>
-                )}
+            {loadingCourses ? (
+              <div className="py-12 text-center text-ink-muted">
+                <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="mt-2 text-xs font-semibold text-ink-muted">Loading curriculum...</p>
               </div>
+            ) : courses.length === 0 ? (
+              <div className="py-12 text-center text-ink-muted">
+                <p className="text-sm font-semibold">No curriculum available.</p>
+              </div>
+            ) : (
+              (() => {
+                const selectedCourse = courses[expandedCurriculum] || courses[0];
+                if (!selectedCourse) return null;
+
+                const staticMatch = COURSES.find(c => 
+                  c.title.toLowerCase() === selectedCourse.title.toLowerCase() ||
+                  c.title.toLowerCase().replace(/\s+/g, '-').includes(selectedCourse.id) ||
+                  selectedCourse.id.includes(c.title.toLowerCase().replace(/\s+/g, '-'))
+                ) || COURSES[0];
+
+                return (
+                  <div className="max-w-4xl mx-auto">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                      <div>
+                        <h3 className="font-heading text-2xl font-bold text-ink">
+                          {selectedCourse.title}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-2 text-sm text-ink-muted">
+                          <span className="flex items-center gap-1.5">
+                            <Clock className="h-4 w-4 text-primary" />
+                            {selectedCourse.duration}
+                          </span>
+                          {selectedCourse.whoShouldJoin && (
+                            <span className="hidden sm:flex items-center gap-1.5">
+                              <Users className="h-4 w-4 text-primary" />
+                              {selectedCourse.whoShouldJoin}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={openModal}
+                        className="btn-warm text-sm whitespace-nowrap cursor-pointer"
+                      >
+                        Book Free Demo
+                        <ArrowRight className="h-4 w-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      {staticMatch.curriculum?.map((mod, i) => (
+                        <div
+                          key={mod.module}
+                          className="rounded-2xl border border-black/6 bg-white p-6 shadow-soft hover:shadow-soft-lg transition-all duration-300"
+                        >
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-50 text-primary font-heading text-sm font-bold">
+                              {String(i + 1).padStart(2, '0')}
+                            </div>
+                            <h4 className="font-heading text-base font-bold text-ink">{mod.module}</h4>
+                          </div>
+                          <ul className="space-y-2">
+                            {mod.topics.map((topic) => (
+                              <li key={topic} className="flex items-start gap-2 text-sm text-ink-soft">
+                                <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary/60" />
+                                {topic}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+
+                    {staticMatch.teachingMethod && (
+                      <div className="mt-6 rounded-2xl border border-primary/10 bg-primary-50/50 p-5 flex items-start gap-3">
+                        <BookOpen className="h-5 w-5 shrink-0 text-primary mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wide text-primary mb-1">Teaching Method</p>
+                          <p className="text-sm text-ink-soft leading-relaxed">{staticMatch.teachingMethod}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
             )}
           </div>
         </section>

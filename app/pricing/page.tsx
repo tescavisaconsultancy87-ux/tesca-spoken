@@ -4,10 +4,92 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
-import { CheckCircle, X, ArrowRight, Clock, Star, Zap, ChevronDown } from 'lucide-react';
+import { CheckCircle, X, ArrowRight, Clock, Star, Zap, ChevronDown, Users } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
 import { PRICING_FAQS, COURSES } from '@/lib/data/content';
+
+// Metadata helper to augment course with premium details and high-quality photography
+function getCourseMeta(courseIdOrTitle: string) {
+  const normalized = (courseIdOrTitle || '').toLowerCase();
+  
+  if (normalized.includes('basic') || normalized.includes('starter') || normalized.includes('spoken-english-basic') || normalized.includes('day to day') || normalized.includes('day-to-day')) {
+    return {
+      subtitle: 'Build strong grammar foundations and start speaking confidently.',
+      difficulty: 'Beginner',
+      rating: '4.8',
+      students: '5,400+',
+      liveClasses: '48 Live Classes',
+      certificate: 'Certificate Included',
+      imageUrl: 'https://images.pexels.com/photos/3762800/pexels-photo-3762800.jpeg?auto=compress&cs=tinysrgb&w=600',
+      bgGradient: 'from-teal-500/10 via-emerald-500/5 to-transparent',
+    };
+  }
+  
+  if (normalized.includes('advanced') || normalized.includes('business') || normalized.includes('business-communication') || normalized.includes('communication') || normalized.includes('professional')) {
+    return {
+      subtitle: 'Master public speaking, business communication, and neutral accent.',
+      difficulty: 'Advanced',
+      rating: '4.9',
+      students: '6,800+',
+      liveClasses: '64 Live Classes',
+      certificate: 'Certificate Included',
+      imageUrl: 'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=600',
+      bgGradient: 'from-orange-500/10 via-amber-500/5 to-transparent',
+    };
+  }
+  
+  if (normalized.includes('ielts')) {
+    return {
+      subtitle: 'Targeted preparation to clear IELTS Academic & General with Band 7.5+.',
+      difficulty: 'Intermediate to Advanced',
+      rating: '4.9',
+      students: '3,850+',
+      liveClasses: '36 Live Classes',
+      certificate: 'Score Report Included',
+      imageUrl: 'https://images.pexels.com/photos/1438072/pexels-photo-1438072.jpeg?auto=compress&cs=tinysrgb&w=600',
+      bgGradient: 'from-blue-500/10 via-indigo-500/5 to-transparent',
+    };
+  }
+  
+  if (normalized.includes('pte')) {
+    return {
+      subtitle: 'Master PTE Academic using smart templates and AI-scored mock tests.',
+      difficulty: 'Intermediate to Advanced',
+      rating: '4.8',
+      students: '2,900+',
+      liveClasses: '30 Live Classes',
+      certificate: 'AI Report Included',
+      imageUrl: 'https://images.pexels.com/photos/5905709/pexels-photo-5905709.jpeg?auto=compress&cs=tinysrgb&w=600',
+      bgGradient: 'from-purple-500/10 via-pink-500/5 to-transparent',
+    };
+  }
+  
+  if (normalized.includes('interview') || normalized.includes('career') || normalized.includes('accelerator')) {
+    return {
+      subtitle: 'Crack MNC interviews with resume building, mock rounds, and HR prep.',
+      difficulty: 'All Levels',
+      rating: '4.9',
+      students: '1,800+',
+      liveClasses: '20 Live Classes',
+      certificate: 'Placement Support',
+      imageUrl: 'https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=600',
+      bgGradient: 'from-rose-500/10 via-red-500/5 to-transparent',
+    };
+  }
+  
+  return {
+    subtitle: 'Enhance your communication skills with structured, certified training.',
+    difficulty: 'Intermediate',
+    rating: '4.8',
+    students: '2,000+',
+    liveClasses: 'Live Classes Included',
+    certificate: 'Certificate Included',
+    imageUrl: 'https://images.pexels.com/photos/3762800/pexels-photo-3762800.jpeg?auto=compress&cs=tinysrgb&w=600',
+    bgGradient: 'from-teal-500/10 via-emerald-500/5 to-transparent',
+  };
+}
+
 
 
 
@@ -501,6 +583,9 @@ export default function PricingPage() {
             ) : (
               <div className="grid gap-8 lg:grid-cols-3 items-stretch">
                 {courses.map((plan) => {
+                  const isPopular = plan.popular;
+                  const meta = getCourseMeta(plan.id || plan.title);
+                  
                   const divisor = plan.duration.includes('3') ? 3 : plan.duration.includes('4') ? 4 : plan.duration.includes('5') ? 5 : plan.duration.includes('6') ? 6 : 1;
                   const displayPrice =
                     billing === 'monthly'
@@ -510,143 +595,143 @@ export default function PricingPage() {
                     ((plan.originalPrice - plan.price) / plan.originalPrice) * 100
                   );
 
-                  const tagline = plan.title.toLowerCase().includes('basic')
-                    ? 'Perfect for beginners'
-                    : plan.title.toLowerCase().includes('advanced') || plan.title.toLowerCase().includes('professional') || plan.popular
-                    ? 'Most popular choice'
-                    : 'Maximum transformation';
+                  const displayPriceFormatted = `₹${displayPrice.toLocaleString('en-IN')}`;
+                  const displayOriginalPriceFormatted = `₹${plan.originalPrice.toLocaleString('en-IN')}`;
 
                   return (
-                    <div
+                    <article
                       key={plan.id}
-                      className={`relative flex flex-col h-full overflow-hidden rounded-3xl border shadow-soft transition-all duration-300 hover:shadow-soft-xl hover:-translate-y-1 ${
-                        plan.popular
-                          ? 'border-secondary/40 ring-2 ring-secondary/20 shadow-soft-lg'
-                          : 'border-black/6 bg-white'
+                      className={`group relative flex flex-col overflow-hidden rounded-[24px] transition-all duration-300 ease-out hover:-translate-y-2 ${
+                        isPopular
+                          ? 'bg-gradient-to-br from-[#0F766E] via-[#F97316] to-[#0F766E] p-[2px] shadow-[0_12px_40px_rgba(249,120,35,0.15)] hover:shadow-[0_24px_50px_rgba(249,120,35,0.25)]'
+                          : 'border border-[#E8EDF3] bg-white shadow-soft hover:shadow-[0_20px_40px_rgba(15,118,110,0.12)]'
                       }`}
                     >
-                      {plan.popular && (
-                        <div className="bg-secondary py-2 text-center">
-                          <span className="flex items-center justify-center gap-1.5 text-xs font-bold text-white uppercase tracking-wide">
-                            <Star className="h-3.5 w-3.5 fill-current" />
-                            Most Popular
-                          </span>
-                        </div>
-                      )}
+                      <div className="flex flex-col h-full w-full bg-white rounded-[22px] overflow-hidden">
+                        {/* Top Course Visual Cover image */}
+                        <div className="relative h-[155px] w-full overflow-hidden bg-slate-50 border-b border-[#E8EDF3]/50">
+                          <img 
+                            src={meta.imageUrl} 
+                            alt={plan.title}
+                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          
+                          {/* Gradient tint overlay */}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
-                      <div
-                        className={`p-8 ${
-                          plan.popular
-                            ? 'bg-gradient-to-br from-secondary-50 to-orange-50'
-                            : plan.accent === 'ink'
-                            ? 'bg-gradient-to-br from-primary-900 to-primary-800'
-                            : 'bg-white'
-                        }`}
-                      >
-                        <h2
-                          className={`font-heading text-2xl font-bold ${
-                            plan.accent === 'ink' ? 'text-white' : 'text-ink'
-                          }`}
-                        >
-                          {plan.title}
-                        </h2>
-                        <p
-                          className={`text-sm mt-1 ${
-                            plan.accent === 'ink' ? 'text-primary-200' : 'text-ink-muted'
-                          }`}
-                        >
-                          {tagline}
-                        </p>
-
-                        <div className="mt-6">
-                          <div className="flex items-end gap-2">
-                            <span
-                              className={`font-heading text-4xl font-bold ${
-                                plan.accent === 'ink' ? 'text-white' : 'text-ink'
-                              }`}
-                            >
-                              ₹{displayPrice.toLocaleString('en-IN')}
+                          {/* Top floating difficulty badge */}
+                          <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap z-10">
+                            <span className="rounded-full bg-white/95 backdrop-blur-sm border border-[#E8EDF3] px-2.5 py-0.5 text-[10px] font-bold text-[#0F172A] shadow-xs">
+                              {meta.difficulty}
                             </span>
-                            {billing === 'monthly' && (
-                              <span
-                                className={`text-sm mb-1 ${
-                                  plan.accent === 'ink' ? 'text-primary-200' : 'text-ink-muted'
+                          </div>
+
+                          {/* Ribbon / Floating Badge for Popular plan */}
+                          {isPopular && (
+                            <div className="absolute top-3 right-3 rounded-full bg-gradient-to-r from-[#F97316] to-[#E05E00] px-3 py-1 text-[9px] font-black text-white uppercase tracking-wider shadow-xs z-20">
+                              ★ Most Popular
+                            </div>
+                          )}
+
+                          {/* Best Value Tag */}
+                          {!isPopular && (plan.id?.includes('basic') || plan.id?.includes('day-to-day') || plan.title?.toLowerCase().includes('day to day') || plan.title?.toLowerCase().includes('starter')) && (
+                            <div className="absolute top-3 right-3 rounded-full bg-teal-50 border border-teal-100 px-2.5 py-0.5 text-[9px] font-bold text-teal-700 uppercase tracking-wide z-20">
+                              Best Value
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Content Area */}
+                        <div className="flex-1 p-6 flex flex-col justify-between">
+                          <div>
+                            {/* Plan Title & Tagline/Subtitle */}
+                            <h3 className="font-heading text-lg font-bold text-[#0F172A] leading-snug group-hover:text-[#0F766E] transition-colors duration-250">
+                              {plan.title}
+                            </h3>
+                            <p className="text-[13px] leading-relaxed text-[#64748B] mt-1.5 font-medium min-h-[40px]">
+                              {meta.subtitle}
+                            </p>
+
+                            {/* Trust Section as pills */}
+                            <div className="mt-4 flex flex-wrap gap-1.5">
+                              <span className="flex items-center gap-1 rounded-full bg-amber-50 border border-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800 shadow-2xs">
+                                ⭐ {meta.rating} Rating
+                              </span>
+                              <span className="flex items-center gap-1 rounded-full bg-slate-50 border border-[#E8EDF3] px-2 py-0.5 text-[10px] font-bold text-[#0F172A] shadow-2xs">
+                                <Users className="h-3 w-3 text-[#0F766E]" />
+                                {meta.students} Students
+                              </span>
+                              <span className="flex items-center gap-1 rounded-full bg-teal-50 border border-teal-100 px-2 py-0.5 text-[10px] font-bold text-teal-800 shadow-2xs">
+                                <Clock className="h-3 w-3 text-teal-700" />
+                                {plan.duration} Program
+                              </span>
+                            </div>
+
+                            {/* Learning Benefits / Features */}
+                            <div className="mt-5 pt-4 border-t border-slate-100">
+                              <p className="text-[11px] font-black uppercase tracking-wider text-[#0F766E] mb-2.5">
+                                What&apos;ll You Get
+                              </p>
+                              <ul className="space-y-2">
+                                {plan.benefits.map((benefit: string) => (
+                                  <li key={benefit} className="flex items-start gap-2.5 text-xs text-[#0F172A] font-medium leading-tight">
+                                    <CheckCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
+                                    <span>{benefit}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+
+                          {/* Pricing and CTAs */}
+                          <div className="mt-6 pt-5 border-t border-slate-100">
+                            <div className="flex items-baseline justify-between mb-4.5">
+                              <div className="flex flex-col">
+                                <div className="flex items-baseline gap-2">
+                                  <span className="text-2xl font-black text-[#0F172A] tracking-tight">{displayPriceFormatted}</span>
+                                  {plan.originalPrice && plan.originalPrice !== plan.price && (
+                                    <span className="text-xs text-[#64748B] line-through font-semibold">{displayOriginalPriceFormatted}</span>
+                                  )}
+                                </div>
+                                {billing === 'monthly' && (
+                                  <span className="text-[10px] text-[#64748B] font-semibold mt-0.5">per month (for {divisor} months)</span>
+                                )}
+                              </div>
+                              {(() => {
+                                if (plan.originalPrice && plan.price && plan.originalPrice > plan.price) {
+                                  return (
+                                    <span className="rounded-md bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+                                      Save {savings}%
+                                    </span>
+                                  );
+                                }
+                                return null;
+                              })()}
+                            </div>
+
+                            <div className="flex flex-col gap-2">
+                              <button
+                                onClick={() => handleGetStarted(plan)}
+                                className={`w-full flex justify-center items-center gap-1.5 py-3 px-4 rounded-xl text-xs font-bold transition-all duration-300 shadow-2xs group hover:shadow-xs cursor-pointer ${
+                                  isPopular
+                                    ? 'bg-gradient-to-r from-[#F97316] to-[#E05E00] hover:from-[#e45f0e] hover:to-[#b63d00] text-white hover:brightness-105'
+                                    : 'bg-[#0F766E] hover:bg-[#0d645e] text-white'
                                 }`}
                               >
-                                /month
-                              </span>
-                            )}
-                          </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <span
-                              className={`text-sm line-through ${
-                                plan.accent === 'ink' ? 'text-primary-300' : 'text-ink-muted'
-                              }`}
-                            >
-                              ₹{plan.originalPrice.toLocaleString('en-IN')}
-                            </span>
-                            <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-700">
-                              Save {savings}%
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-3">
-                            <Clock
-                              className={`h-3.5 w-3.5 ${
-                                plan.accent === 'ink' ? 'text-primary-300' : 'text-ink-muted'
-                              }`}
-                            />
-                            <span
-                              className={`text-xs ${
-                                plan.accent === 'ink' ? 'text-primary-200' : 'text-ink-muted'
-                              }`}
-                            >
-                              {plan.duration} program
-                            </span>
+                                Enroll Now
+                                <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+                              </button>
+                              <button
+                                onClick={openModal}
+                                className="w-full py-3 px-4 rounded-xl text-xs font-bold text-[#0F172A] border border-[#E8EDF3] bg-white hover:bg-slate-50 transition-all duration-200 cursor-pointer"
+                              >
+                                Book Free Demo
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
-
-                      {/* Features */}
-                      <div className={`flex-1 p-8 ${plan.accent === 'ink' ? 'bg-primary-900' : 'bg-white'}`}>
-                        <ul className="space-y-3">
-                          {plan.benefits.map((benefit: string) => (
-                            <li key={benefit} className="flex items-start gap-3">
-                              <CheckCircle
-                                className={`mt-0.5 h-4 w-4 shrink-0 ${
-                                  plan.accent === 'ink' ? 'text-secondary' : 'text-primary'
-                                }`}
-                              />
-                              <span
-                                className={`text-sm ${
-                                  plan.accent === 'ink' ? 'text-primary-100' : 'text-ink-soft'
-                                }`}
-                              >
-                                {benefit}
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* CTA */}
-                      <div
-                        className={`mt-auto p-8 pt-0 ${plan.accent === 'ink' ? 'bg-primary-900' : 'bg-white'}`}
-                      >
-                        <button
-                          onClick={() => handleGetStarted(plan)}
-                          className={`flex w-full items-center justify-center cursor-pointer ${
-                            plan.popular
-                              ? 'btn-warm'
-                              : plan.accent === 'ink'
-                              ? 'btn-secondary border-white/20 text-white hover:bg-white hover:text-primary'
-                              : 'btn-primary'
-                          }`}
-                        >
-                          Enroll Now
-                          <ArrowRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
+                    </article>
                   );
                 })}
               </div>

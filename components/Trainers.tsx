@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
-import { Award, BadgeCheck, Users, Briefcase } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
+import TrainerCard from '@/components/TrainerCard';
 import { TRAINERS } from '@/lib/data/content';
 import { db } from '@/lib/db';
 
@@ -60,38 +59,7 @@ export default function Trainers() {
           ) : (
             trainers.map((trainer, i) => (
               <Reveal key={trainer.id || trainer.name} delay={i * 80}>
-                <article className="group relative h-full overflow-hidden rounded-3xl border border-black/5 bg-white shadow-soft transition-all duration-500 hover:-translate-y-2 hover:shadow-soft-lg">
-                  {/* Photo */}
-                  <div className="relative aspect-[3/4] overflow-hidden">
-                    <Image
-                      src={trainer.photo}
-                      alt={`Photo of ${trainer.name}, ${trainer.role}`}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                    {/* Name overlay */}
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <h3 className="font-heading text-lg font-bold text-white">
-                        {trainer.name}
-                      </h3>
-                      <p className="text-sm font-medium text-secondary-200 mt-0.5">
-                        {trainer.role}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Details */}
-                  <div className="space-y-2.5 p-5">
-                    <div className="flex items-center gap-2 text-sm text-ink-soft">
-                      <Briefcase className="h-4 w-4 text-primary" />
-                      <span className="font-medium">Experience:</span>
-                      <span>{trainer.experience}</span>
-                    </div>
-                  </div>
-                </article>
+                <TrainerCard trainer={trainer} />
               </Reveal>
             ))
           )}

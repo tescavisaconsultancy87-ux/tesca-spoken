@@ -222,7 +222,7 @@ export default function AdminTutorsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">Tutors Directory</h1>
-          <p className="text-xs text-gray-400 font-semibold mt-0.5">Manage details, certifications, and homepage visibility of trainers</p>
+          <p className="text-xs text-gray-400 font-semibold mt-0.5">Manage details, expertise, and homepage visibility of trainers</p>
         </div>
 
         <button
@@ -240,7 +240,7 @@ export default function AdminTutorsPage() {
           <Search className="h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Search tutors or roles..."
+            placeholder="Search tutors, roles or expertise..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="flex-1 bg-transparent text-xs text-gray-700 outline-none placeholder:text-gray-400"
@@ -338,7 +338,7 @@ export default function AdminTutorsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Role / Designation</label>
+                <label className="text-xs font-bold text-gray-500">Expertise / Role</label>
                 <input
                   type="text"
                   placeholder="e.g. Lead IELTS Trainer, Pronunciation Expert"
