@@ -5,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ArrowRight, HelpCircle, Award, BookOpen, MessageCircle, RotateCcw } from 'lucide-react';
+import { Check, ArrowRight, HelpCircle, Award, BookOpen, MessageCircle, RotateCcw, Loader2 } from 'lucide-react';
 
 interface Question {
   id: number;
@@ -131,6 +131,10 @@ export default function AssessmentPage() {
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [quizFinished, setQuizFinished] = useState<boolean>(false);
+  const [showLeadModal, setShowLeadModal] = useState<boolean>(false);
+  const [leadForm, setLeadForm] = useState({ name: '', phone: '', email: '' });
+  const [submittingLead, setSubmittingLead] = useState<boolean>(false);
+  const [leadError, setLeadError] = useState<string>('');
 
   const handleSelectOption = (qId: number, optIdx: number) => {
     setAnswers(prev => ({ ...prev, [qId]: optIdx }));
@@ -140,7 +144,7 @@ export default function AssessmentPage() {
     if (currentIdx < QUESTIONS.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      setQuizFinished(true);
+      setShowLeadModal(true);
     }
   };
 
@@ -154,6 +158,54 @@ export default function AssessmentPage() {
     setCurrentIdx(0);
     setAnswers({});
     setQuizFinished(false);
+    setShowLeadModal(false);
+    setLeadForm({ name: '', phone: '', email: '' });
+    setLeadError('');
+  };
+
+  const handleLeadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLeadError('');
+
+    // Phone validation
+    const cleanedPhone = leadForm.phone.replace(/\D/g, '');
+    if (cleanedPhone.length !== 10) {
+      setLeadError('Mobile number must be exactly 10 digits.');
+      return;
+    }
+
+    setSubmittingLead(true);
+
+    try {
+      const notesPayload = `Source: CEFR Assessment\nCEFR Level: ${cefrLevel}\nRecommended Course: ${courseRecommendation}\nCorrect Answers: ${totalCorrect}/${QUESTIONS.length}`;
+
+      const response = await fetch('/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'assessment',
+          name: leadForm.name,
+          phone: leadForm.phone,
+          email: leadForm.email || undefined,
+          notes: notesPayload
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit details.');
+      }
+
+      setShowLeadModal(false);
+      setQuizFinished(true);
+    } catch (err: any) {
+      console.error('Lead submit error:', err);
+      setLeadError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setSubmittingLead(false);
+    }
   };
 
   // Compute Results
@@ -288,7 +340,7 @@ export default function AssessmentPage() {
                     type="button"
                     disabled={currentIdx === 0}
                     onClick={handlePrev}
-                    className="btn-secondary text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-secondary text-xs disabled:opacity-55 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
@@ -298,7 +350,7 @@ export default function AssessmentPage() {
                     onClick={handleNext}
                     className="btn-primary text-xs cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
                   >
-                    {currentIdx === QUESTIONS.length - 1 ? 'Finish Assessment' : 'Next Question'}
+                    {currentIdx === QUESTIONS.length - 1 ? 'See My CEFR Result' : 'Next Question'}
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
@@ -394,6 +446,102 @@ export default function AssessmentPage() {
           
         </div>
       </main>
+
+      {/* Lead Capture Modal */}
+      {showLeadModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-soft-xl p-8 sm:p-10 space-y-6 text-center animate-scale-up border border-black/5">
+            
+            <div className="space-y-2">
+              <span className="text-[28px]" role="img" aria-label="party popper">🎉</span>
+              <h3 className="font-heading text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight leading-tight">
+                Your assessment is complete!
+              </h3>
+              <p className="text-sm font-bold text-primary">
+                Your CEFR level is ready.
+              </p>
+              <p className="text-xs text-gray-450 font-semibold leading-relaxed">
+                Enter your details to view your result and receive personalized course recommendations.
+              </p>
+            </div>
+
+            {leadError && (
+              <div className="rounded-xl bg-red-50 border border-red-100 p-3 text-xs font-semibold text-red-650 text-left">
+                {leadError}
+              </div>
+            )}
+
+            <form onSubmit={handleLeadSubmit} className="space-y-4 text-left">
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  Name <span className="text-accent">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={leadForm.name}
+                  onChange={(e) => setLeadForm(f => ({ ...f, name: e.target.value }))}
+                  placeholder="Enter your name"
+                  className="w-full rounded-xl border border-black/10 bg-bg-soft px-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
+                />
+              </div>
+
+              {/* Mobile Number */}
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-bold text-gray-700">
+                    Mobile Number <span className="text-accent">*</span>
+                  </label>
+                  <span className={`text-[10px] font-semibold transition-colors ${leadForm.phone.length === 10 ? 'text-green-600' : 'text-gray-400'}`}>
+                    {leadForm.phone.length} / 10 digits
+                  </span>
+                </div>
+                <input
+                  type="tel"
+                  required
+                  value={leadForm.phone}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setLeadForm(f => ({ ...f, phone: val }));
+                  }}
+                  placeholder="Enter 10-digit number"
+                  className="w-full rounded-xl border border-black/10 bg-bg-soft px-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  Email (Optional)
+                </label>
+                <input
+                  type="email"
+                  value={leadForm.email}
+                  onChange={(e) => setLeadForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="your@email.com"
+                  className="w-full rounded-xl border border-black/10 bg-bg-soft px-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submittingLead}
+                className="btn-primary w-full justify-center py-3.5 mt-6 cursor-pointer font-bold text-sm"
+              >
+                {submittingLead ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                    Loading...
+                  </>
+                ) : (
+                  'View My Result'
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
       <FloatingActions />

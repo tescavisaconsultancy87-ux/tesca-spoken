@@ -23,8 +23,29 @@ interface Lead {
   phone: string;
   email: string;
   notes: string;
+  source?: string;
   status: 'new' | 'contacted' | 'processing' | 'followup' | 'converted' | 'rejected';
   dateAdded: string;
+}
+
+function parseLeadNotes(notes: string) {
+  let source = 'Website Inquiry';
+  let cleanNotes = notes;
+
+  if (notes.startsWith('Source: ')) {
+    const lines = notes.split('\n');
+    const sourceLine = lines[0];
+    source = sourceLine.substring(8).trim();
+    cleanNotes = lines.slice(1).join('\n');
+  } else if (notes.includes('Requested Free Demo Class')) {
+    source = 'Book Free Demo';
+  } else if (notes.includes('Topic:') || notes.includes('Message:')) {
+    source = 'Contact Us';
+  } else if (notes.includes('CEFR Level:') || notes.includes('CEFR assessment')) {
+    source = 'CEFR Assessment';
+  }
+
+  return { source, cleanNotes };
 }
 
 export default function AdminLeadsPage() {
@@ -78,7 +99,7 @@ export default function AdminLeadsPage() {
           name: editingLead.name,
           email: editingLead.email,
           phone: editingLead.phone,
-          notes: editingLead.notes,
+          notes: editingLead.source ? `Source: ${editingLead.source}\n${editingLead.notes}` : editingLead.notes,
           status: editingLead.status
         })
       });
@@ -143,15 +164,19 @@ export default function AdminLeadsPage() {
   useEffect(() => {
     async function load() {
       const data = await db.getLeads();
-      const mapped = data.map((l: any) => ({
-        id: l.id,
-        name: l.name,
-        phone: l.phone,
-        email: l.email || '',
-        notes: l.notes || '',
-        status: l.status as any,
-        dateAdded: l.date_added,
-      }));
+      const mapped = data.map((l: any) => {
+        const { source, cleanNotes } = parseLeadNotes(l.notes || '');
+        return {
+          id: l.id,
+          name: l.name,
+          phone: l.phone,
+          email: l.email || '',
+          notes: cleanNotes,
+          source: source,
+          status: l.status as any,
+          dateAdded: l.date_added,
+        };
+      });
       setLeads(mapped);
       setLoading(false);
     }
@@ -251,9 +276,16 @@ export default function AdminLeadsPage() {
                 <p>Email: <span className="text-gray-700">{lead.email}</span></p>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex gap-2">
-                <MessageSquare className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-gray-500 font-medium leading-normal">{lead.notes}</p>
+              <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex flex-col gap-1.5">
+                <div className="flex items-center text-[10px] font-bold text-gray-400">
+                  <span className="uppercase tracking-wider px-2 py-0.5 bg-gray-200/50 rounded text-gray-600">
+                    Source: {lead.source || 'Website Inquiry'}
+                  </span>
+                </div>
+                <div className="flex gap-2 border-t border-gray-100/50 pt-1.5">
+                  <MessageSquare className="h-4 w-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-gray-500 font-medium leading-normal whitespace-pre-wrap">{lead.notes}</p>
+                </div>
               </div>
             </div>
 
