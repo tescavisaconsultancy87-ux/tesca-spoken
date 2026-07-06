@@ -8,7 +8,7 @@ import CoursesList from '@/components/CoursesList';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
 import { COURSES, TRAINERS, COURSE_FAQS } from '@/lib/data/content';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import TrainerCard from '@/components/TrainerCard';
 import Reveal from '@/components/Reveal';
 import {
@@ -51,91 +51,75 @@ export default function CoursesPage() {
 
   // Trainer slider scroll states and handlers
   const trainersScrollContainerRef = useRef<HTMLDivElement>(null);
+  const trainersLengthRef = useRef(0);
   const [trainersActiveIndex, setTrainersActiveIndex] = useState(0);
   const [trainersCanScrollLeft, setTrainersCanScrollLeft] = useState(false);
-  const [trainersCanScrollRight, setTrainersCanScrollRight] = useState(true);
+  const [trainersCanScrollRight, setTrainersCanScrollRight] = useState(false);
   const [trainersShowControls, setTrainersShowControls] = useState(false);
 
-  const checkTrainersOverflow = () => {
-    if (trainersScrollContainerRef.current) {
-      const container = trainersScrollContainerRef.current;
-      setTrainersShowControls(container.scrollWidth > container.clientWidth);
-    }
-  };
+  useEffect(() => {
+    trainersLengthRef.current = trainers.length;
+  }, [trainers]);
 
-  const handleTrainersScroll = () => {
-    if (!trainersScrollContainerRef.current) return;
+  const updateTrainersScrollState = useCallback(() => {
     const container = trainersScrollContainerRef.current;
+    if (!container) return;
     const scrollLeft = container.scrollLeft;
     const maxScroll = container.scrollWidth - container.clientWidth;
-
-    setTrainersCanScrollLeft(scrollLeft > 5);
-    setTrainersCanScrollRight(scrollLeft < maxScroll - 5);
-
-    const children = container.children;
-    if (children.length > 0) {
-      let closestIndex = 0;
-      let minDiff = Infinity;
-      const containerLeft = container.getBoundingClientRect().left;
-
-      for (let i = 0; i < children.length; i++) {
-        const child = children[i] as HTMLElement;
-        const childLeft = child.getBoundingClientRect().left;
-        const diff = Math.abs(childLeft - containerLeft);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestIndex = i;
-        }
-      }
-      setTrainersActiveIndex(closestIndex);
+    const isOverflowing = maxScroll > 1;
+    setTrainersShowControls(isOverflowing);
+    setTrainersCanScrollLeft(scrollLeft > 1);
+    setTrainersCanScrollRight(scrollLeft < maxScroll - 1);
+    const len = trainersLengthRef.current;
+    if (len === 0) return;
+    let closestIndex = 0;
+    let minDist = Infinity;
+    for (let i = 0; i < len; i++) {
+      const child = container.children[i] as HTMLElement | undefined;
+      if (!child) continue;
+      const dist = Math.abs(child.offsetLeft - scrollLeft);
+      if (dist < minDist) { minDist = dist; closestIndex = i; }
     }
-  };
-
-  const scrollTrainersToIndex = (index: number) => {
-    if (!trainersScrollContainerRef.current) return;
-    const container = trainersScrollContainerRef.current;
-    const children = container.children;
-    if (children[index]) {
-      const child = children[index] as HTMLElement;
-      const paddingLeft = parseFloat(window.getComputedStyle(container).paddingLeft || '0');
-      container.scrollTo({
-        left: child.offsetLeft - paddingLeft,
-        behavior: 'smooth',
-      });
-    }
-  };
-
-  const handleTrainersPrev = () => {
-    if (trainersActiveIndex > 0) {
-      scrollTrainersToIndex(trainersActiveIndex - 1);
-    }
-  };
-
-  const handleTrainersNext = () => {
-    if (trainersActiveIndex < trainers.length - 1) {
-      scrollTrainersToIndex(trainersActiveIndex + 1);
-    }
-  };
+    setTrainersActiveIndex(closestIndex);
+  }, []);
 
   useEffect(() => {
     const container = trainersScrollContainerRef.current;
-    if (container && trainers.length > 0) {
-      container.addEventListener('scroll', handleTrainersScroll);
-      handleTrainersScroll();
-      checkTrainersOverflow();
+    if (!container || trainers.length === 0) return;
+    const timer = setTimeout(updateTrainersScrollState, 50);
+    container.addEventListener('scroll', updateTrainersScrollState, { passive: true });
+    const ro = new ResizeObserver(updateTrainersScrollState);
+    ro.observe(container);
+    return () => {
+      clearTimeout(timer);
+      container.removeEventListener('scroll', updateTrainersScrollState);
+      ro.disconnect();
+    };
+  }, [trainers, updateTrainersScrollState]);
 
-      const resizeObserver = new ResizeObserver(() => {
-        handleTrainersScroll();
-        checkTrainersOverflow();
-      });
-      resizeObserver.observe(container);
+  const scrollTrainersToIndex = useCallback((index: number) => {
+    const container = trainersScrollContainerRef.current;
+    if (!container) return;
+    const child = container.children[index] as HTMLElement | undefined;
+    if (!child) return;
+    container.scrollTo({ left: child.offsetLeft, behavior: 'smooth' });
+  }, []);
 
-      return () => {
-        container.removeEventListener('scroll', handleTrainersScroll);
-        resizeObserver.disconnect();
-      };
-    }
-  }, [trainers]);
+  const handleTrainersPrev = useCallback(() => {
+    setTrainersActiveIndex(prev => {
+      const next = Math.max(0, prev - 1);
+      scrollTrainersToIndex(next);
+      return next;
+    });
+  }, [scrollTrainersToIndex]);
+
+  const handleTrainersNext = useCallback(() => {
+    setTrainersActiveIndex(prev => {
+      const next = Math.min(trainersLengthRef.current - 1, prev + 1);
+      scrollTrainersToIndex(next);
+      return next;
+    });
+  }, [scrollTrainersToIndex]);
 
   // Dynamic courses state
   const [courses, setCourses] = useState<any[]>([]);
@@ -742,7 +726,7 @@ export default function CoursesPage() {
                     {/* Scrollable list */}
                     <div
                       ref={trainersScrollContainerRef}
-                      className={`flex gap-6 py-4 items-stretch scroll-smooth no-scrollbar overflow-x-auto snap-x snap-mandatory ${
+                      className={`relative flex gap-6 py-4 items-stretch scroll-smooth no-scrollbar overflow-x-auto snap-x snap-mandatory ${
                         trainersShowControls
                           ? 'justify-start'
                           : 'justify-start lg:justify-center'
@@ -775,13 +759,13 @@ export default function CoursesPage() {
                       <button
                         type="button"
                         onClick={handleTrainersPrev}
-                        disabled={!trainersCanScrollLeft}
+                        disabled={trainersActiveIndex === 0}
                         className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-ink-soft shadow-soft transition-all duration-300 ${
-                          !trainersCanScrollLeft
+                          trainersActiveIndex === 0
                             ? 'opacity-40 cursor-not-allowed'
                             : 'hover:border-primary hover:bg-primary hover:text-white cursor-pointer active:scale-95'
                         }`}
-                        aria-label="Previous trainers"
+                        aria-label="Previous trainer"
                       >
                         <ChevronLeft className="h-5 w-5" />
                       </button>
@@ -807,13 +791,13 @@ export default function CoursesPage() {
                       <button
                         type="button"
                         onClick={handleTrainersNext}
-                        disabled={!trainersCanScrollRight}
+                        disabled={trainersActiveIndex === trainers.length - 1}
                         className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-ink-soft shadow-soft transition-all duration-300 ${
-                          !trainersCanScrollRight
+                          trainersActiveIndex === trainers.length - 1
                             ? 'opacity-40 cursor-not-allowed'
                             : 'hover:border-primary hover:bg-primary hover:text-white cursor-pointer active:scale-95'
                         }`}
-                        aria-label="Next trainers"
+                        aria-label="Next trainer"
                       >
                         <ChevronRight className="h-5 w-5" />
                       </button>
