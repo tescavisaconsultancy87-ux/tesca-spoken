@@ -737,25 +737,35 @@ export default function CoursesPage() {
                 </div>
               ) : (
                 <>
-                  {/* Scrollable list */}
-                  <div
-                    ref={trainersScrollContainerRef}
-                    className={`flex gap-6 py-4 px-4 items-stretch scroll-smooth no-scrollbar ${
-                      trainersShowControls
-                        ? 'overflow-x-auto snap-x snap-mandatory justify-start'
-                        : 'overflow-x-visible justify-center'
-                    }`}
-                  >
-                    {trainers.map((trainer, i) => (
-                      <Reveal
-                        key={trainer.id || trainer.name}
-                        delay={i * 80}
-                        className="flex flex-col items-stretch shrink-0 snap-start w-[245px] sm:w-[270px] h-full"
-                      >
-                        <TrainerCard trainer={trainer} />
-                      </Reveal>
-                    ))}
-                    {trainersShowControls && <div className="shrink-0 w-4" />}
+                  <div className="relative">
+                    {/* Scrollable list */}
+                    <div
+                      ref={trainersScrollContainerRef}
+                      className={`flex gap-6 py-4 px-4 items-stretch scroll-smooth no-scrollbar ${
+                        trainersShowControls
+                          ? 'overflow-x-auto snap-x snap-mandatory justify-start'
+                          : 'overflow-x-visible justify-center'
+                      }`}
+                    >
+                      {trainers.map((trainer, i) => (
+                        <Reveal
+                          key={trainer.id || trainer.name}
+                          delay={i * 80}
+                          className="flex flex-col items-stretch shrink-0 snap-start w-[245px] sm:w-[270px] h-full"
+                        >
+                          <TrainerCard trainer={trainer} />
+                        </Reveal>
+                      ))}
+                      {trainersShowControls && <div className="shrink-0 w-4" />}
+                    </div>
+
+                    {/* Gradient Overlays */}
+                    {trainersShowControls && trainersCanScrollLeft && (
+                      <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-12 bg-gradient-to-r from-white via-white/70 to-transparent" />
+                    )}
+                    {trainersShowControls && trainersCanScrollRight && (
+                      <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-12 bg-gradient-to-l from-white via-white/70 to-transparent" />
+                    )}
                   </div>
 
                   {/* Controls */}
