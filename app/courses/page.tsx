@@ -8,7 +8,9 @@ import CoursesList from '@/components/CoursesList';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
 import { COURSES, TRAINERS, COURSE_FAQS } from '@/lib/data/content';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import TrainerCard from '@/components/TrainerCard';
+import Reveal from '@/components/Reveal';
 import {
   CheckCircle,
   Clock,
@@ -21,6 +23,8 @@ import {
   MessageCircle,
   Award,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   GraduationCap,
   Layers,
   Star,
@@ -44,6 +48,94 @@ export default function CoursesPage() {
   // Dynamic trainers state
   const [trainers, setTrainers] = useState<any[]>([]);
   const [loadingTrainers, setLoadingTrainers] = useState(true);
+
+  // Trainer slider scroll states and handlers
+  const trainersScrollContainerRef = useRef<HTMLDivElement>(null);
+  const [trainersActiveIndex, setTrainersActiveIndex] = useState(0);
+  const [trainersCanScrollLeft, setTrainersCanScrollLeft] = useState(false);
+  const [trainersCanScrollRight, setTrainersCanScrollRight] = useState(true);
+  const [trainersShowControls, setTrainersShowControls] = useState(false);
+
+  const checkTrainersOverflow = () => {
+    if (trainersScrollContainerRef.current) {
+      const container = trainersScrollContainerRef.current;
+      setTrainersShowControls(container.scrollWidth > container.clientWidth);
+    }
+  };
+
+  const handleTrainersScroll = () => {
+    if (!trainersScrollContainerRef.current) return;
+    const container = trainersScrollContainerRef.current;
+    const scrollLeft = container.scrollLeft;
+    const maxScroll = container.scrollWidth - container.clientWidth;
+
+    setTrainersCanScrollLeft(scrollLeft > 5);
+    setTrainersCanScrollRight(scrollLeft < maxScroll - 5);
+
+    const children = container.children;
+    if (children.length > 0) {
+      let closestIndex = 0;
+      let minDiff = Infinity;
+      const containerLeft = container.getBoundingClientRect().left;
+
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i] as HTMLElement;
+        const childLeft = child.getBoundingClientRect().left;
+        const diff = Math.abs(childLeft - containerLeft);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIndex = i;
+        }
+      }
+      setTrainersActiveIndex(closestIndex);
+    }
+  };
+
+  const scrollTrainersToIndex = (index: number) => {
+    if (!trainersScrollContainerRef.current) return;
+    const container = trainersScrollContainerRef.current;
+    const children = container.children;
+    if (children[index]) {
+      const child = children[index] as HTMLElement;
+      const paddingLeft = parseFloat(window.getComputedStyle(container).paddingLeft || '0');
+      container.scrollTo({
+        left: child.offsetLeft - paddingLeft,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  const handleTrainersPrev = () => {
+    if (trainersActiveIndex > 0) {
+      scrollTrainersToIndex(trainersActiveIndex - 1);
+    }
+  };
+
+  const handleTrainersNext = () => {
+    if (trainersActiveIndex < trainers.length - 1) {
+      scrollTrainersToIndex(trainersActiveIndex + 1);
+    }
+  };
+
+  useEffect(() => {
+    const container = trainersScrollContainerRef.current;
+    if (container && trainers.length > 0) {
+      container.addEventListener('scroll', handleTrainersScroll);
+      handleTrainersScroll();
+      checkTrainersOverflow();
+
+      const resizeObserver = new ResizeObserver(() => {
+        handleTrainersScroll();
+        checkTrainersOverflow();
+      });
+      resizeObserver.observe(container);
+
+      return () => {
+        container.removeEventListener('scroll', handleTrainersScroll);
+        resizeObserver.disconnect();
+      };
+    }
+  }, [trainers]);
 
   // Dynamic courses state
   const [courses, setCourses] = useState<any[]>([]);
@@ -618,7 +710,7 @@ export default function CoursesPage() {
         </section>
 
         {/* ── Our Trainers ── */}
-        <section className="py-20 lg:py-28">
+        <section className="py-20 lg:py-28 overflow-hidden">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
@@ -633,60 +725,90 @@ export default function CoursesPage() {
               </p>
             </div>
 
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto">
+            <div className="relative mt-12 lg:mt-16 w-full">
               {loadingTrainers ? (
-                <div className="col-span-full py-12 text-center text-gray-400">
+                <div className="py-12 text-center text-gray-400">
                   <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   <p className="mt-2 text-xs font-semibold text-ink-muted">Loading trainers...</p>
                 </div>
               ) : trainers.length === 0 ? (
-                <div className="col-span-full py-12 text-center text-gray-400">
+                <div className="py-12 text-center text-gray-400">
                   <p className="text-sm font-semibold text-ink-muted">No trainers configured.</p>
                 </div>
               ) : (
-                trainers.map((trainer) => (
+                <>
+                  {/* Scrollable list */}
                   <div
-                    key={trainer.id || trainer.name}
-                    className="group rounded-2xl border border-black/6 bg-white overflow-hidden shadow-soft hover:shadow-soft-lg transition-all duration-300 hover:-translate-y-1"
+                    ref={trainersScrollContainerRef}
+                    className={`flex gap-6 py-4 px-4 items-stretch scroll-smooth no-scrollbar ${
+                      trainersShowControls
+                        ? 'overflow-x-auto snap-x snap-mandatory justify-start'
+                        : 'overflow-x-visible justify-center'
+                    }`}
                   >
-                    <div className="relative aspect-[3/4] overflow-hidden">
-                      {trainer.photo ? (
-                        <Image
-                          src={trainer.photo}
-                          alt={trainer.name}
-                          fill
-                          sizes="(max-width: 768px) 50vw, 300px"
-                          className="object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-primary-50 flex items-center justify-center">
-                          <GraduationCap className="h-12 w-12 text-primary" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="p-6 space-y-2.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-heading text-lg font-bold text-ink">{trainer.name}</h3>
-                        {trainer.verified && (
-                          <span className="inline-flex items-center rounded-full bg-blue-50 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                            Verified
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm font-semibold text-primary">{trainer.role}</p>
-                      <div className="flex items-center gap-3 text-sm text-ink-muted pt-1">
-                        <span className="flex items-center gap-1">
-                          <Star className="h-3.5 w-3.5 text-secondary fill-secondary" />
-                          {trainer.experience}
-                        </span>
-                        {trainer.students && <span>{trainer.students} students</span>}
-                      </div>
-                      {trainer.certification && (
-                        <p className="text-xs text-ink-muted">{trainer.certification}</p>
-                      )}
-                    </div>
+                    {trainers.map((trainer, i) => (
+                      <Reveal
+                        key={trainer.id || trainer.name}
+                        delay={i * 80}
+                        className="flex flex-col items-stretch shrink-0 snap-start w-[245px] sm:w-[270px] h-full"
+                      >
+                        <TrainerCard trainer={trainer} />
+                      </Reveal>
+                    ))}
+                    {trainersShowControls && <div className="shrink-0 w-4" />}
                   </div>
-                ))
+
+                  {/* Controls */}
+                  {trainersShowControls && (
+                    <div className="mt-8 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={handleTrainersPrev}
+                        disabled={!trainersCanScrollLeft}
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-ink-soft shadow-soft transition-all duration-300 ${
+                          !trainersCanScrollLeft
+                            ? 'opacity-40 cursor-not-allowed'
+                            : 'hover:border-primary hover:bg-primary hover:text-white cursor-pointer active:scale-95'
+                        }`}
+                        aria-label="Previous trainers"
+                      >
+                        <ChevronLeft className="h-5 w-5" />
+                      </button>
+
+                      {/* Dots */}
+                      <div className="flex gap-2">
+                        {trainers.map((_, i) => (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => scrollTrainersToIndex(i)}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              i === trainersActiveIndex
+                                ? 'w-8 bg-primary'
+                                : 'w-2 bg-primary-200 hover:bg-primary-300'
+                            }`}
+                            aria-label={`Go to trainer ${i + 1}`}
+                            aria-current={i === trainersActiveIndex}
+                          />
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleTrainersNext}
+                        disabled={!trainersCanScrollRight}
+                        className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-ink-soft shadow-soft transition-all duration-300 ${
+                          !trainersCanScrollRight
+                            ? 'opacity-40 cursor-not-allowed'
+                            : 'hover:border-primary hover:bg-primary hover:text-white cursor-pointer active:scale-95'
+                        }`}
+                        aria-label="Next trainers"
+                      >
+                        <ChevronRight className="h-5 w-5" />
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
