@@ -14,14 +14,26 @@ import { COURSES } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
 
-// Metadata helper to augment course with premium details and high-quality photography
-function getCourseMeta(courseIdOrTitle: string) {
-  const normalized = (courseIdOrTitle || '').toLowerCase();
+// Difficulty helper — determines the difficulty label from the course TITLE
+function getDifficulty(title: string): string {
+  const t = (title || '').toLowerCase();
+  if (t.includes('basic') || t.includes('starter') || t.includes('day to day') || t.includes('day-to-day')) return 'Beginner';
+  if (t.includes('intermediate') || t.includes('professional')) return 'Intermediate';
+  if (t.includes('advanced') || t.includes('business') || t.includes('business-communication') || t.includes('communication')) return 'Advanced';
+  if (t.includes('ielts') || t.includes('pte')) return 'Intermediate to Advanced';
+  if (t.includes('interview') || t.includes('career') || t.includes('accelerator')) return 'All Levels';
+  return 'Intermediate';
+}
+
+// Image / visual metadata helper — uses the course ID (database slug) to preserve original images
+function getCourseMeta(courseId: string, courseTitle: string) {
+  const normalized = (courseId || courseTitle || '').toLowerCase();
+  const difficulty = getDifficulty(courseTitle || courseId);
   
-  if (normalized.includes('basic') || normalized.includes('starter') || normalized.includes('spoken-english-basic')) {
+  if (normalized.includes('basic') || normalized.includes('starter') || normalized.includes('spoken-english-basic') || normalized.includes('day to day') || normalized.includes('day-to-day')) {
     return {
       subtitle: 'Build strong grammar foundations and start speaking confidently.',
-      difficulty: 'Beginner',
+      difficulty,
       rating: '4.8',
       students: '5,400+',
       liveClasses: '48 Live Classes',
@@ -31,10 +43,10 @@ function getCourseMeta(courseIdOrTitle: string) {
     };
   }
   
-  if (normalized.includes('advanced') || normalized.includes('business') || normalized.includes('business-communication') || normalized.includes('communication')) {
+  if (normalized.includes('advanced') || normalized.includes('business') || normalized.includes('business-communication') || normalized.includes('communication') || normalized.includes('professional')) {
     return {
       subtitle: 'Master public speaking, business communication, and neutral accent.',
-      difficulty: 'Advanced',
+      difficulty,
       rating: '4.9',
       students: '6,400+',
       liveClasses: '64 Live Classes',
@@ -47,7 +59,7 @@ function getCourseMeta(courseIdOrTitle: string) {
   if (normalized.includes('ielts')) {
     return {
       subtitle: 'Targeted preparation to clear IELTS Academic & General with Band 7.5+.',
-      difficulty: 'Intermediate to Advanced',
+      difficulty,
       rating: '4.9',
       students: '3,850+',
       liveClasses: '36 Live Classes',
@@ -60,7 +72,7 @@ function getCourseMeta(courseIdOrTitle: string) {
   if (normalized.includes('pte')) {
     return {
       subtitle: 'Master PTE Academic using smart templates and AI-scored mock tests.',
-      difficulty: 'Intermediate to Advanced',
+      difficulty,
       rating: '4.8',
       students: '2,900+',
       liveClasses: '30 Live Classes',
@@ -73,7 +85,7 @@ function getCourseMeta(courseIdOrTitle: string) {
   if (normalized.includes('interview') || normalized.includes('career') || normalized.includes('accelerator')) {
     return {
       subtitle: 'Crack MNC interviews with resume building, mock rounds, and HR prep.',
-      difficulty: 'All Levels',
+      difficulty,
       rating: '4.9',
       students: '1,800+',
       liveClasses: '20 Live Classes',
@@ -85,7 +97,7 @@ function getCourseMeta(courseIdOrTitle: string) {
   
   return {
     subtitle: 'Enhance your communication skills with structured, certified training.',
-    difficulty: 'Intermediate',
+    difficulty,
     rating: '4.8',
     students: '2,000+',
     liveClasses: 'Live Classes Included',
@@ -159,7 +171,7 @@ export default function Courses() {
           ) : (
             courses.map((course, i) => {
               const isPopular = course.popular;
-              const meta = getCourseMeta(course.id || course.title);
+              const meta = getCourseMeta(course.id, course.title);
 
               return (
                 <Reveal

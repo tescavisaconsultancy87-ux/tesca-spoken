@@ -67,11 +67,10 @@ const COURSE_LINKS = [
 ];
 
 const SOCIAL_LINKS = [
-  { icon: Youtube, href: '#', label: 'YouTube' },
-  { icon: Instagram, href: '#', label: 'Instagram' },
-  { icon: Facebook, href: '#', label: 'Facebook' },
-  { icon: Linkedin, href: '#', label: 'LinkedIn' },
-  { icon: Twitter, href: '#', label: 'Twitter' },
+  { icon: Youtube, href: 'https://www.youtube.com/@tescaspokenenglishandielts6122', label: 'YouTube' },
+  { icon: Instagram, href: 'https://www.instagram.com/tescaspokenenglish', label: 'Instagram' },
+  { icon: Facebook, href: 'https://www.facebook.com/tescaspoken', label: 'Facebook' },
+  { icon: Linkedin, href: 'https://www.linkedin.com/in/tesca-spoken-english', label: 'LinkedIn' },
 ];
 
 export default function Footer() {
