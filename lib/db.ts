@@ -46,6 +46,8 @@ export const db = {
         benefits: course.benefits,
         accent: course.accent,
         popular: course.popular,
+        tags: course.tags || [],
+        keywords: course.keywords || [],
       };
       const { data, error } = await supabase.from('courses').insert(dbCourse).select().single();
       if (error) {
@@ -88,6 +90,8 @@ export const db = {
       if (updates.benefits !== undefined) dbUpdates.benefits = updates.benefits;
       if (updates.accent !== undefined) dbUpdates.accent = updates.accent;
       if (updates.popular !== undefined) dbUpdates.popular = updates.popular;
+      if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
+      if (updates.keywords !== undefined) dbUpdates.keywords = updates.keywords;
 
       const { error } = await supabase.from('courses').update(dbUpdates).eq('id', id);
       if (error) {
@@ -954,6 +958,9 @@ export const db = {
       showProgressBar: true,
       claimedPercentage: 85,
       progressBarText: '🔥 [percentage]% of promotional seats claimed',
+      seoTitle: '',
+      seoDescription: '',
+      seoKeywords: [] as string[],
     };
 
     if (!supabase) return defaultSettings;
@@ -985,6 +992,9 @@ export const db = {
         showProgressBar: data.show_progress_bar ?? defaultSettings.showProgressBar,
         claimedPercentage: data.claimed_percentage ?? defaultSettings.claimedPercentage,
         progressBarText: data.progress_bar_text ?? defaultSettings.progressBarText,
+        seoTitle: data.seo_title ?? defaultSettings.seoTitle,
+        seoDescription: data.seo_description ?? defaultSettings.seoDescription,
+        seoKeywords: data.seo_keywords ?? defaultSettings.seoKeywords,
       };
     } catch (err) {
       console.error('getSystemSettings failed:', err);
@@ -1012,6 +1022,10 @@ export const db = {
       if (updates.showProgressBar !== undefined) dbUpdates.show_progress_bar = updates.showProgressBar;
       if (updates.claimedPercentage !== undefined) dbUpdates.claimed_percentage = updates.claimedPercentage;
       if (updates.progressBarText !== undefined) dbUpdates.progress_bar_text = updates.progressBarText;
+
+      if (updates.seoTitle !== undefined) dbUpdates.seo_title = updates.seoTitle;
+      if (updates.seoDescription !== undefined) dbUpdates.seo_description = updates.seoDescription;
+      if (updates.seoKeywords !== undefined) dbUpdates.seo_keywords = updates.seoKeywords;
 
       dbUpdates.updated_at = new Date().toISOString();
 

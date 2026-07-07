@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next';
+import { db } from '@/lib/db';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://tesca.co';
   const currentDate = new Date();
 
-  return [
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: `${baseUrl}/`,
       lastModified: currentDate,
@@ -66,4 +67,21 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.3,
     },
   ];
+
+  try {
+    const courses = await db.getCourses();
+    if (courses && courses.length > 0) {
+      const dynamicCourseRoutes = courses.map((course: any) => ({
+        url: `${baseUrl}/courses#${course.id}`,
+        lastModified: currentDate,
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }));
+      return [...staticRoutes, ...dynamicCourseRoutes];
+    }
+  } catch (err) {
+    console.error('Failed to load courses for sitemap generation:', err);
+  }
+
+  return staticRoutes;
 }

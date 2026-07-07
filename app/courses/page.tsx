@@ -49,6 +49,33 @@ export default function CoursesPage() {
   const [trainers, setTrainers] = useState<any[]>([]);
   const [loadingTrainers, setLoadingTrainers] = useState(true);
 
+  // Search and tag filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+
+  // Dynamic courses state
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+
+  const getFallbackTags = (title: string) => {
+    const t = title.toLowerCase();
+    if (t.includes('basic')) return ['Speaking', 'Basic', 'Grammar'];
+    if (t.includes('advanced') || t.includes('interview') || t.includes('communication')) return ['Corporate', 'Speaking', 'Interview Prep'];
+    if (t.includes('ielts') || t.includes('pte') || t.includes('vocabulary') || t.includes('accelerator')) return ['Vocabulary', 'IELTS', 'PTE'];
+    return ['Speaking'];
+  };
+
+  const getFallbackKeywords = (title: string) => {
+    const t = title.toLowerCase();
+    if (t.includes('basic')) return ['spoken english', 'english speaking', 'conversation'];
+    if (t.includes('advanced')) return ['business english', 'corporate training', 'advanced speaking'];
+    if (t.includes('interview') || t.includes('communication')) return ['interview preparation', 'hr interview', 'mock interview', 'business communication'];
+    if (t.includes('ielts')) return ['ielts preparation', 'ielts training', 'english test'];
+    if (t.includes('pte')) return ['pte academic', 'pte test', 'pte practice'];
+    if (t.includes('vocabulary') || t.includes('accelerator')) return ['english vocabulary', 'idioms', 'speaking vocabulary'];
+    return ['english learning'];
+  };
+
   // Trainer slider scroll states and handlers
   const trainersScrollContainerRef = useRef<HTMLDivElement>(null);
   const trainersLengthRef = useRef(0);
@@ -121,9 +148,7 @@ export default function CoursesPage() {
     });
   }, [scrollTrainersToIndex]);
 
-  // Dynamic courses state
-  const [courses, setCourses] = useState<any[]>([]);
-  const [loadingCourses, setLoadingCourses] = useState(true);
+
 
   useEffect(() => {
     async function loadCourses() {
@@ -142,6 +167,8 @@ export default function CoursesPage() {
             popular: !!c.popular,
             price: Number(c.price || 0),
             originalPrice: Number(c.original_price || c.price || 0),
+            tags: c.tags && c.tags.length > 0 ? c.tags : getFallbackTags(c.title),
+            keywords: c.keywords && c.keywords.length > 0 ? c.keywords : getFallbackKeywords(c.title),
           }));
           setCourses(mapped);
         } else {
@@ -156,6 +183,8 @@ export default function CoursesPage() {
               popular: c.popular,
               price: Number(c.price.replace(/[₹,]/g, '')),
               originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+              tags: getFallbackTags(c.title),
+              keywords: getFallbackKeywords(c.title),
             }))
           );
         }
@@ -172,6 +201,8 @@ export default function CoursesPage() {
             popular: c.popular,
             price: Number(c.price.replace(/[₹,]/g, '')),
             originalPrice: Number(c.originalPrice.replace(/[₹,]/g, '')),
+            tags: getFallbackTags(c.title),
+            keywords: getFallbackKeywords(c.title),
           }))
         );
       } finally {
@@ -366,11 +397,11 @@ export default function CoursesPage() {
               },
               {
                 '@type': 'ItemList',
-                itemListElement: COURSES.map((c, i) => ({
+                itemListElement: (courses && courses.length > 0 ? courses : COURSES).map((c: any, i: number) => ({
                   '@type': 'Course',
                   position: i + 1,
-                  name: c.title,
-                  description: c.benefits.join(', '),
+                  name: c.title || c.name,
+                  description: Array.isArray(c.benefits) ? c.benefits.join(', ') : (c.benefits || ''),
                   provider: { '@type': 'EducationalOrganization', name: 'TESCA Spoken English', sameAs: 'https://tesca.co' },
                 })),
               },
@@ -445,8 +476,73 @@ export default function CoursesPage() {
                 Each course is designed for a specific goal. Pick the one that matches your needs.
               </p>
             </div>
+
+            {/* Search and tag filter UI */}
+            {!loadingCourses && courses.length > 0 && (() => {
+              const allTags = Array.from(new Set(courses.flatMap(c => c.tags || [])));
+              return (
+                <div className="max-w-4xl mx-auto mb-12 space-y-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search courses by title, keywords or benefits..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full rounded-2xl border border-black/10 bg-white px-5 py-3.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary shadow-soft"
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-primary hover:text-primary-600 bg-primary-50 px-3 py-1.5 rounded-lg"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {allTags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2 justify-center">
+                      <button
+                        onClick={() => setSelectedTag(null)}
+                        className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                          !selectedTag
+                            ? 'bg-primary text-white shadow-soft'
+                            : 'bg-white border border-black/8 text-ink-muted hover:text-ink hover:border-black/15'
+                        }`}
+                      >
+                        All Tags
+                      </button>
+                      {allTags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                          className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all cursor-pointer ${
+                            tag === selectedTag
+                              ? 'bg-primary text-white shadow-soft'
+                              : 'bg-white border border-black/8 text-ink-muted hover:text-ink hover:border-black/15'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 justify-center max-w-6xl mx-auto">
-              <CoursesList courses={courses} loading={loadingCourses} onEnroll={handleEnroll} />
+              <CoursesList 
+                courses={courses.filter(c => {
+                  const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    (c.benefits && c.benefits.some((b: string) => b.toLowerCase().includes(searchQuery.toLowerCase()))) ||
+                    (c.keywords && c.keywords.some((k: string) => k.toLowerCase().includes(searchQuery.toLowerCase())));
+                  const matchesTag = !selectedTag || (c.tags && c.tags.includes(selectedTag));
+                  return matchesSearch && matchesTag;
+                })} 
+                loading={loadingCourses} 
+                onEnroll={handleEnroll} 
+              />
             </div>
           </div>
         </section>
