@@ -8,7 +8,7 @@ const PUBLIC_URLS = [
   `https://${HOST}/`,
   `https://${HOST}/about`,
   `https://${HOST}/courses`,
-  `https://${HOST}/pricing`,
+  `https://${HOST}/blog`,
   `https://${HOST}/assessment`,
   `https://${HOST}/contact`,
   `https://${HOST}/faq`,

@@ -315,7 +315,7 @@ export default function Courses() {
                                                 course.title.toLowerCase().includes('basic') ? 'starter' :
                                                 course.title.toLowerCase().includes('business') || course.title.toLowerCase().includes('interview') ? 'professional' :
                                                 course.title.toLowerCase().includes('vocabulary') || course.title.toLowerCase().includes('idioms') ? 'premium' : '';
-                              const enrollHref = planParam ? `/pricing?plan=${planParam}` : '/pricing';
+                              const enrollHref = planParam ? `/courses?plan=${planParam}` : '/courses';
                               return (
                                 <a
                                   href={enrollHref}

@@ -408,7 +408,7 @@ export default function OfferBannerSettingsPage() {
           <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5">
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">💡 Designing Banners</h4>
             <p className="text-[11px] text-slate-500 leading-relaxed">
-              The preview represents exactly how the marketing banner will display to visiting students at <code className="bg-slate-100 text-slate-700 px-1 py-0.5 rounded font-mono">/pricing</code>. Use rolling timers for continuous promotions, or fixed dates for major school launches.
+              The preview represents exactly how the marketing banner will display to visiting students at <code className="bg-slate-100 text-slate-700 px-1 py-0.5 rounded font-mono">/courses</code>. Use rolling timers for continuous promotions, or fixed dates for major school launches.
             </p>
           </div>
         </div>

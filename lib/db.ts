@@ -1002,6 +1002,71 @@ export const db = {
     }
   },
 
+  // ─── Blog Posts ───
+  getBlogPosts: async () => {
+    await ensureSupabaseClient();
+    if (!supabase) return [];
+    try {
+      const { data, error } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
+      if (error) {
+        logError('blog_posts', error);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.error('getBlogPosts failed:', err);
+      return [];
+    }
+  },
+
+  createBlogPost: async (post: any) => {
+    await ensureSupabaseClient();
+    if (!supabase) return post;
+    try {
+      const { data, error } = await supabase.from('blog_posts').insert(post).select().single();
+      if (error) {
+        logError('blog_posts', error);
+        return post;
+      }
+      return data;
+    } catch (err) {
+      console.error('createBlogPost failed:', err);
+      return post;
+    }
+  },
+
+  updateBlogPost: async (id: string, updates: any) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from('blog_posts').update(updates).eq('id', id);
+      if (error) {
+        logError('blog_posts', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('updateBlogPost failed:', err);
+      return false;
+    }
+  },
+
+  deleteBlogPost: async (id: string) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from('blog_posts').delete().eq('id', id);
+      if (error) {
+        logError('blog_posts', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('deleteBlogPost failed:', err);
+      return false;
+    }
+  },
+
   updateSystemSettings: async (updates: any) => {
     await ensureSupabaseClient();
     if (!supabase) return false;

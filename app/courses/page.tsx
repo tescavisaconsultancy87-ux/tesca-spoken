@@ -40,6 +40,86 @@ const FEATURES = [
   { icon: BookOpen, label: 'Mock Tests & Quizzes' },
 ];
 
+function CountdownTimer({ expiryType, fixedExpiry }: { expiryType: string; fixedExpiry: string }) {
+  const getTimeLeft = () => {
+    const now = new Date();
+    let end = new Date();
+    if (expiryType === 'fixed' && fixedExpiry) {
+      const parsedEnd = new Date(fixedExpiry);
+      if (!isNaN(parsedEnd.getTime())) {
+        end = parsedEnd;
+      } else {
+        end.setHours(23, 59, 59, 999);
+      }
+    } else {
+      end.setHours(23, 59, 59, 999);
+    }
+    const diff = Math.max(0, end.getTime() - now.getTime());
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    return { hours, minutes, seconds, isExpired: diff <= 0 };
+  };
+
+  const [mounted, setMounted] = useState(false);
+  const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0, isExpired: false });
+
+  useEffect(() => {
+    setMounted(true);
+    setTime(getTimeLeft());
+    const interval = setInterval(() => {
+      setTime(getTimeLeft());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [expiryType, fixedExpiry]);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center gap-2">
+        {[
+          { value: '00', label: 'Hrs' },
+          { value: '00', label: 'Min' },
+          { value: '00', label: 'Sec' },
+        ].map((unit, i) => (
+          <div key={unit.label} className="flex items-center gap-2">
+            <div className="flex flex-col items-center">
+              <span className="font-heading text-xl font-bold text-white tabular-nums">{unit.value}</span>
+              <span className="text-[10px] text-primary-200 uppercase tracking-wide">{unit.label}</span>
+            </div>
+            {i < 2 && <span className="text-xl font-bold text-primary-300 mb-3">:</span>}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (expiryType === 'fixed' && time.isExpired) {
+    return (
+      <span className="text-xs font-bold text-rose-300 uppercase tracking-widest py-2">Offer Expired</span>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      {[
+        { value: pad(time.hours), label: 'Hrs' },
+        { value: pad(time.minutes), label: 'Min' },
+        { value: pad(time.seconds), label: 'Sec' },
+      ].map((unit, i) => (
+        <div key={unit.label} className="flex items-center gap-2">
+          <div className="flex flex-col items-center">
+            <span className="font-heading text-xl font-bold text-white tabular-nums">{unit.value}</span>
+            <span className="text-[10px] text-primary-200 uppercase tracking-wide">{unit.label}</span>
+          </div>
+          {i < 2 && <span className="text-xl font-bold text-primary-300 mb-3">:</span>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function CoursesPage() {
   const { openModal } = useDemoModal();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -48,6 +128,17 @@ export default function CoursesPage() {
   // Dynamic trainers state
   const [trainers, setTrainers] = useState<any[]>([]);
   const [loadingTrainers, setLoadingTrainers] = useState(true);
+
+  // Banner / promo settings
+  const [settings, setSettings] = useState({
+    showOfferBanner: true,
+    showTimer: true,
+    timerExpiryType: 'rolling',
+    timerFixedExpiry: '',
+    showProgressBar: true,
+    claimedPercentage: 85,
+    progressBarText: '🔥 [percentage]% of promotional seats claimed',
+  });
 
   // Search and tag filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -149,6 +240,18 @@ export default function CoursesPage() {
   }, [scrollTrainersToIndex]);
 
 
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const data = await db.getSystemSettings();
+        setSettings(data);
+      } catch (err) {
+        console.error('Failed to load settings', err);
+      }
+    }
+    loadSettings();
+  }, []);
 
   useEffect(() => {
     async function loadCourses() {
@@ -463,6 +566,45 @@ export default function CoursesPage() {
             </div>
           </div>
         </section>
+
+        {/* ── Promo Banner (from settings) ── */}
+        {(settings.showOfferBanner && (settings.showTimer || settings.showProgressBar)) && (
+          <div className="container-x mt-10 mb-0 lg:mb-0">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#062426] to-[#0c4447] border border-primary/20 px-6 py-6 sm:px-10 text-white shadow-soft-lg flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+                <div className="absolute -top-12 -right-12 h-36 w-36 rounded-full bg-secondary/15 blur-2xl" />
+                <div className="absolute -bottom-12 -left-12 h-36 w-36 rounded-full bg-primary/20 blur-2xl" />
+              </div>
+              <div className="relative z-10 flex-1 space-y-3 text-center md:text-left">
+                <span className="inline-flex items-center gap-1 bg-secondary/25 border border-secondary/40 text-secondary text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                  ⚡ Limited Time Promotion
+                </span>
+                <h3 className="text-xl font-bold font-heading">Enroll Today & Save!</h3>
+                {settings.showProgressBar && (
+                  <div className="space-y-1.5 max-w-md mx-auto md:mx-0">
+                    <p className="text-xs text-primary-100 font-semibold">
+                      {settings.progressBarText.replace('[percentage]', String(settings.claimedPercentage))}
+                    </p>
+                    <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden border border-white/5 p-[1px]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-secondary to-amber-400 transition-all duration-1000 ease-out"
+                        style={{ width: `${settings.claimedPercentage}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              {settings.showTimer && (
+                <div className="relative z-10 flex flex-col items-center gap-1.5 shrink-0 bg-white/5 border border-white/10 p-4 rounded-2xl shadow-soft w-full md:w-auto">
+                  <span className="text-[10px] text-primary-200 font-bold uppercase tracking-widest flex items-center gap-1">
+                    Offer Ends In:
+                  </span>
+                  <CountdownTimer expiryType={settings.timerExpiryType} fixedExpiry={settings.timerFixedExpiry} />
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Course Cards (no pricing) ── */}
         <section className="py-20 lg:py-28" id="courses">
