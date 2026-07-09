@@ -30,8 +30,7 @@ export default function LoginPage() {
         try {
           const settings = await db.getSystemSettings();
           if (settings.maintenanceMode) {
-            setError('The portal is currently under maintenance. Please try again later.');
-            setLoading(false);
+            router.push('/maintenance');
             return;
           }
         } catch (err) {

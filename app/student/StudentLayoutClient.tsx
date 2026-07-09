@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { LayoutDashboard, BookOpen, Video, FileText, User, Home } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
@@ -30,6 +30,8 @@ const studentNavGroups: NavGroup[] = [
 export default function StudentLayoutClient({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const [checkingMaintenance, setCheckingMaintenance] = useState(true);
 
   useEffect(() => {
     async function checkGates() {
@@ -45,9 +47,10 @@ export default function StudentLayoutClient({ children }: { children: React.Reac
             router.push('/maintenance');
             return;
           }
-
+          setCheckingMaintenance(false);
         } catch (e) {
           console.error('[Student Layout] Maintenance gate check failed:', e);
+          setCheckingMaintenance(false);
         }
 
         if (user.needsPasswordChange) {
@@ -56,9 +59,9 @@ export default function StudentLayoutClient({ children }: { children: React.Reac
       }
     }
     checkGates();
-  }, [user, loading, router]);
+  }, [user, loading, router, pathname]);
 
-  if (loading) {
+  if (loading || checkingMaintenance) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f6fa]">
         <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary/20 border-t-primary" />

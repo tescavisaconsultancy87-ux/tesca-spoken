@@ -191,7 +191,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email,
             password,
           });
-          if (error) throw error;
+          
+          if (error) {
+            const isNetworkError = 
+              error.name === 'AuthRetryableFetchError' || 
+              error.message?.includes('fetch') || 
+              error.message?.includes('NetworkError') || 
+              error.status === 0;
+
+            if (isNetworkError && process.env.NODE_ENV === 'development') {
+              const targetUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'undefined';
+              console.warn(`[Auth] Supabase login failed due to connection/network error. Target URL: "${targetUrl}". Falling back to local mock authentication.`, error);
+              return await performMockLogin(email, password);
+            }
+            return { success: false, error: formatFriendlyError(error) };
+          }
           
           if (data.user) {
             // Write session cookie synchronously before redirecting to satisfy middleware
@@ -248,18 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           return { success: false, error: 'User login data unavailable' };
         } catch (supabaseError: any) {
-          const isNetworkError = 
-            supabaseError.name === 'AuthRetryableFetchError' || 
-            supabaseError.message?.includes('fetch') || 
-            supabaseError.message?.includes('NetworkError') || 
-            supabaseError.status === 0;
-
-          if (isNetworkError && process.env.NODE_ENV === 'development') {
-            const targetUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'undefined';
-            console.warn(`[Auth] Supabase login failed due to connection/network error. Target URL: "${targetUrl}". Falling back to local mock authentication.`, supabaseError);
-            return await performMockLogin(email, password);
-          }
-          throw supabaseError;
+          return { success: false, error: formatFriendlyError(supabaseError) };
         }
       } else {
         return await performMockLogin(email, password);

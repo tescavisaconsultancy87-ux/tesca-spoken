@@ -24,8 +24,14 @@ export function isTutorEmail(email: string | undefined): boolean {
 
 // Format raw error objects into user-friendly strings without leaking details
 export function formatFriendlyError(err: any): string {
-  console.error('[Security] Raw error encountered:', err);
   if (!err) return 'An unexpected error occurred. Please try again.';
+
+  const lowerMsg = (err.message || '').toLowerCase();
+  if (!lowerMsg.includes('invalid login credentials')) {
+    console.error('[Security] Raw error encountered:', err);
+  } else {
+    console.warn('[Security] Authentication attempt failed:', err.message || err);
+  }
   if (typeof err === 'string') return err;
 
   // Intercept network/connectivity errors

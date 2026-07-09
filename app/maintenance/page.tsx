@@ -91,7 +91,7 @@ export default function MaintenancePage() {
               <Phone className="h-5 w-5" />
             </div>
             <div className="min-w-0">
-              <p className="font-bold text-ink text-xs">Call Hotline</p>
+              <p className="font-bold text-ink text-xs">Call Support Team</p>
               <p className="text-[11px] text-ink-muted truncate">+91 98241 52731</p>
             </div>
           </a>
@@ -103,7 +103,7 @@ export default function MaintenancePage() {
             href="/"
             className="btn-primary w-full sm:w-auto justify-center px-8 py-3.5 font-bold text-xs"
           >
-            Back to Public Website
+            Back to Home page
             <ExternalLink className="h-4 w-4" />
           </Link>
         </div>
