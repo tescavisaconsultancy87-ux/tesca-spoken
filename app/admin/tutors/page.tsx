@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, Users, Award, Briefcase, X, BadgeCheck } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Search, Plus, Trash2, Users, Award, Briefcase, X, BadgeCheck, GripVertical, ArrowUp, ArrowDown, ArrowUpDown, Check } from 'lucide-react';
 import { db } from '@/lib/db';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import {
@@ -27,6 +27,7 @@ interface Trainer {
   photo: string;
   verified: boolean;
   show_on_homepage: boolean;
+  display_order: number;
 }
 
 export default function AdminTutorsPage() {
@@ -37,6 +38,13 @@ export default function AdminTutorsPage() {
   const [loading, setLoading] = useState(true);
   const [deleteTrainerId, setDeleteTrainerId] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
+
+  // ─── Reorder Mode State ───
+  const [isReorderMode, setIsReorderMode] = useState(false);
+  const [reorderList, setReorderList] = useState<Trainer[]>([]);
+  const [reorderSaving, setReorderSaving] = useState(false);
+  const dragItemRef = useRef<number | null>(null);
+  const dragOverItemRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -171,6 +179,7 @@ export default function AdminTutorsPage() {
           photo: formData.photo,
           verified: formData.verified,
           show_on_homepage: formData.show_on_homepage,
+          display_order: trainers.length + 1,
         };
 
         await db.createTrainer(createdObj);
@@ -196,6 +205,59 @@ export default function AdminTutorsPage() {
 
   const handleDeleteTrainer = (id: string) => {
     setDeleteTrainerId(id);
+  };
+
+  // ─── Reorder Handlers ───
+  const enterReorderMode = () => {
+    setReorderList([...trainers]);
+    setIsReorderMode(true);
+  };
+
+  const exitReorderMode = () => {
+    setIsReorderMode(false);
+    setReorderList([]);
+  };
+
+  const moveTrainer = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= reorderList.length) return;
+    const updated = [...reorderList];
+    const [moved] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, moved);
+    setReorderList(updated);
+  };
+
+  const handleDragStart = (index: number) => {
+    dragItemRef.current = index;
+  };
+
+  const handleDragEnter = (index: number) => {
+    dragOverItemRef.current = index;
+  };
+
+  const handleDragEnd = () => {
+    if (dragItemRef.current !== null && dragOverItemRef.current !== null && dragItemRef.current !== dragOverItemRef.current) {
+      moveTrainer(dragItemRef.current, dragOverItemRef.current);
+    }
+    dragItemRef.current = null;
+    dragOverItemRef.current = null;
+  };
+
+  const saveReorder = async () => {
+    setReorderSaving(true);
+    try {
+      const orderedIds = reorderList.map((t) => t.id);
+      const success = await db.reorderTrainers(orderedIds);
+      if (success) {
+        // Update main trainers list with new order
+        setTrainers(reorderList.map((t, i) => ({ ...t, display_order: i + 1 })));
+        setIsReorderMode(false);
+        setReorderList([]);
+      }
+    } catch (err) {
+      console.error('Failed to save reorder:', err);
+    } finally {
+      setReorderSaving(false);
+    }
   };
 
   const filteredTrainers = trainers.filter(
@@ -225,13 +287,32 @@ export default function AdminTutorsPage() {
           <p className="text-xs text-gray-400 font-semibold mt-0.5">Manage details, expertise, and homepage visibility of trainers</p>
         </div>
 
-        <button
-          onClick={handleOpenCreateModal}
-          className="inline-flex items-center justify-center gap-1.5 px-5 py-3 bg-primary hover:bg-primary-600 text-white rounded-xl text-xs font-bold transition-all shadow-soft self-start sm:self-auto"
-        >
-          <Plus className="h-4 w-4" />
-          Add Tutor
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={enterReorderMode}
+            disabled={isReorderMode || trainers.length < 2}
+            className={`inline-flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl text-xs font-bold transition-all shadow-soft border ${
+              isReorderMode || trainers.length < 2
+                ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
+                : 'border-primary text-primary hover:bg-primary hover:text-white cursor-pointer'
+            }`}
+          >
+            <ArrowUpDown className="h-4 w-4" />
+            Reorder
+          </button>
+          <button
+            onClick={handleOpenCreateModal}
+            disabled={isReorderMode}
+            className={`inline-flex items-center justify-center gap-1.5 px-5 py-3 rounded-xl text-xs font-bold transition-all shadow-soft ${
+              isReorderMode
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-primary hover:bg-primary-600 text-white'
+            }`}
+          >
+            <Plus className="h-4 w-4" />
+            Add Tutor
+          </button>
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -260,15 +341,128 @@ export default function AdminTutorsPage() {
           <h3 className="text-base font-bold text-gray-700">No tutors found</h3>
           <p className="text-xs text-gray-400 mt-1">Try resetting search filter or add a new trainer profile.</p>
         </div>
+      ) : isReorderMode ? (
+        /* ═══ Reorder Mode ═══ */
+        <div className="space-y-3">
+          {/* Reorder toolbar */}
+          <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3">
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-amber-600" />
+              <span className="text-xs font-bold text-amber-700">Drag to reorder trainers — changes apply to homepage & about page</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={exitReorderMode}
+                disabled={reorderSaving}
+                className="px-4 py-2 rounded-xl border border-gray-200 text-gray-500 text-xs font-bold hover:bg-gray-50 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveReorder}
+                disabled={reorderSaving}
+                className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary hover:bg-primary-600 text-white text-xs font-bold transition-all shadow-soft disabled:opacity-50"
+              >
+                {reorderSaving ? (
+                  <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+                {reorderSaving ? 'Saving...' : 'Save Order'}
+              </button>
+            </div>
+          </div>
+
+          {/* Reorder list */}
+          <div className="space-y-2">
+            {reorderList.map((trainer, index) => (
+              <div
+                key={trainer.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragEnter={() => handleDragEnter(index)}
+                onDragEnd={handleDragEnd}
+                onDragOver={(e) => e.preventDefault()}
+                className="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-4 shadow-soft hover:shadow-soft-lg hover:border-primary/30 transition-all duration-200 cursor-grab active:cursor-grabbing active:shadow-lg active:scale-[1.01] select-none"
+              >
+                {/* Grip handle */}
+                <div className="flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors">
+                  <GripVertical className="h-5 w-5" />
+                </div>
+
+                {/* Position badge */}
+                <div className="flex items-center justify-center h-8 w-8 rounded-full bg-primary/10 text-primary text-xs font-extrabold shrink-0">
+                  {index + 1}
+                </div>
+
+                {/* Thumbnail */}
+                <div className="h-12 w-12 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shrink-0">
+                  <img
+                    src={trainer.photo || 'https://images.pexels.com/photos/5212343/pexels-photo-5212343.jpeg?auto=compress&cs=tinysrgb&w=600&h=600&fit=crop'}
+                    alt={trainer.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+
+                {/* Name & Role */}
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-bold text-gray-800 truncate">{trainer.name}</h4>
+                  <p className="text-xs text-gray-400 font-medium truncate">{trainer.role}</p>
+                </div>
+
+                {/* Show on homepage indicator */}
+                {trainer.show_on_homepage && (
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-bold border border-emerald-100 shrink-0">
+                    <BadgeCheck className="h-3 w-3" />
+                    Homepage
+                  </span>
+                )}
+
+                {/* Arrow buttons */}
+                <div className="flex flex-col gap-0.5 shrink-0">
+                  <button
+                    onClick={() => moveTrainer(index, index - 1)}
+                    disabled={index === 0}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      index === 0
+                        ? 'text-gray-200 cursor-not-allowed'
+                        : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'
+                    }`}
+                    title="Move up"
+                  >
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => moveTrainer(index, index + 1)}
+                    disabled={index === reorderList.length - 1}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      index === reorderList.length - 1
+                        ? 'text-gray-200 cursor-not-allowed'
+                        : 'text-gray-400 hover:bg-gray-50 hover:text-gray-600'
+                    }`}
+                    title="Move down"
+                  >
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
-        /* Trainers Grid */
+        /* ═══ Normal Grid View ═══ */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredTrainers.map((trainer) => (
+          {filteredTrainers.map((trainer, index) => (
             <div
               key={trainer.id}
               className="bg-white border border-gray-100 rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col justify-between h-full space-y-4 group"
             >
               <div className="space-y-3 relative">
+                {/* Position badge */}
+                <div className="absolute top-2 left-2 z-10 flex items-center justify-center h-7 w-7 rounded-full bg-black/60 text-white text-[10px] font-extrabold backdrop-blur-sm">
+                  {index + 1}
+                </div>
+
                 {/* Photo */}
                 <div className="relative aspect-[4/5] overflow-hidden rounded-2xl bg-gray-50 border border-gray-100">
                   <img

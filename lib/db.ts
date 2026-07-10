@@ -880,7 +880,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('trainers').select('*').order('created_at', { ascending: true });
+      const { data, error } = await supabase.from('trainers').select('*').order('display_order', { ascending: true });
       if (error) {
         logError('trainers', error);
         return [];
@@ -896,7 +896,17 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return trainer;
     try {
-      const { data, error } = await supabase.from('trainers').insert(trainer).select().single();
+      // Auto-assign display_order as max+1 so new trainers appear at the end
+      const { data: maxRow } = await supabase
+        .from('trainers')
+        .select('display_order')
+        .order('display_order', { ascending: false })
+        .limit(1)
+        .single();
+      const nextOrder = (maxRow?.display_order ?? 0) + 1;
+
+      const trainerWithOrder = { ...trainer, display_order: nextOrder };
+      const { data, error } = await supabase.from('trainers').insert(trainerWithOrder).select().single();
       if (error) {
         logError('trainers', error);
         return trainer;
@@ -936,6 +946,27 @@ export const db = {
       return true;
     } catch (err) {
       console.error('deleteTrainer failed:', err);
+      return false;
+    }
+  },
+
+  reorderTrainers: async (orderedIds: string[]) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      // Batch update each trainer's display_order based on its position in the array
+      const updates = orderedIds.map((id, index) =>
+        supabase!.from('trainers').update({ display_order: index + 1 }).eq('id', id)
+      );
+      const results = await Promise.all(updates);
+      const failed = results.find((r) => r.error);
+      if (failed?.error) {
+        logError('trainers', failed.error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('reorderTrainers failed:', err);
       return false;
     }
   },
