@@ -29,7 +29,10 @@ import {
   Layers,
   Star,
   X,
+  Phone,
 } from 'lucide-react';
+
+const DISABLE_ONLINE_PURCHASE = true; // Toggle to disable online Razorpay payments and show contact info instead
 
 const FEATURES = [
   { icon: Video, label: 'Live Interactive Classes' },
@@ -1185,6 +1188,62 @@ export default function CoursesPage() {
                   >
                     Go to Student Portal
                   </a>
+                </div>
+              </div>
+            ) : DISABLE_ONLINE_PURCHASE ? (
+              <div className="text-center py-6 space-y-5">
+                <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 text-primary flex items-center justify-center shadow-soft animate-pulse">
+                  <Clock className="h-8 w-8 text-primary" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight">Course Purchase Coming Soon</h3>
+                  <p className="text-sm text-gray-550 leading-relaxed max-w-sm mx-auto">
+                    Online course purchase is coming soon. Please check back later.
+                  </p>
+                </div>
+                
+                <div className="border-t border-gray-100 my-4" />
+                
+                <div className="space-y-3">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Contact Us to Enroll Now</p>
+                  
+                  <div className="flex flex-col gap-2">
+                    <a
+                      href={`https://wa.me/919824152731?text=Hi%20TESCA,%20I%20am%20interested%20in%20enrolling%20in%20the%20${encodeURIComponent(selectedPlanForPurchase.title || selectedPlanForPurchase.name)}%20course.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-[#25D366] hover:bg-[#20ba5a] transition-all shadow-md animate-bounce"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Contact via WhatsApp
+                    </a>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <a
+                        href="tel:+919824152731"
+                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-150 text-gray-700 bg-white hover:bg-gray-50 transition-all"
+                      >
+                        <Phone className="h-3.5 w-3.5 text-primary" />
+                        +91 98241 52731
+                      </a>
+                      <a
+                        href="tel:+919925060609"
+                        className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-150 text-gray-700 bg-white hover:bg-gray-50 transition-all"
+                      >
+                        <Phone className="h-3.5 w-3.5 text-primary" />
+                        +91 99250 60609
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-4">
+                  <button
+                    onClick={() => setSelectedPlanForPurchase(null)}
+                    className="px-4 py-2.5 w-full rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-50 transition-colors"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             ) : (
