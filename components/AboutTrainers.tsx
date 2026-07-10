@@ -12,12 +12,10 @@ export default function AboutTrainers() {
   const [loading, setLoading] = useState(true);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const trainersLengthRef = useRef(0);
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [showControls, setShowControls] = useState(false);
+  const [canFadeLeft, setCanFadeLeft] = useState(false);
+  const [canFadeRight, setCanFadeRight] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -39,55 +37,31 @@ export default function AboutTrainers() {
     load();
   }, []);
 
-  useEffect(() => {
-    trainersLengthRef.current = trainers.length;
-  }, [trainers]);
-
-  const updateScrollState = useCallback(() => {
+  // Gradient overlays only — doesn't touch activeIndex
+  const updateFadeState = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
-
     const scrollLeft = container.scrollLeft;
     const maxScroll = container.scrollWidth - container.clientWidth;
-    const isOverflowing = maxScroll > 1;
-
-    setShowControls(isOverflowing);
-    setCanScrollLeft(scrollLeft > 1);
-    setCanScrollRight(scrollLeft < maxScroll - 1);
-
-    const len = trainersLengthRef.current;
-    if (len === 0) return;
-
-    let closestIndex = 0;
-    let minDist = Infinity;
-    for (let i = 0; i < len; i++) {
-      const child = container.children[i] as HTMLElement | undefined;
-      if (!child) continue;
-      const dist = Math.abs(child.offsetLeft - scrollLeft);
-      if (dist < minDist) {
-        minDist = dist;
-        closestIndex = i;
-      }
-    }
-    setActiveIndex(closestIndex);
+    setCanFadeLeft(scrollLeft > 1);
+    setCanFadeRight(scrollLeft < maxScroll - 1);
   }, []);
 
   useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container || trainers.length === 0) return;
 
-    const timer = setTimeout(updateScrollState, 50);
-    container.addEventListener('scroll', updateScrollState, { passive: true });
-
-    const ro = new ResizeObserver(updateScrollState);
+    const timer = setTimeout(updateFadeState, 50);
+    container.addEventListener('scroll', updateFadeState, { passive: true });
+    const ro = new ResizeObserver(updateFadeState);
     ro.observe(container);
 
     return () => {
       clearTimeout(timer);
-      container.removeEventListener('scroll', updateScrollState);
+      container.removeEventListener('scroll', updateFadeState);
       ro.disconnect();
     };
-  }, [trainers, updateScrollState]);
+  }, [trainers, updateFadeState]);
 
   const scrollToIndex = useCallback((index: number) => {
     const container = scrollContainerRef.current;
@@ -97,21 +71,19 @@ export default function AboutTrainers() {
     container.scrollTo({ left: child.offsetLeft, behavior: 'smooth' });
   }, []);
 
+  const goToIndex = useCallback((index: number) => {
+    const clamped = Math.max(0, Math.min(trainers.length - 1, index));
+    setActiveIndex(clamped);
+    scrollToIndex(clamped);
+  }, [trainers.length, scrollToIndex]);
+
   const handlePrev = useCallback(() => {
-    setActiveIndex(prev => {
-      const next = Math.max(0, prev - 1);
-      scrollToIndex(next);
-      return next;
-    });
-  }, [scrollToIndex]);
+    goToIndex(activeIndex - 1);
+  }, [activeIndex, goToIndex]);
 
   const handleNext = useCallback(() => {
-    setActiveIndex(prev => {
-      const next = Math.min(trainersLengthRef.current - 1, prev + 1);
-      scrollToIndex(next);
-      return next;
-    });
-  }, [scrollToIndex]);
+    goToIndex(activeIndex + 1);
+  }, [activeIndex, goToIndex]);
 
   if (loading) {
     return (
@@ -136,9 +108,7 @@ export default function AboutTrainers() {
         {/* Scrollable list */}
         <div
           ref={scrollContainerRef}
-          className={`flex gap-6 py-4 px-5 sm:px-8 lg:px-0 items-stretch scroll-smooth no-scrollbar overflow-x-auto snap-x snap-mandatory ${
-            showControls ? 'justify-start' : 'justify-start lg:justify-center'
-          }`}
+          className="flex gap-6 py-4 px-5 sm:px-8 lg:px-0 items-stretch scroll-smooth no-scrollbar overflow-x-auto snap-x snap-mandatory justify-start"
         >
           {trainers.map((trainer, i) => (
             <Reveal
@@ -152,10 +122,10 @@ export default function AboutTrainers() {
         </div>
 
         {/* Gradient Overlays */}
-        {canScrollLeft && (
+        {canFadeLeft && (
           <div className="pointer-events-none absolute inset-y-0 left-0 z-20 w-12 bg-gradient-to-r from-bg-soft via-bg-soft/70 to-transparent" />
         )}
-        {canScrollRight && (
+        {canFadeRight && (
           <div className="pointer-events-none absolute inset-y-0 right-0 z-20 w-12 bg-gradient-to-l from-bg-soft via-bg-soft/70 to-transparent" />
         )}
       </div>
@@ -182,7 +152,7 @@ export default function AboutTrainers() {
             <button
               key={i}
               type="button"
-              onClick={() => scrollToIndex(i)}
+              onClick={() => goToIndex(i)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === activeIndex
                   ? 'w-8 bg-primary'
