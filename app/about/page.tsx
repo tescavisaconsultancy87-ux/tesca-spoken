@@ -89,10 +89,10 @@ const MILESTONES = [
 ];
 
 const STATS = [
-  { value: '5,000+', label: 'Students Trained', icon: Users },
-  { value: '20+', label: 'Expert Trainers', icon: GraduationCap },
+  { value: '7L+', label: 'Students Trained', icon: Users },
+  { value: '6000+', label: 'Expert Trainers', icon: GraduationCap },
   { value: '25+', label: 'Countries Reached', icon: Globe },
-  { value: '95%', label: 'Success Rate', icon: Trophy },
+  { value: '97%', label: 'Success Rate', icon: Trophy },
 ];
 
 const FACULTY_TEAM = [
