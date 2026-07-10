@@ -146,17 +146,17 @@ export default function AboutTrainers() {
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* Dots */}
-        <div className="flex gap-2">
+        {/* Step indicators — one per trainer, auto-adjusts on add/delete */}
+        <div className="flex items-center gap-1.5">
           {trainers.map((_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => goToIndex(i)}
-              className={`h-2 rounded-full transition-all duration-300 ${
+              className={`rounded-full transition-all duration-300 ${
                 i === activeIndex
-                  ? 'w-8 bg-primary'
-                  : 'w-2 bg-primary-200 hover:bg-primary-300'
+                  ? 'h-2.5 w-8 bg-primary'
+                  : 'h-2 w-2 bg-primary-200 hover:bg-primary-300'
               }`}
               aria-label={`Go to trainer ${i + 1}`}
               aria-current={i === activeIndex}
