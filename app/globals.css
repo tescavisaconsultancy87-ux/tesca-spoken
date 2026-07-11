@@ -203,16 +203,16 @@
 
 /* ─── Hero Custom Background ─── */
 .hero-bg {
-  background: #FFFFFF;
+  background-color: #FFFFFF;
+  background-image: url('/hero-section-background.png');
+  background-size: cover;
+  background-position: 80% center;
+  background-repeat: no-repeat;
 }
 
 @media (min-width: 1024px) {
   .hero-bg {
-    background-color: #FFFFFF;
-    background-image: url('/hero-section-background.png');
-    background-size: cover;
     background-position: center;
-    background-repeat: no-repeat;
   }
 }
 
