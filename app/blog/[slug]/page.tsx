@@ -101,8 +101,8 @@ export default function BlogPostPage() {
 
             {/* Featured Image */}
             {post.image_url && (
-              <div className="container-x max-w-4xl mx-auto -mt-8 relative z-20">
-                <div className="relative aspect-video rounded-3xl overflow-hidden border border-black/5 shadow-soft-lg">
+              <div className="container-x max-w-md mx-auto -mt-8 relative z-20">
+                <div className="relative aspect-square rounded-3xl overflow-hidden border border-black/5 shadow-soft-lg">
                   <img
                     src={post.image_url}
                     alt={post.title}

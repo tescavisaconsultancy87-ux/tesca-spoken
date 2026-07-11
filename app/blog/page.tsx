@@ -84,7 +84,7 @@ export default function BlogPage() {
                     href={`/blog/${post.slug}`}
                     className="group relative flex flex-col overflow-hidden rounded-[24px] border border-[#E8EDF3] bg-white shadow-soft hover:shadow-[0_20px_40px_rgba(15,118,110,0.12)] transition-all duration-300 ease-out hover:-translate-y-2"
                   >
-                    <div className="relative h-[200px] w-full overflow-hidden bg-slate-50 border-b border-[#E8EDF3]/50">
+                    <div className="relative aspect-square w-full overflow-hidden bg-slate-50 border-b border-[#E8EDF3]/50">
                       {post.image_url ? (
                         <img
                           src={post.image_url}

@@ -232,7 +232,7 @@ export default function AdminBlogPage() {
                 <label className="text-xs font-bold text-gray-500">Featured Image (Max 500 KB, JPG/PNG)</label>
                 <div className="flex items-center gap-3">
                   {form.image_url ? (
-                    <div className="relative h-[38px] w-20 rounded-xl overflow-hidden border border-gray-200 group">
+                    <div className="relative h-[38px] w-[38px] rounded-xl overflow-hidden border border-gray-200 group">
                       <img src={form.image_url} alt="Preview" className="h-full w-full object-cover" />
                       <button
                         type="button"
