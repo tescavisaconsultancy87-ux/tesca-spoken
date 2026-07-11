@@ -61,9 +61,47 @@ export default function AdminBlogPage() {
     published: false,
   });
 
+  const [imageError, setImageError] = useState<string | null>(null);
+
   const resetForm = () => {
     setForm({ title: '', slug: '', excerpt: '', content: '', author: '', image_url: '', published: false });
     setEditingPost(null);
+    setImageError(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setImageError(null);
+    if (!file) return;
+
+    // Check size <= 500KB
+    if (file.size > 500 * 1024) {
+      setImageError('Image size must be less than 500 KB.');
+      e.target.value = '';
+      return;
+    }
+
+    // Check type is JPG or PNG
+    const isJpg = file.type === 'image/jpeg' || file.type === 'image/jpg';
+    const isPng = file.type === 'image/png';
+
+    if (!isJpg && !isPng) {
+      setImageError('Only JPG, JPEG, and PNG images are allowed.');
+      e.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setForm((prev) => ({
+        ...prev,
+        image_url: reader.result as string,
+      }));
+    };
+    reader.onerror = () => {
+      setImageError('Failed to read image file.');
+    };
+    reader.readAsDataURL(file);
   };
 
   const openAdd = () => {
@@ -178,16 +216,53 @@ export default function AdminBlogPage() {
                 />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-500">Author *</label>
-              <input
-                type="text"
-                placeholder="e.g. TESCA Team"
-                value={form.author}
-                onChange={(e) => setForm({ ...form, author: e.target.value })}
-                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
-                required
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                <label className="text-xs font-bold text-gray-500">Author *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. TESCA Team"
+                  value={form.author}
+                  onChange={(e) => setForm({ ...form, author: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+                <label className="text-xs font-bold text-gray-500">Featured Image (Max 500 KB, JPG/PNG)</label>
+                <div className="flex items-center gap-3">
+                  {form.image_url ? (
+                    <div className="relative h-[38px] w-20 rounded-xl overflow-hidden border border-gray-200 group">
+                      <img src={form.image_url} alt="Preview" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, image_url: '' })}
+                        className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-bold"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      htmlFor="blog-image-upload"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100/50 cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4 text-gray-400" />
+                      Choose Image
+                    </label>
+                  )}
+                  <input
+                    type="file"
+                    id="blog-image-upload"
+                    accept="image/png, image/jpeg, image/jpg"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
+                {imageError && (
+                  <p className="text-[10px] text-rose-500 font-semibold mt-1">{imageError}</p>
+                )}
+              </div>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500">Excerpt / Summary *</label>
