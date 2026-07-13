@@ -99,13 +99,13 @@ export default function MaintenancePage() {
 
         {/* Action button */}
         <div className="w-full pt-4">
-          <Link
-            href="/"
-            className="btn-primary w-full sm:w-auto justify-center px-8 py-3.5 font-bold text-xs"
+          <a
+            href="https://tesca.co"
+            className="btn-primary w-full sm:w-auto justify-center px-8 py-3.5 font-bold text-xs inline-flex items-center gap-1.5"
           >
             Back to Home page
             <ExternalLink className="h-4 w-4" />
-          </Link>
+          </a>
         </div>
       </div>
     </div>

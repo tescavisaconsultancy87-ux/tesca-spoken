@@ -29,10 +29,10 @@ export default function CustomNotFound() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                  <Link href="/" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
+                  <a href="https://tesca.co" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
                     <Home className="h-4 w-4" />
                     Back to Home
-                  </Link>
+                  </a>
                   <Link 
                     href="/faq" 
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-150 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all"
