@@ -94,18 +94,6 @@ export default function AdminSettingsPage() {
                   required
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Default Currency</label>
-                <select
-                  value={schoolSettings.currency}
-                  onChange={(e) => setSchoolSettings({ ...schoolSettings, currency: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none transition-colors"
-                >
-                  <option>USD ($)</option>
-                  <option>INR (₹)</option>
-                  <option>GBP (£)</option>
-                </select>
-              </div>
             </div>
           </div>
 
