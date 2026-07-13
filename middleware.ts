@@ -64,8 +64,8 @@ export function middleware(request: NextRequest) {
   );
 
   if (isSubdomain && !isRewritten) {
-    // If they request '/login', let them access the shared login page
-    if (pathname === '/login') {
+    // If they request '/login' or '/maintenance', let them access the shared pages
+    if (pathname === '/login' || pathname === '/maintenance') {
       return NextResponse.next();
     }
 
