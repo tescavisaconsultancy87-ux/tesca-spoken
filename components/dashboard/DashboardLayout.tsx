@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardTopBar from './DashboardTopBar';
 import type { NavGroup } from './DashboardSidebar';
@@ -13,6 +13,25 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, role, navGroups }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Safely initialize state from localStorage on client mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebar_collapsed');
+      if (saved) {
+        setIsCollapsed(saved === 'true');
+      }
+    }
+  }, []);
+
+  const handleToggleCollapse = () => {
+    const nextVal = !isCollapsed;
+    setIsCollapsed(nextVal);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebar_collapsed', String(nextVal));
+    }
+  };
 
   return (
     <div className="flex h-screen bg-[#f5f6fa] overflow-hidden">
@@ -22,6 +41,8 @@ export default function DashboardLayout({ children, role, navGroups }: Dashboard
         role={role}
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={handleToggleCollapse}
       />
 
       {/* Main area */}

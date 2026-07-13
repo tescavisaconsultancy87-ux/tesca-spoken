@@ -1,32 +1,95 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// Paths that require an active authenticated session
-const PROTECTED_PATHS = ['/admin', '/tutor', '/student'];
-
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') || '';
+  const hostName = host.split(':')[0].toLowerCase();
   const xProto = request.headers.get('x-forwarded-proto') || '';
   const protocol = xProto || request.nextUrl.protocol.replace(':', '');
 
+  // 1. Detect subdomain
+  let subdomain = '';
+  if (hostName.endsWith('tesca.co')) {
+    const parts = hostName.split('.');
+    if (parts.length > 2) {
+      subdomain = parts[0];
+    }
+  } else if (hostName.endsWith('localhost')) {
+    const parts = hostName.split('.');
+    if (parts.length > 1) {
+      subdomain = parts[0];
+    }
+  }
+
+  const isSubdomain = ['admin', 'tutor', 'student'].includes(subdomain);
+  const isRewritten = request.nextUrl.searchParams.get('_rewritten') === 'true';
+
   // ─── 301 Permanent Domain Redirects (Production Only) ───
-  const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1') || host.includes('[::1]');
-  if (!isLocalhost && (host.startsWith('www.') || protocol === 'http')) {
-    const cleanHost = host.replace(/^www\./, '') || 'tesca.co';
+  const isLocalhost = hostName.includes('localhost') || hostName.includes('127.0.0.1') || hostName.includes('[::1]');
+  if (!isLocalhost && !isSubdomain && (hostName.startsWith('www.') || protocol === 'http')) {
+    const cleanHost = hostName.replace(/^www\./, '') || 'tesca.co';
     const targetUrl = `https://${cleanHost}${pathname}${request.nextUrl.search}`;
     return NextResponse.redirect(targetUrl, 301);
   }
 
-  // ─── Protected Path Guard ───
-  const cookieNames = request.cookies.getAll().map((c) => c.name);
-  const hasSessionCookie = cookieNames.some((name) => name.startsWith('sb-'));
+  // ─── Subdomain / Role Path Mapping & Redirection ───
+  // Skip if we are processing an internal rewrite to avoid infinite loops
+  if (!isRewritten) {
+    const rolePrefixes = ['/admin', '/tutor', '/student'];
+    const matchedRole = rolePrefixes.find(prefix => pathname === prefix || pathname.startsWith(prefix + '/'));
 
-  const isProtected = PROTECTED_PATHS.some(
-    (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+    if (matchedRole) {
+      const targetRole = matchedRole.slice(1); // 'admin' | 'tutor' | 'student'
+      
+      // If we are already on the correct subdomain, redirect to the clean path (e.g. admin.tesca.co/admin/students -> admin.tesca.co/students)
+      if (subdomain === targetRole) {
+        const remainingPath = pathname.substring(matchedRole.length) || '/';
+        const redirectUrl = new URL(remainingPath, request.url);
+        return NextResponse.redirect(redirectUrl);
+      } else {
+        // Redirect to the correct subdomain
+        const remainingPath = pathname.substring(matchedRole.length) || '/';
+        const targetHost = isLocalhost 
+          ? `${targetRole}.localhost:${host.split(':')[1] || '3000'}` 
+          : `${targetRole}.tesca.co`;
+        return NextResponse.redirect(`${protocol}://${targetHost}${remainingPath}${request.nextUrl.search}`);
+      }
+    }
+  }
+
+  // ─── Protected Path Guard & Rewriting ───
+  const cookieNames = request.cookies.getAll().map((c) => c.name);
+  const hasSessionCookie = cookieNames.some(
+    (name) => name.startsWith('sb-') || name === 'sb-mock-session'
   );
 
-  if (isProtected) {
+  if (isSubdomain && !isRewritten) {
+    // If they request '/login', let them access the shared login page
+    if (pathname === '/login') {
+      return NextResponse.next();
+    }
+
+    // If they are not logged in, redirect to the subdomain's login page
     if (!hasSessionCookie) {
+      const loginUrl = new URL('/login', request.url);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // If logged in, internally rewrite the request to the subfolder path
+    // e.g. admin.tesca.co/students -> /admin/students?_rewritten=true
+    const targetUrl = new URL(`/${subdomain}${pathname}`, request.url);
+    targetUrl.searchParams.set('_rewritten', 'true');
+    return NextResponse.rewrite(targetUrl);
+  }
+
+  // Fallback for paths on the main domain that are protected but not rewritten
+  if (!isSubdomain && !isRewritten) {
+    const PROTECTED_PATHS = ['/admin', '/tutor', '/student'];
+    const isProtected = PROTECTED_PATHS.some(
+      (prefix) => pathname === prefix || pathname.startsWith(prefix + '/')
+    );
+
+    if (isProtected && !hasSessionCookie) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('from', pathname);
       return NextResponse.redirect(loginUrl);
