@@ -104,26 +104,6 @@ export default function AdminSettingsPage() {
               {/* Toggles */}
               <div className="flex items-center justify-between p-3.5 bg-gray-50/50 border border-gray-100 rounded-xl">
                 <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-gray-800">Enable New Registrations</p>
-                  <p className="text-[10px] text-gray-400 font-semibold">Allow new visitors to register student accounts</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSchoolSettings({ ...schoolSettings, enableRegistrations: !schoolSettings.enableRegistrations })}
-                  className={`w-10 h-6 rounded-full p-1 transition-all duration-300 ${
-                    schoolSettings.enableRegistrations ? 'bg-primary' : 'bg-gray-250'
-                  }`}
-                >
-                  <div
-                    className={`w-4 h-4 rounded-full bg-white shadow-md transform transition-all duration-300 ${
-                      schoolSettings.enableRegistrations ? 'translate-x-4' : 'translate-x-0'
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-3.5 bg-gray-50/50 border border-gray-100 rounded-xl">
-                <div className="space-y-0.5">
                   <p className="text-xs font-bold text-gray-800">Activate Level Evaluation Test</p>
                   <p className="text-[10px] text-gray-400 font-semibold">Enable free test evaluation prompts on landing page</p>
                 </div>
