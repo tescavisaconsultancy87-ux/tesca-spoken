@@ -17,6 +17,7 @@ const tutorNavGroups: NavGroup[] = [
       { label: 'Live Classes', href: '/tutor/live-classes', icon: Video },
       { label: 'Study Materials', href: '/tutor/materials', icon: FileText },
       { label: 'Batches', href: '/tutor/batches', icon: Users },
+      { label: 'Blog Posts', href: '/tutor/blog', icon: FileText },
     ],
   },
   {

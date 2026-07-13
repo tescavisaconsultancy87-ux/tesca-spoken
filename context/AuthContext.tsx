@@ -178,7 +178,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(profile);
       return { success: true, role, needsPasswordChange: isTemp };
     } else {
-      return { success: false, error: 'Invalid username or password.' };
+      return { success: false, error: 'Invalid Email or password.' };
     }
   };
 

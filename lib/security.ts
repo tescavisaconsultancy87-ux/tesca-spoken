@@ -81,7 +81,7 @@ export function formatFriendlyError(err: any): string {
 
   // Handle specific Supabase Auth errors gracefully
   if (lower.includes('invalid login credentials')) {
-    return 'Invalid username or password. Please check your credentials.';
+    return 'Invalid Email or password. Please check your credentials.';
   }
   if (lower.includes('email not confirmed')) {
     return 'Your email address has not been confirmed yet. Please verify your email.';

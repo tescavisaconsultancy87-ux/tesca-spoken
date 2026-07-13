@@ -50,3 +50,6 @@ next-env.d.ts
 scratch/
 *.log
 wrangler_tail*
+
+# graphify
+/graphify-out

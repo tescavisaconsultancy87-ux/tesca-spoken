@@ -123,7 +123,7 @@ export default function LoginPage() {
               {/* Username / Email */}
               <div className="space-y-1.5">
                 <label htmlFor="username" className="block text-xs font-semibold text-primary-200">
-                  Username or Email
+                  Email
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40">

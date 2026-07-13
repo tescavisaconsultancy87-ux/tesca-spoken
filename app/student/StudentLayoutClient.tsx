@@ -16,6 +16,7 @@ const studentNavGroups: NavGroup[] = [
       { label: 'My Courses', href: '/student/courses', icon: BookOpen },
       { label: 'Live Classes', href: '/student/live-classes', icon: Video },
       { label: 'Study Materials', href: '/student/materials', icon: FileText },
+      { label: 'Blog Posts', href: '/student/blog', icon: FileText },
     ],
   },
   {
