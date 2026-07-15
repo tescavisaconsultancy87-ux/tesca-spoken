@@ -13,6 +13,7 @@ import Faq from '@/components/Faq';
 import FinalCTA from '@/components/FinalCTA';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
+import StudyAbroadPromo from '@/components/StudyAbroadPromo';
 import { db } from '@/lib/db';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -225,6 +226,7 @@ export default async function Home() {
         <Testimonials />
         <Trainers />
         {showFreeTest && <FreeTest />}
+        <StudyAbroadPromo />
         <Faq />
         <FinalCTA />
       </main>

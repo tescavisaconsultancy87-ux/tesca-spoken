@@ -58,6 +58,8 @@ export default function Navbar() {
                 <Link
                   href={link.href}
                   onMouseEnter={() => setHoveredLink(link.href)}
+                  target={(link as any).external ? '_blank' : undefined}
+                  rel={(link as any).external ? 'noopener noreferrer' : undefined}
                   className={`group relative px-4 py-2 text-sm font-semibold transition-colors duration-300 block rounded-full ${
                     isHighlight 
                       ? 'text-white' 
@@ -131,6 +133,8 @@ export default function Navbar() {
                 <Link
                   href={link.href}
                   onClick={() => setMenuOpen(false)}
+                  target={(link as any).external ? '_blank' : undefined}
+                  rel={(link as any).external ? 'noopener noreferrer' : undefined}
                   className={`block rounded-xl px-4 py-3 text-base font-medium transition-colors ${
                     isActive
                       ? 'bg-primary-50 text-primary'

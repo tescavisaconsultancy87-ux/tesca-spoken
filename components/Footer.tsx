@@ -50,6 +50,7 @@ const QUICK_LINKS = [
   { label: 'Courses', href: '/courses' },
   { label: 'Success Stories', href: '/#success' },
   { label: 'Free English Test', href: '/assessment' },
+  { label: 'Study Abroad (Visa)', href: 'https://tescavisa.com', external: true },
 ];
 
 const COURSE_LINKS = [
@@ -206,6 +207,8 @@ export default function Footer() {
                 <li key={link.label}>
                   <Link
                     href={link.href}
+                    target={link.external ? '_blank' : undefined}
+                    rel={link.external ? 'noopener noreferrer' : undefined}
                     className="group flex items-center gap-1.5 text-sm text-primary-200 transition-colors hover:text-white"
                   >
                     <ArrowRight className="h-3 w-3 opacity-0 transition-all duration-300 group-hover:opacity-100" />
