@@ -121,11 +121,11 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       <div
-        className={`overflow-hidden bg-white border-t border-black/5 transition-all duration-500 lg:hidden ${
-          menuOpen ? 'max-h-[480px]' : 'max-h-0'
+        className={`bg-white border-t border-black/5 transition-all duration-500 lg:hidden ${
+          menuOpen ? 'max-h-[580px] overflow-y-auto' : 'max-h-0 overflow-hidden'
         }`}
       >
-        <ul className="space-y-1 p-5">
+        <ul className="space-y-1 p-5 pb-7">
           {NAV_LINKS.map((link) => {
             const isActive = pathname === link.href;
             return (
