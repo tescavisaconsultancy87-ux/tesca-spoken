@@ -14,8 +14,14 @@ export default function AboutTrainers() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const [dotsCount, setDotsCount] = useState(0);
   const [canFadeLeft, setCanFadeLeft] = useState(false);
   const [canFadeRight, setCanFadeRight] = useState(false);
+
+  const trainersLengthRef = useRef(0);
+  useEffect(() => {
+    trainersLengthRef.current = trainers.length;
+  }, [trainers]);
 
   useEffect(() => {
     async function load() {
@@ -24,12 +30,17 @@ export default function AboutTrainers() {
         if (data && data.length > 0) {
           const active = data.filter((t: any) => !!t.show_on_homepage);
           setTrainers(active);
+          setDotsCount(active.length);
         } else {
-          setTrainers(TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true })));
+          const mock = TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true }));
+          setTrainers(mock);
+          setDotsCount(mock.length);
         }
       } catch (err) {
         console.error('Failed to fetch trainers for About page, using mock fallback', err);
-        setTrainers(TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true })));
+        const mock = TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true }));
+        setTrainers(mock);
+        setDotsCount(mock.length);
       } finally {
         setLoading(false);
       }
@@ -37,7 +48,6 @@ export default function AboutTrainers() {
     load();
   }, []);
 
-  // Gradient overlays only — doesn't touch activeIndex
   const updateFadeState = useCallback(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
@@ -45,6 +55,20 @@ export default function AboutTrainers() {
     const maxScroll = container.scrollWidth - container.clientWidth;
     setCanFadeLeft(scrollLeft > 1);
     setCanFadeRight(scrollLeft < maxScroll - 1);
+    const len = trainersLengthRef.current;
+    if (len === 0) return;
+
+    // Dynamically calculate visible cards based on container clientWidth and card size (270px width + 24px gap = 294px)
+    const visibleCards = Math.max(1, Math.round(container.clientWidth / 294));
+    const dots = Math.max(1, len - visibleCards + 1);
+    setDotsCount(dots);
+    
+    let closestIndex = 0;
+    if (maxScroll > 1) {
+      const progress = scrollLeft / maxScroll;
+      closestIndex = Math.min(dots - 1, Math.max(0, Math.round(progress * (dots - 1))));
+    }
+    setActiveIndex(closestIndex);
   }, []);
 
   useEffect(() => {
@@ -63,27 +87,31 @@ export default function AboutTrainers() {
     };
   }, [trainers, updateFadeState]);
 
-  const scrollToIndex = useCallback((index: number) => {
+  const scrollToDotIndex = useCallback((index: number, totalDots: number) => {
     const container = scrollContainerRef.current;
     if (!container) return;
-    const child = container.children[index] as HTMLElement | undefined;
-    if (!child) return;
-    container.scrollTo({ left: child.offsetLeft, behavior: 'smooth' });
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    if (maxScroll > 1 && totalDots > 1) {
+      const targetScroll = (index / (totalDots - 1)) * maxScroll;
+      container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    }
   }, []);
 
-  const goToIndex = useCallback((index: number) => {
-    const clamped = Math.max(0, Math.min(trainers.length - 1, index));
-    setActiveIndex(clamped);
-    scrollToIndex(clamped);
-  }, [trainers.length, scrollToIndex]);
-
   const handlePrev = useCallback(() => {
-    goToIndex(activeIndex - 1);
-  }, [activeIndex, goToIndex]);
+    setActiveIndex(prev => {
+      const next = Math.max(0, prev - 1);
+      scrollToDotIndex(next, dotsCount);
+      return next;
+    });
+  }, [scrollToDotIndex, dotsCount]);
 
   const handleNext = useCallback(() => {
-    goToIndex(activeIndex + 1);
-  }, [activeIndex, goToIndex]);
+    setActiveIndex(prev => {
+      const next = Math.min(dotsCount - 1, prev + 1);
+      scrollToDotIndex(next, dotsCount);
+      return next;
+    });
+  }, [scrollToDotIndex, dotsCount]);
 
   if (loading) {
     return (
@@ -147,36 +175,36 @@ export default function AboutTrainers() {
         </button>
 
         {/* Step indicators — one per trainer, auto-adjusts on add/delete */}
-        <div className="flex items-center gap-1.5">
-          {trainers.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={() => goToIndex(i)}
-              className={`rounded-full transition-all duration-300 ${
-                i === activeIndex
-                  ? 'h-2.5 w-8 bg-primary'
-                  : 'h-2 w-2 bg-primary-200 hover:bg-primary-300'
-              }`}
-              aria-label={`Go to trainer ${i + 1}`}
-              aria-current={i === activeIndex}
-            />
-          ))}
-        </div>
+                <div className="flex items-center gap-1.5">
+                  {Array.from({ length: dotsCount }).map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => scrollToDotIndex(i, dotsCount)}
+                      className={`rounded-full transition-all duration-300 ${
+                        i === activeIndex
+                          ? 'h-2.5 w-8 bg-primary'
+                          : 'h-2 w-2 bg-primary-200 hover:bg-primary-300'
+                      }`}
+                      aria-label={`Go to trainer page ${i + 1}`}
+                      aria-current={i === activeIndex}
+                    />
+                  ))}
+                </div>
 
-        <button
-          type="button"
-          onClick={handleNext}
-          disabled={activeIndex === trainers.length - 1}
-          className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-ink-soft shadow-soft transition-all duration-300 ${
-            activeIndex === trainers.length - 1
-              ? 'opacity-40 cursor-not-allowed'
-              : 'hover:border-primary hover:bg-primary hover:text-white cursor-pointer active:scale-95'
-          }`}
-          aria-label="Next trainer"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={activeIndex === dotsCount - 1}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-ink-soft shadow-soft transition-all duration-300 ${
+                    activeIndex === dotsCount - 1
+                      ? 'opacity-40 cursor-not-allowed'
+                      : 'hover:border-primary hover:bg-primary hover:text-white cursor-pointer active:scale-95'
+                  }`}
+                  aria-label="Next trainer"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
       </div>
     </div>
   );

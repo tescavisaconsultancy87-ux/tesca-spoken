@@ -174,6 +174,7 @@ export default function CoursesPage() {
   const trainersScrollContainerRef = useRef<HTMLDivElement>(null);
   const trainersLengthRef = useRef(0);
   const [trainersActiveIndex, setTrainersActiveIndex] = useState(0);
+  const [trainersDotsCount, setTrainersDotsCount] = useState(0);
   const [trainersCanScrollLeft, setTrainersCanScrollLeft] = useState(false);
   const [trainersCanScrollRight, setTrainersCanScrollRight] = useState(false);
   const [trainersShowControls, setTrainersShowControls] = useState(false);
@@ -193,13 +194,16 @@ export default function CoursesPage() {
     setTrainersCanScrollRight(scrollLeft < maxScroll - 1);
     const len = trainersLengthRef.current;
     if (len === 0) return;
+
+    // Dynamically calculate visible cards based on container clientWidth and card size (270px width + 24px gap = 294px)
+    const visibleCards = Math.max(1, Math.round(container.clientWidth / 294));
+    const dots = Math.max(1, len - visibleCards + 1);
+    setTrainersDotsCount(dots);
+    
     let closestIndex = 0;
-    let minDist = Infinity;
-    for (let i = 0; i < len; i++) {
-      const child = container.children[i] as HTMLElement | undefined;
-      if (!child) continue;
-      const dist = Math.abs(child.offsetLeft - scrollLeft);
-      if (dist < minDist) { minDist = dist; closestIndex = i; }
+    if (maxScroll > 1) {
+      const progress = scrollLeft / maxScroll;
+      closestIndex = Math.min(dots - 1, Math.max(0, Math.round(progress * (dots - 1))));
     }
     setTrainersActiveIndex(closestIndex);
   }, []);
@@ -218,29 +222,31 @@ export default function CoursesPage() {
     };
   }, [trainers, updateTrainersScrollState]);
 
-  const scrollTrainersToIndex = useCallback((index: number) => {
+  const scrollTrainersToDotIndex = useCallback((index: number, totalDots: number) => {
     const container = trainersScrollContainerRef.current;
     if (!container) return;
-    const child = container.children[index] as HTMLElement | undefined;
-    if (!child) return;
-    container.scrollTo({ left: child.offsetLeft, behavior: 'smooth' });
+    const maxScroll = container.scrollWidth - container.clientWidth;
+    if (maxScroll > 1 && totalDots > 1) {
+      const targetScroll = (index / (totalDots - 1)) * maxScroll;
+      container.scrollTo({ left: targetScroll, behavior: 'smooth' });
+    }
   }, []);
 
   const handleTrainersPrev = useCallback(() => {
     setTrainersActiveIndex(prev => {
       const next = Math.max(0, prev - 1);
-      scrollTrainersToIndex(next);
+      scrollTrainersToDotIndex(next, trainersDotsCount);
       return next;
     });
-  }, [scrollTrainersToIndex]);
+  }, [scrollTrainersToDotIndex, trainersDotsCount]);
 
   const handleTrainersNext = useCallback(() => {
     setTrainersActiveIndex(prev => {
-      const next = Math.min(trainersLengthRef.current - 1, prev + 1);
-      scrollTrainersToIndex(next);
+      const next = Math.min(trainersDotsCount - 1, prev + 1);
+      scrollTrainersToDotIndex(next, trainersDotsCount);
       return next;
     });
-  }, [scrollTrainersToIndex]);
+  }, [scrollTrainersToDotIndex, trainersDotsCount]);
 
 
 
@@ -332,12 +338,17 @@ export default function CoursesPage() {
           // Filter to show only active trainers configured for homepage/courses display
           const active = data.filter((t: any) => !!t.show_on_homepage);
           setTrainers(active);
+          setTrainersDotsCount(active.length);
         } else {
-          setTrainers(TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true })));
+          const mock = TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true }));
+          setTrainers(mock);
+          setTrainersDotsCount(mock.length);
         }
       } catch (err) {
         console.error('Failed to fetch trainers, using mock fallback', err);
-        setTrainers(TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true })));
+        const mock = TRAINERS.map((t, idx) => ({ ...t, id: `mock-${idx}`, show_on_homepage: true, verified: true }));
+        setTrainers(mock);
+        setTrainersDotsCount(mock.length);
       } finally {
         setLoadingTrainers(false);
       }
@@ -949,7 +960,6 @@ export default function CoursesPage() {
                 Our trainers hold international certifications and have trained thousands of students across 25+ countries.
               </p>
             </div>
-          </div>
 
             <div className="relative mt-12 lg:mt-16 w-full">
               {loadingTrainers ? (
@@ -963,11 +973,11 @@ export default function CoursesPage() {
                 </div>
               ) : (
                 <>
-                  <div className="relative -mx-5 px-5 sm:-mx-8 sm:px-8 lg:mx-0 lg:px-0">
+                  <div className="relative -mx-5 sm:-mx-8 lg:mx-0">
                     {/* Scrollable list */}
                     <div
                       ref={trainersScrollContainerRef}
-                      className={`relative flex gap-6 py-4 items-stretch scroll-smooth no-scrollbar overflow-x-auto snap-x snap-mandatory ${
+                      className={`flex gap-6 py-4 px-5 sm:px-8 lg:px-0 items-stretch scroll-smooth no-scrollbar overflow-x-auto snap-x snap-mandatory ${
                         trainersShowControls
                           ? 'justify-start'
                           : 'justify-start lg:justify-center'
@@ -1012,18 +1022,18 @@ export default function CoursesPage() {
                       </button>
 
                       {/* Dots */}
-                      <div className="flex gap-2">
-                        {trainers.map((_, i) => (
+                      <div className="flex items-center gap-1.5">
+                        {Array.from({ length: trainersDotsCount }).map((_, i) => (
                           <button
                             key={i}
                             type="button"
-                            onClick={() => scrollTrainersToIndex(i)}
-                            className={`h-2 rounded-full transition-all duration-300 ${
+                            onClick={() => scrollTrainersToDotIndex(i, trainersDotsCount)}
+                            className={`rounded-full transition-all duration-300 ${
                               i === trainersActiveIndex
-                                ? 'w-8 bg-primary'
-                                : 'w-2 bg-primary-200 hover:bg-primary-300'
+                                ? 'h-2.5 w-8 bg-primary'
+                                : 'h-2 w-2 bg-primary-200 hover:bg-primary-300'
                             }`}
-                            aria-label={`Go to trainer ${i + 1}`}
+                            aria-label={`Go to trainer page ${i + 1}`}
                             aria-current={i === trainersActiveIndex}
                           />
                         ))}
@@ -1032,9 +1042,9 @@ export default function CoursesPage() {
                       <button
                         type="button"
                         onClick={handleTrainersNext}
-                        disabled={trainersActiveIndex === trainers.length - 1}
+                        disabled={trainersActiveIndex === trainersDotsCount - 1}
                         className={`flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white text-ink-soft shadow-soft transition-all duration-300 ${
-                          trainersActiveIndex === trainers.length - 1
+                          trainersActiveIndex === trainersDotsCount - 1
                             ? 'opacity-40 cursor-not-allowed'
                             : 'hover:border-primary hover:bg-primary hover:text-white cursor-pointer active:scale-95'
                         }`}
@@ -1047,6 +1057,7 @@ export default function CoursesPage() {
                 </>
               )}
             </div>
+          </div>
         </section>
 
         {/* ── Certification ── */}
