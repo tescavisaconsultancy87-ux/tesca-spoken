@@ -13,16 +13,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/courses`,
-      lastModified: currentDate,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    },
-    {
       url: `${baseUrl}/about`,
       lastModified: currentDate,
       changeFrequency: 'monthly',
       priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/courses`,
+      lastModified: currentDate,
+      changeFrequency: 'weekly',
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/blog`,
@@ -51,37 +51,54 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     {
       url: `${baseUrl}/privacy`,
       lastModified: currentDate,
-      changeFrequency: 'monthly',
+      changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/terms`,
       lastModified: currentDate,
-      changeFrequency: 'monthly',
+      changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
       url: `${baseUrl}/refund`,
       lastModified: currentDate,
-      changeFrequency: 'monthly',
+      changeFrequency: 'yearly',
       priority: 0.3,
     },
   ];
 
+  const dynamicRoutes: MetadataRoute.Sitemap = [];
+
   try {
     const courses = await db.getCourses();
     if (courses && courses.length > 0) {
-      const dynamicCourseRoutes = courses.map((course: any) => ({
-        url: `${baseUrl}/courses#${course.id}`,
+      const courseRoutes = courses.map((course: any) => ({
+        url: `${baseUrl}/courses/${course.id}`,
         lastModified: currentDate,
         changeFrequency: 'weekly' as const,
         priority: 0.8,
       }));
-      return [...staticRoutes, ...dynamicCourseRoutes];
+      dynamicRoutes.push(...courseRoutes);
     }
   } catch (err) {
     console.error('Failed to load courses for sitemap generation:', err);
   }
 
-  return staticRoutes;
+  try {
+    const posts = await db.getBlogPosts();
+    if (posts && posts.length > 0) {
+      const blogRoutes = posts.map((post: any) => ({
+        url: `${baseUrl}/blog/${post.slug || post.id}`,
+        lastModified: new Date(post.updated_at || post.created_at || currentDate),
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+      }));
+      dynamicRoutes.push(...blogRoutes);
+    }
+  } catch (err) {
+    console.error('Failed to load blog posts for sitemap generation:', err);
+  }
+
+  return [...staticRoutes, ...dynamicRoutes];
 }

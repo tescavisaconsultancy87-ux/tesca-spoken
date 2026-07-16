@@ -1,0 +1,23 @@
+# robots.txt for TESCA Spoken English (tesca.co)
+# Production: Allow search engines, disallow private/API routes
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /student/
+Disallow: /tutor/
+Disallow: /api/
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /change-password
+Disallow: /maintenance
+Disallow: /bot-labyrinth/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://tesca.co/sitemap.xml

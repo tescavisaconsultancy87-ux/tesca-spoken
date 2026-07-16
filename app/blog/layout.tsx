@@ -1,17 +1,33 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Blog — TESCA Spoken English | Tips, Guides & Insights',
+  title: 'Blog — English Learning Tips, IELTS Advice & Updates | TESCA',
   description:
-    'Read expert tips, study guides, and success stories from TESCA Spoken English. Improve your English speaking, IELTS, PTE, and interview skills.',
+    'Read expert articles on spoken English tips, IELTS & PTE preparation strategies, interview advice, and success stories from TESCA students.',
   alternates: {
     canonical: 'https://tesca.co/blog',
   },
   openGraph: {
-    title: 'Blog — TESCA Spoken English',
-    description: 'Tips, guides, and insights to improve your English communication skills.',
+    title: 'Blog — English Learning Tips, IELTS Advice & Updates | TESCA',
+    description:
+      'Read expert articles on spoken English tips, IELTS & PTE preparation strategies, interview advice, and success stories.',
     url: 'https://tesca.co/blog',
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'TESCA Blog' }],
+    siteName: 'TESCA Spoken English',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'TESCA Blog — English Learning Tips',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Blog — English Learning Tips, IELTS Advice & Updates | TESCA',
+    description:
+      'Read expert articles on spoken English tips, IELTS & PTE preparation strategies, interview advice, and success stories.',
+    images: ['/og-image.jpg'],
   },
 };
 

@@ -1,4 +1,39 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, userAgent } from 'next/server';
+
+const AI_CRAWLERS = [
+  'GPTBot', 'ChatGPT-User', 'Claude-Web', 'ClaudeBot', 'anthropic-ai',
+  'CCBot', 'FacebookBot', 'diffbot', 'ImagesiftBot', 'magpie-crawler',
+  'omgili', 'Omgilibot', 'peer39_crawler', 'peer39', 'scrapy',
+  'SemrushBot', 'Seznambot', 'Timpibot', 'VelenPublicWebCrawler',
+  'Webzio', 'ZoominfoBot', 'DataForSeoBot', 'Meltwater', 'Applebot-Extended',
+  'Bytespider', 'cohere-ai', 'PerplexityBot', 'YouBot', 'Kangaroo Bot',
+  'AwarioSmartBot', 'AwarioBot', 'Barkrowler', 'BrightBot', 'Daum',
+  'DotBot', 'GeckoBot', 'Google-Extended', 'IAScrawler', 'ichiro',
+  'Israelsky', 'Laserlikebot', 'Netseercrawler', 'Pcore-HTTP',
+  'researchscan', 'SeekrBot', 'seqbot', 'ShopBot', 'Sirdata',
+  'Screaming Frog', 'ScreenerBot', 'SiteCheckerBot', 'TrafficBot',
+  'Trendsmap', 'UptimeRobot', 'VelenCrawler', 'Wget', 'Wotbox',
+  'XoviBot', 'ZumBot', 'Go-http-client', 'python-requests',
+  'aiohttp', 'httpx', 'curl', 'wget',
+];
+
+const LEGITIMATE_BOTS = ['Googlebot', 'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot',
+  'Baiduspider', 'YandexBot', 'facebookexternalhit', 'Twitterbot',
+  'LinkedInBot', 'WhatsApp', 'TelegramBot', 'Discordbot',
+];
+
+const LABYRINTH_BASE = '/bot-labyrinth';
+
+function isKnownBot(ua: string): 'ai' | 'legitimate' | null {
+  const lower = ua.toLowerCase();
+  for (const bot of LEGITIMATE_BOTS) {
+    if (lower.includes(bot.toLowerCase())) return 'legitimate';
+  }
+  for (const bot of AI_CRAWLERS) {
+    if (lower.includes(bot.toLowerCase())) return 'ai';
+  }
+  return null;
+}
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -6,10 +41,46 @@ export function middleware(request: NextRequest) {
   const hostName = host.split(':')[0].toLowerCase();
   const xProto = request.headers.get('x-forwarded-proto') || '';
   const protocol = xProto || request.nextUrl.protocol.replace(':', '');
+  const ua = request.headers.get('user-agent') || '';
+  const isLocalhost = hostName.includes('localhost') || hostName.includes('127.0.0.1') || hostName.includes('[::1]');
+
+
+  // ─── UNKNOWN SUBDOMAIN → 404 ───
+  // Return 404 for any subdomain not in our valid list (admin, tutor, student, www)
+  if (!isLocalhost && hostName.endsWith('.tesca.co')) {
+    const parts = hostName.split('.');
+    if (parts.length > 2) {
+      const subdomain = parts[0];
+      const validSubdomains = ['admin', 'tutor', 'student', 'www'];
+      if (!validSubdomains.includes(subdomain)) {
+        return NextResponse.json(
+          { error: 'Not Found', message: 'The requested subdomain does not exist.' },
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+  }
+
+  // ─── AI Crawler Detection & Labyrinth Trap ───
+  const uaCheck = isKnownBot(ua);
+  if (uaCheck === 'ai' && !pathname.startsWith(LABYRINTH_BASE)) {
+    const { isBot } = userAgent(request);
+    if (isBot) {
+      console.log(`[BOT-FIGHT] Trapped AI crawler: ${ua.substring(0,80)} -> ${pathname}`);
+      const labyrinthUrl = new URL(`${LABYRINTH_BASE}/entry`, request.url);
+      labyrinthUrl.searchParams.set('via', btoa(pathname));
+      return NextResponse.redirect(labyrinthUrl, 307);
+    }
+  }
+
+  // Skip middleware for labyrinth pages (they handle themselves)
+  if (pathname.startsWith(LABYRINTH_BASE)) {
+    return NextResponse.next();
+  }
 
   // 1. Detect subdomain
   let subdomain = '';
-  if (hostName.endsWith('tesca.co')) {
+  if (hostName.endsWith('tesca.co') || hostName.endsWith('tescavisa.com')) {
     const parts = hostName.split('.');
     if (parts.length > 2) {
       subdomain = parts[0];
@@ -25,7 +96,6 @@ export function middleware(request: NextRequest) {
   const isRewritten = request.nextUrl.searchParams.get('_rewritten') === 'true';
 
   // ─── 301 Permanent Domain Redirects (Production Only) ───
-  const isLocalhost = hostName.includes('localhost') || hostName.includes('127.0.0.1') || hostName.includes('[::1]');
   if (!isLocalhost && !isSubdomain && (hostName.startsWith('www.') || protocol === 'http')) {
     const cleanHost = hostName.replace(/^www\./, '') || 'tesca.co';
     const targetUrl = `https://${cleanHost}${pathname}${request.nextUrl.search}`;

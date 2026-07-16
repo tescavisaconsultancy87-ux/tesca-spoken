@@ -13,6 +13,12 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "routes": [
+    { "pattern": "tesca.co", "custom_domain": true },
+    { "pattern": "*.tesca.co/*" },
+    { "pattern": "tescavisa.com/*" },
+    { "pattern": "*.tescavisa.com/*" }
+  ],
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://sdkiidhjvauoxbgojnxe.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka2lpZGhqdmF1b3hiZ29qbnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTc5NjgsImV4cCI6MjA5NzY5Mzk2OH0.qMtx_m4gmjF-xwT9DQmVn2AEfZffqVXPfgA_8zZD6R0",

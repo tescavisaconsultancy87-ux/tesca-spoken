@@ -87,9 +87,64 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const globalSchema = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'EducationalOrganization',
+        '@id': 'https://tesca.co/#organization',
+        'name': 'TESCA Spoken English',
+        'url': 'https://tesca.co',
+        'logo': {
+          '@type': 'ImageObject',
+          'url': 'https://tesca.co/Tesca_logo.png',
+          'width': 140,
+          'height': 32,
+          'caption': 'TESCA Spoken English Logo'
+        },
+        'description': 'Master English Fluency from Basic to Advanced — Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
+        'telephone': '+91 98241 52731',
+        'email': 'tescavisaconsultancy87@gmail.com',
+        'areaServed': 'Surat, Gujarat, India',
+        'foundingDate': '2005',
+        'address': {
+          '@type': 'PostalAddress',
+          'streetAddress': '110,111,112 Royal Arcade, Opp. Deep Kamal Mall, Sarthana Jakatnaka',
+          'addressLocality': 'Surat',
+          'addressRegion': 'Gujarat',
+          'postalCode': '395006',
+          'addressCountry': 'IN'
+        }
+      },
+      {
+        '@type': 'WebSite',
+        '@id': 'https://tesca.co/#website',
+        'url': 'https://tesca.co',
+        'name': 'TESCA Spoken English',
+        'publisher': {
+          '@id': 'https://tesca.co/#organization'
+        },
+        'potentialAction': {
+          '@type': 'SearchAction',
+          'target': {
+            '@type': 'EntryPoint',
+            'urlTemplate': 'https://tesca.co/search?q={search_term_string}'
+          },
+          'query-input': 'required name=search_term_string'
+        }
+      }
+    ]
+  };
+
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <body className="font-body text-ink antialiased overflow-x-hidden">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(globalSchema)
+          }}
+        />
         <ScrollToTop />
         <AuthProvider>
           <DemoModalProvider>
@@ -97,6 +152,15 @@ export default function RootLayout({
             <OfferBanner />
             <AlertOverlay />
             {children}
+            {/* ─── Bot Honeypot: invisible to users, traps AI crawlers ─── */}
+            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional: crawlers follow raw <a>, not <Link> */}
+            <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
+              <a href="/bot-labyrinth/honeypot/admin-panel">Admin</a>
+              <a href="/bot-labyrinth/honeypot/wp-admin">Dashboard</a>
+              <a href="/bot-labyrinth/honeypot/sitemap-private">Sitemap</a>
+              <a href="/bot-labyrinth/honeypot/.env">Config</a>
+              <a href="/bot-labyrinth/honeypot/backup.sql">Backup</a>
+            </div>
           </DemoModalProvider>
         </AuthProvider>
       </body>

@@ -1,8 +1,23 @@
+import type { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import { Home, HelpCircle } from 'lucide-react';
+
+export const metadata: Metadata = {
+  title: '404 — Page Not Found | TESCA Spoken English',
+  description:
+    'The page you are looking for has been moved, deleted, or never existed. Return to TESCA Spoken English homepage or browse our FAQs.',
+  robots: {
+    index: false,
+    follow: true,
+  },
+  alternates: {
+    canonical: 'https://tesca.co/404',
+  },
+};
 
 export default function CustomNotFound() {
   return (
@@ -29,10 +44,10 @@ export default function CustomNotFound() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                  <a href="https://tesca.co" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
+                  <Link href="/" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
                     <Home className="h-4 w-4" />
                     Back to Home
-                  </a>
+                  </Link>
                   <Link 
                     href="/faq" 
                     className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-150 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all"
@@ -46,10 +61,12 @@ export default function CustomNotFound() {
               {/* Illustration Area */}
               <div className="lg:col-span-5 flex justify-center order-first lg:order-last">
                 <div className="relative w-full max-w-[280px] lg:max-w-none aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 to-secondary-50 p-2 border border-black/5 shadow-soft">
-                  <img
+                  <Image
                     src="/not_found_graphic.png"
                     alt="404 Page Not Found Illustration"
-                    className="w-full h-full object-cover rounded-xl"
+                    fill
+                    className="object-cover rounded-xl"
+                    sizes="(max-width: 280px) 100vw, 280px"
                   />
                 </div>
               </div>
