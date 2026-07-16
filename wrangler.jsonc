@@ -15,9 +15,9 @@
   ],
   "routes": [
     { "pattern": "tesca.co", "custom_domain": true },
-    { "pattern": "*.tesca.co/*" },
-    { "pattern": "tescavisa.com/*" },
-    { "pattern": "*.tescavisa.com/*" }
+    { "pattern": "tescavisa.com", "custom_domain": true },
+    "*.tesca.co/*",
+    "*.tescavisa.com/*"
   ],
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://sdkiidhjvauoxbgojnxe.supabase.co",
