@@ -7,6 +7,7 @@ import FloatingActions from '@/components/FloatingActions';
 import { db } from '@/lib/db';
 import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 interface BlogPost {
   id: string;
@@ -86,9 +87,11 @@ export default function BlogPage() {
                   >
                     <div className="relative aspect-square w-full overflow-hidden bg-slate-50 border-b border-[#E8EDF3]/50">
                       {post.image_url ? (
-                        <img
+                        <Image
                           src={post.image_url}
                           alt={post.title}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 330px"
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                       ) : (

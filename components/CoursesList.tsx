@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { 
   CheckCircle, 
   Clock, 
@@ -218,9 +219,11 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
               {/* Top subtle course visual cover image */}
               <div className="relative h-[155px] w-full overflow-hidden bg-slate-50 border-b border-[#E8EDF3]/50">
                 {/* Course Cover Photo */}
-                <img 
+                <Image 
                   src={meta.imageUrl} 
                   alt={course.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 380px"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 

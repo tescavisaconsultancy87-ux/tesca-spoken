@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
@@ -80,15 +81,19 @@ export default function LoginPage() {
           {/* Logo */}
           <div className="relative z-10">
             <Link href="/" className="group flex items-center">
-              <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-8 w-auto object-contain" />
+              <Image src="/Tesca_logo.png" alt="TESCA Logo" width={150} height={32} priority style={{ width: 'auto' }} className="h-8 w-auto object-contain" />
             </Link>
           </div>
 
           {/* AI generated Illustration */}
           <div className="my-auto max-w-[280px] mx-auto z-10 flex flex-col items-center">
-            <img
+            <Image
               src="/login_illustration.png"
               alt="English Learning Illustration"
+              width={280}
+              height={280}
+              priority
+              style={{ height: 'auto' }}
               className="w-full h-auto object-contain"
             />
           </div>

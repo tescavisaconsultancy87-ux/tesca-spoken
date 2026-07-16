@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import {
   X,
   Send,
@@ -156,9 +157,11 @@ export default function DemoModal({ onClose }: DemoModalProps) {
 
           {/* Tutor image aligned at the bottom */}
           <div className="relative z-10 mt-8 -mx-10 -mb-10 overflow-hidden rounded-t-3xl border-t border-white/10 h-64 lg:h-72">
-            <img
+            <Image
               src="/tutor.png"
               alt="TESCA English Tutor"
+              fill
+              sizes="(max-width: 768px) 100vw, 400px"
               className="w-full h-full object-cover object-top"
             />
           </div>

@@ -8,6 +8,7 @@ import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import { db } from '@/lib/db';
 import { Calendar, User, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 
 interface BlogPost {
   id: string;
@@ -103,9 +104,12 @@ export default function BlogPostPage() {
             {post.image_url && (
               <div className="container-x max-w-md mx-auto -mt-8 relative z-20">
                 <div className="relative aspect-square rounded-3xl overflow-hidden border border-black/5 shadow-soft-lg">
-                  <img
+                  <Image
                     src={post.image_url}
                     alt={post.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 448px"
+                    priority
                     className="w-full h-full object-cover"
                   />
                 </div>

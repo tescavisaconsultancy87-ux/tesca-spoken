@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X, LogOut, PanelLeft, PanelRight } from 'lucide-react';
@@ -84,9 +85,9 @@ export default function DashboardSidebar({ groups, role, open, onClose, isCollap
         <div className={`flex border-b border-gray-100 py-5 ${isCollapsed ? 'flex-col items-center gap-4 px-2' : 'items-center justify-between px-6'}`}>
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
             {isCollapsed ? (
-              <img src="/favicon.png" alt="TESCA" className="h-8 w-8 object-contain transition-all duration-300" />
+              <Image src="/favicon.png" alt="TESCA" width={32} height={32} priority className="h-8 w-8 object-contain transition-all duration-300" />
             ) : (
-              <img src="/Tesca_logo.png" alt="TESCA" className="h-8 w-auto object-contain transition-all duration-300" />
+              <Image src="/Tesca_logo.png" alt="TESCA" width={150} height={32} priority style={{ width: 'auto' }} className="h-8 w-auto object-contain transition-all duration-300" />
             )}
           </Link>
           <div className={`flex ${isCollapsed ? 'flex-col items-center gap-2' : 'items-center gap-1'}`}>
