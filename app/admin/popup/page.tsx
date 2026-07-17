@@ -559,25 +559,6 @@ export default function PromoPopupAdminPage() {
                   <img src={imagePreview} alt="Preview" className="absolute inset-0 m-auto max-w-full max-h-full object-contain p-2 pointer-events-none select-none" />
                 </div>
 
-                {/* Content details */}
-                <div className="p-4 flex flex-col text-left bg-white border-t border-gray-50">
-                  <span className="inline-block text-[8px] font-extrabold uppercase tracking-widest text-primary bg-primary-50/50 border border-primary-100/50 px-2 py-0.5 rounded mb-1.5 self-start">
-                    Featured Flyer Offer
-                  </span>
-                  <h4 className="text-xs font-extrabold tracking-tight text-gray-800 leading-tight">
-                    {title || 'Special Update'}
-                  </h4>
-                  <p className="text-[10px] text-gray-400 mt-1 leading-normal font-sans font-medium line-clamp-2">
-                    {subtitle || 'Sign up to get the latest news and guides.'}
-                  </p>
-
-                  <div className="mt-3">
-                    <button type="button" className="w-full py-2 bg-primary text-white font-bold text-[10px] rounded-lg shadow-sm hover:bg-primary-600 transition-colors">
-                      {buttonText || 'Get Details'}
-                    </button>
-                  </div>
-                </div>
-
               </div>
             </div>
           </div>

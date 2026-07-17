@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import PromoForm from './PromoForm';
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -57,6 +58,11 @@ export default async function PromoLandingPage({ params }: PageProps) {
 
         {/* Right side: Lead capture form */}
         <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col justify-center bg-white relative">
+          {/* Back to Home Button */}
+          <Link href="/" className="absolute top-6 right-8 text-xs font-bold text-slate-400 hover:text-[#067779] transition-colors flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+            Back to Home
+          </Link>
           <div className="space-y-6 text-left">
             <div>
               <span className="inline-block text-[9px] font-extrabold uppercase tracking-widest text-[#067779] bg-[#f0fafa] border border-[#d9f2f2] px-2.5 py-0.5 rounded-full mb-3 font-sans">Featured Update</span>

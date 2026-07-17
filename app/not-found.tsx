@@ -1,15 +1,14 @@
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
-import { Home, HelpCircle } from 'lucide-react';
+import NotFoundActions from '@/components/NotFoundActions';
 
 export const metadata: Metadata = {
   title: '404 — Page Not Found | TESCA Spoken English',
   description:
-    'The page you are looking for has been moved, deleted, or never existed. Return to TESCA Spoken English homepage or browse our FAQs.',
+    'The page you are looking for has been moved, deleted, or is temporarily unavailable. Return to TESCA Spoken English homepage.',
   robots: {
     index: false,
     follow: true,
@@ -21,57 +20,37 @@ export const metadata: Metadata = {
 
 export default function CustomNotFound() {
   return (
-    <div className="min-h-screen bg-bg-soft flex flex-col justify-between">
+    <div className="min-h-screen bg-white flex flex-col justify-between">
       <Navbar />
-      
+
       <main className="flex-1 flex items-center justify-center pt-28 pb-16 lg:pt-36">
-        <div className="container-x w-full">
-          <div className="max-w-4xl mx-auto bg-white border border-black/5 rounded-3xl p-6 sm:p-10 lg:p-12 shadow-soft hover:shadow-soft-lg transition-all duration-300">
-            <div className="grid items-center gap-8 lg:grid-cols-12">
-              
-              {/* Text Area */}
-              <div className="text-center lg:text-left lg:col-span-7 space-y-6">
-                <div className="inline-flex items-center gap-2 rounded-full bg-rose-50 border border-rose-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-rose-600 shadow-soft">
-                  Error 404
-                </div>
-                
-                <h1 className="font-heading text-3xl font-extrabold leading-tight text-ink sm:text-4xl lg:text-5xl">
-                  Lost in <span className="text-primary">Translation?</span>
-                </h1>
-                
-                <p className="text-sm sm:text-base leading-relaxed text-ink-muted">
-                  The page you are looking for has either been moved, deleted, or never existed in the first place. Don&apos;t worry — let&apos;s get you back on track!
-                </p>
+        <div className="w-full px-4 text-center max-w-2xl mx-auto space-y-6">
+          {/* Huge Gradient 404 Text */}
+          <h1 className="text-8xl md:text-[10rem] font-black tracking-tighter bg-gradient-to-b from-[#067779] to-[#0b3336] bg-clip-text text-transparent select-none leading-none">
+            404
+          </h1>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
-                  <Link href="/" className="w-full sm:w-auto btn-warm inline-flex items-center justify-center gap-2">
-                    <Home className="h-4 w-4" />
-                    Back to Home
-                  </Link>
-                  <Link 
-                    href="/faq" 
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl border border-gray-150 text-xs font-bold text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-all"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Browse FAQs
-                  </Link>
-                </div>
-              </div>
+          {/* Page Not Found Label */}
+          <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">
+            Page Not Found
+          </h2>
 
-              {/* Illustration Area */}
-              <div className="lg:col-span-5 flex justify-center order-first lg:order-last">
-                <div className="relative w-full max-w-[280px] lg:max-w-none aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-primary-50 to-secondary-50 p-2 border border-black/5 shadow-soft">
-                  <Image
-                    src="/not_found_graphic.png"
-                    alt="404 Page Not Found Illustration"
-                    fill
-                    className="object-cover rounded-xl"
-                    sizes="(max-width: 280px) 100vw, 280px"
-                  />
-                </div>
-              </div>
+          {/* Core Description */}
+          <p className="text-xs md:text-sm text-slate-400 font-semibold max-w-md mx-auto leading-relaxed">
+            The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+          </p>
 
-            </div>
+          {/* Actions component */}
+          <div className="pt-2">
+            <NotFoundActions />
+          </div>
+
+          {/* Help Links footer support */}
+          <div className="pt-10 text-[10px] md:text-xs text-slate-400 font-semibold">
+            Need help?{' '}
+            <Link href="/contact" className="text-[#067779] hover:underline font-bold transition-all">
+              Contact our support team
+            </Link>
           </div>
         </div>
       </main>

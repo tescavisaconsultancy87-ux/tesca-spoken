@@ -169,30 +169,11 @@ export default function PromoPopup() {
             alt={currentPopup.title}
             className="absolute inset-0 m-auto max-w-full max-h-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02]"
           />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-6 pt-12 text-white text-left flex flex-col justify-end">
-            <span className="inline-block text-[8px] font-extrabold uppercase tracking-widest text-[#F97823] bg-[#F97823]/10 border border-[#F97823]/30 px-2 py-0.5 rounded mb-2 self-start">
-              Special Event Offer
-            </span>
-            <h3 className="text-sm sm:text-base font-extrabold tracking-tight leading-snug">
-              {currentPopup.title}
-            </h3>
-            {currentPopup.subtitle && (
-              <p className="text-[10px] sm:text-xs text-gray-250 mt-1 line-clamp-2 font-medium opacity-90 leading-normal">
-                {currentPopup.subtitle}
-              </p>
-            )}
-            <button
-              type="button"
-              className="mt-4 py-2.5 bg-primary text-white font-bold text-xs rounded-xl shadow-lg cursor-pointer hover:bg-primary-600 transition-colors w-full text-center"
-            >
-              {currentPopup.button_text || 'Learn More'}
-            </button>
-          </div>
         </div>
 
         {/* Dots Indicators */}
         {popups.length > 1 && (
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-40 flex gap-1.5 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-40 flex gap-1.5 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
             {popups.map((_, idx) => (
               <button
                 key={idx}
