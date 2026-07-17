@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle } = body;
+    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle, course } = body;
 
     // 1. Basic validation
     if (!type || !name || (type !== 'assessment' && type !== 'popup' && !email)) {
@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       : null;
 
     if (type === 'demo') {
-      if (!phone || !timeSlot || !learningMode) {
+      if (!phone || !timeSlot || !learningMode || !course) {
         return NextResponse.json(
-          { error: 'Phone number, time slot, and learning mode are required for demo bookings.' },
+          { error: 'Phone number, course, time slot, and learning mode are required for demo bookings.' },
           { status: 400 }
         );
       }
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
     if (type === 'contact') {
       notes = `Source: Contact Us\nTopic: ${topic || 'General Feedback'}\nMessage: ${message}`;
     } else if (type === 'demo') {
-      notes = `Source: Book Free Demo\nRequested Free Demo Class.\nPreferred Time: ${timeSlot}\nLearning Mode: ${learningMode}`;
+      notes = `Source: Book Free Demo\nRequested Free Demo Class.\nSelected Course: ${course}\nPreferred Time: ${timeSlot}\nLearning Mode: ${learningMode}`;
     } else if (type === 'assessment') {
       notes = assessmentNotes || 'Source: CEFR Assessment';
     } else if (type === 'popup') {
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
 
                 <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">If you need urgent assistance, feel free to chat with us directly on WhatsApp by clicking the button below.</p>
                 <div style="text-align: center; margin: 30px 0 10px 0;">
-                  <a href="https://wa.me/919824152731" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Chat on WhatsApp</a>
+                  <a href="https://wa.me/918488805888" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Chat on WhatsApp</a>
                 </div>
               </div>
               <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #f3f4f6;">
@@ -246,6 +246,10 @@ export async function POST(request: NextRequest) {
                   <p style="margin: 0 0 10px 0; font-size: 11px; font-weight: bold; color: #6b7280; text-transform: uppercase;">Your Booking Details</p>
                   <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                     <tr>
+                      <td style="padding: 6px 0; color: #4b5563; width: 130px;"><strong>Course of Interest:</strong></td>
+                      <td style="padding: 6px 0; color: #111827;">${course}</td>
+                    </tr>
+                    <tr>
                       <td style="padding: 6px 0; color: #4b5563; width: 130px;"><strong>Preferred Time Slot:</strong></td>
                       <td style="padding: 6px 0; color: #111827;">${timeSlot}</td>
                     </tr>
@@ -268,7 +272,7 @@ export async function POST(request: NextRequest) {
                 </ol>
 
                 <div style="text-align: center; margin: 35px 0 10px 0;">
-                  <a href="https://wa.me/919824152731" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Connect with Counselor</a>
+                  <a href="https://wa.me/918488805888" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Connect with Counselor</a>
                 </div>
               </div>
               <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #f3f4f6;">
@@ -300,7 +304,7 @@ export async function POST(request: NextRequest) {
 
                 <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Based on your assessment results, our expert trainers are ready to guide you towards fluency. Let's connect on WhatsApp to get started!</p>
                 <div style="text-align: center; margin: 30px 0 10px 0;">
-                  <a href="https://wa.me/919824152731" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Connect with Counselor</a>
+                  <a href="https://wa.me/918488805888" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Connect with Counselor</a>
                 </div>
               </div>
               <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #f3f4f6;">
@@ -324,7 +328,7 @@ export async function POST(request: NextRequest) {
 
                 <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">If you need immediate assistance, please chat with us on WhatsApp by clicking the button below.</p>
                 <div style="text-align: center; margin: 30px 0 10px 0;">
-                  <a href="https://wa.me/919824152731" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Chat on WhatsApp</a>
+                  <a href="https://wa.me/918488805888" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Chat on WhatsApp</a>
                 </div>
               </div>
               <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #f3f4f6;">
@@ -353,6 +357,10 @@ export async function POST(request: NextRequest) {
       if (type === 'demo') {
         badgeLabel = 'Free Demo Request';
         detailSnippet = `
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Course Selected:</td>
+            <td style="padding: 10px 0; color: #111827;">${course}</td>
+          </tr>
           <tr style="border-bottom: 1px solid #f3f4f6;">
             <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Time Preference:</td>
             <td style="padding: 10px 0; color: #111827;">${timeSlot}</td>

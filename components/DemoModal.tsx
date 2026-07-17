@@ -14,7 +14,9 @@ import {
   Award,
   Laptop,
   ChevronDown,
+  BookOpen,
 } from 'lucide-react';
+import { COURSES } from '@/lib/data/content';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -35,10 +37,12 @@ export default function DemoModal({ onClose }: DemoModalProps) {
     email: '',
     time: '',
     mode: '',
+    course: '',
   });
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
 
   // Close modal on escape press
   useEffect(() => {
@@ -59,6 +63,27 @@ export default function DemoModal({ onClose }: DemoModalProps) {
     };
   }, []);
 
+  // Fetch courses list from dynamic API or fall back to static list
+  useEffect(() => {
+    async function fetchCourses() {
+      try {
+        const res = await fetch('/api/courses');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setCourses(data.map((c: any) => ({ id: c.id, title: c.title })));
+            return;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch courses:', err);
+      }
+      // Fallback
+      setCourses(COURSES.map(c => ({ id: c.title.toLowerCase().replace(/\s+/g, '-'), title: c.title })));
+    }
+    fetchCourses();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -70,8 +95,8 @@ export default function DemoModal({ onClose }: DemoModalProps) {
       return;
     }
 
-    if (!form.time || !form.mode) {
-      setError('Please select both a preferred time slot and learning mode.');
+    if (!form.course || !form.time || !form.mode) {
+      setError('Please select a course, preferred time slot, and learning mode.');
       return;
     }
     
@@ -88,6 +113,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
           name: form.name,
           email: form.email,
           phone: form.phone,
+          course: form.course,
           timeSlot: form.time,
           learningMode: form.mode,
         }),
@@ -275,6 +301,37 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                     className="w-full rounded-xl border border-black/10 bg-bg-soft pl-10 pr-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
                   />
                 </div>
+              </div>
+
+              {/* Course Selection */}
+              <div className="flex flex-col">
+                <span className="block text-xs font-semibold text-ink mb-1.5">
+                  Course of Interest <span className="text-accent">*</span>
+                </span>
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    <div className="w-full flex items-center justify-between rounded-xl border border-black/10 bg-bg-soft pl-10 pr-4 py-3 text-xs text-ink cursor-pointer hover:bg-black/5 transition-colors">
+                      <div className="flex items-center gap-2.5">
+                        <BookOpen className="h-4 w-4 text-ink-muted shrink-0" />
+                        <span className={form.course ? 'text-ink font-semibold' : 'text-ink-muted/50'}>
+                          {form.course || 'Select a course...'}
+                        </span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-ink-muted/60" />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-64 max-h-60 overflow-y-auto z-50">
+                    <DropdownMenuHighlight>
+                      {courses.map((course) => (
+                        <DropdownMenuHighlightItem key={course.id}>
+                          <DropdownMenuItem onClick={() => setForm((f) => ({ ...f, course: course.title }))}>
+                            {course.title}
+                          </DropdownMenuItem>
+                        </DropdownMenuHighlightItem>
+                      ))}
+                    </DropdownMenuHighlight>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
               {/* Preferred Time & Mode grid */}

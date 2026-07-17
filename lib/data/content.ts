@@ -8,7 +8,7 @@ export const NAV_LINKS = [
   { label: 'Contact', href: '/contact' },
 ];
 
-export const WHATSAPP_URL = 'https://wa.me/919824152731?text=Hi%20TESCA,%20I%20would%20like%20to%20book%20a%20free%20demo%20class.';
+export const WHATSAPP_URL = 'https://wa.me/918488805888?text=Hi%20TESCA,%20I%20would%20like%20to%20book%20a%20free%20demo%20class.';
 
 export const TRUST_STATS = [
   { value: 2005, label: 'Years of Trust', suffix: '', isYear: true, prefix: 'Since ' },

@@ -28,6 +28,7 @@ interface Lead {
   source?: string;
   status: LeadStatus;
   dateAdded: string;
+  course?: string;
 }
 
 const LEAD_STATUS_OPTIONS: Array<{
@@ -92,6 +93,7 @@ function normalizeLeadStatus(status: string | null | undefined): LeadStatus {
 function parseLeadNotes(notes: string) {
   let source = 'Website Inquiry';
   let cleanNotes = notes;
+  let course = '';
 
   if (notes.startsWith('Source: ')) {
     const lines = notes.split('\n');
@@ -106,7 +108,13 @@ function parseLeadNotes(notes: string) {
     source = 'CEFR Assessment';
   }
 
-  return { source, cleanNotes };
+  // Extract selected course if present
+  const courseMatch = notes.match(/Selected Course:\s*([^\n]+)/);
+  if (courseMatch) {
+    course = courseMatch[1].trim();
+  }
+
+  return { source, cleanNotes, course };
 }
 
 export default function AdminLeadsPage() {
@@ -228,7 +236,7 @@ export default function AdminLeadsPage() {
     async function load() {
       const data = await db.getLeads();
       const mapped = data.map((l: any) => {
-        const { source, cleanNotes } = parseLeadNotes(l.notes || '');
+        const { source, cleanNotes, course } = parseLeadNotes(l.notes || '');
         return {
           id: l.id,
           name: l.name,
@@ -238,6 +246,7 @@ export default function AdminLeadsPage() {
           source: source,
           status: normalizeLeadStatus(l.status),
           dateAdded: l.date_added,
+          course: course,
         };
       });
       setLeads(mapped);
@@ -266,6 +275,7 @@ export default function AdminLeadsPage() {
     l.phone.toLowerCase().includes(normalizedSearchQuery) ||
     l.email.toLowerCase().includes(normalizedSearchQuery) ||
     l.notes.toLowerCase().includes(normalizedSearchQuery) ||
+    (l.course || '').toLowerCase().includes(normalizedSearchQuery) ||
     (l.source || '').toLowerCase().includes(normalizedSearchQuery) ||
     getLeadStatusMeta(l.status).label.toLowerCase().includes(normalizedSearchQuery)
   );
@@ -337,6 +347,11 @@ export default function AdminLeadsPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-semibold text-gray-500">
                 <p>Phone: <span className="text-gray-700">{lead.phone}</span></p>
                 <p>Email: <span className="text-gray-700">{lead.email}</span></p>
+                {lead.course && (
+                  <p className="sm:col-span-2">
+                    Course: <span className="text-primary font-extrabold">{lead.course}</span>
+                  </p>
+                )}
               </div>
 
               <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 flex flex-col gap-1.5">

@@ -1220,7 +1220,7 @@ export default function CoursesPage() {
                   
                   <div className="flex flex-col gap-2">
                     <a
-                      href={`https://wa.me/919824152731?text=Hi%20TESCA,%20I%20am%20interested%20in%20enrolling%20in%20the%20${encodeURIComponent(selectedPlanForPurchase.title || selectedPlanForPurchase.name)}%20course.`}
+                      href={`https://wa.me/918488805888?text=Hi%20TESCA,%20I%20am%20interested%20in%20enrolling%20in%20the%20${encodeURIComponent(selectedPlanForPurchase.title || selectedPlanForPurchase.name)}%20course.`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-[#25D366] hover:bg-[#20ba5a] transition-all shadow-md animate-bounce"
@@ -1231,11 +1231,11 @@ export default function CoursesPage() {
                     
                     <div className="grid grid-cols-2 gap-2">
                       <a
-                        href="tel:+919824152731"
+                        href="tel:+918488805888"
                         className="flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold border border-gray-150 text-gray-700 bg-white hover:bg-gray-50 transition-all"
                       >
                         <Phone className="h-3.5 w-3.5 text-primary" />
-                        +91 98241 52731
+                        +91 84888 05888
                       </a>
                       <a
                         href="tel:+919925060609"

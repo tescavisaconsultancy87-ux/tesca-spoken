@@ -130,7 +130,7 @@ export default function FloatingActions() {
       >
         {/* Call Us */}
         <a
-          href="tel:+919824152731"
+          href="tel:+918488805888"
           className="flex flex-col items-center gap-1 text-[#334155] hover:text-slate-800 transition-colors"
         >
           <Phone className="h-5 w-5 stroke-[2] text-[#334155]" />

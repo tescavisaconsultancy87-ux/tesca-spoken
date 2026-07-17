@@ -41,9 +41,9 @@ const CONTACT_ITEMS = [
   {
     icon: Phone,
     title: 'Call Us',
-    lines: ['+91 98241 52731', '+91 99250 60609'],
+    lines: ['+91 84888 05888', '+91 99250 60609'],
     hint: 'Mon – Sat, 9am – 7pm',
-    action: 'tel:+919824152731',
+    action: 'tel:+918488805888',
   },
   {
     icon: Mail,
@@ -152,7 +152,7 @@ export default function ContactPage() {
     'mainEntity': {
       '@type': 'EducationalBusiness',
       'name': 'TESCA Spoken English',
-      'telephone': '+91 98241 52731',
+      'telephone': '+91 84888 05888',
       'areaServed': 'Surat, Gujarat, India',
       'address': {
         '@type': 'PostalAddress',

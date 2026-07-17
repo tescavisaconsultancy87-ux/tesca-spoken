@@ -14,8 +14,8 @@ const DemoModalContext = createContext<DemoModalContextType | undefined>(undefin
 export function DemoModalProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const openModal = () => setIsOpen(true);
-  const closeModal = () => setIsOpen(false);
+  const openModal = React.useCallback(() => setIsOpen(true), []);
+  const closeModal = React.useCallback(() => setIsOpen(false), []);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -36,8 +36,10 @@ export function DemoModalProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const value = React.useMemo(() => ({ isOpen, openModal, closeModal }), [isOpen, openModal, closeModal]);
+
   return (
-    <DemoModalContext.Provider value={{ isOpen, openModal, closeModal }}>
+    <DemoModalContext.Provider value={value}>
       {children}
       {isOpen && <DemoModal onClose={closeModal} />}
     </DemoModalContext.Provider>

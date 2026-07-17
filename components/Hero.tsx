@@ -1,43 +1,45 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, memo, ComponentType } from 'react';
 import { CalendarCheck, Users, GraduationCap, TrendingUp, ShieldCheck } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
+import { useCounter } from '@/hooks/useCounter';
+import { useReveal } from '@/hooks/useReveal';
+
+const STATS_DATA = [
+  {
+    value: '6000+',
+    label: 'Expert Trainers',
+    icon: GraduationCap,
+    numericEnd: 6000,
+    suffix: '+',
+  },
+  {
+    value: '7M+',
+    label: 'Successful Students',
+    icon: Users,
+    numericEnd: 7,
+    suffix: 'L+',
+  },
+  {
+    value: '98%',
+    label: 'Success Rate',
+    icon: TrendingUp,
+    numericEnd: 95,
+    suffix: '%',
+  },
+  {
+    value: 'Since 2005',
+    label: 'Years of Trust',
+    icon: ShieldCheck,
+    numericEnd: 2005,
+    suffix: '',
+    prefix: 'Since ',
+  },
+];
 
 export default function Hero() {
   const { openModal } = useDemoModal();
-
-  const stats = [
-    {
-      value: '6000+',
-      label: 'Expert Trainers',
-      icon: GraduationCap,
-      numericEnd: 6000,
-      suffix: '+',
-    },
-    {
-      value: '7M+',
-      label: 'Successful Students',
-      icon: Users,
-      numericEnd: 7,
-      suffix: 'L+',
-    },
-    {
-      value: '98%',
-      label: 'Success Rate',
-      icon: TrendingUp,
-      numericEnd: 95,
-      suffix: '%',
-    },
-    {
-      value: 'Since 2005',
-      label: 'Years of Trust',
-      icon: ShieldCheck,
-      numericEnd: 2005,
-      suffix: '',
-      prefix: 'Since ',
-    },
-  ];
 
   return (
     <>
@@ -70,7 +72,7 @@ export default function Hero() {
                 Speak English Confidently. <br className="hidden sm:inline" />
                 Shape Your{' '}
                 <span className="relative inline-block text-secondary lg:text-primary whitespace-nowrap">
-                  Global Future.
+                  Bright Future.
                   {/* Custom hand-drawn SVG wave underline */}
                   <svg
                     className="absolute -bottom-2.5 left-0 w-full h-3 text-secondary lg:text-primary pointer-events-none select-none"
@@ -131,56 +133,21 @@ export default function Hero() {
       </section>
 
       {/* Stats Bar under Hero Section */}
-      <StatsBar stats={stats} />
+      <StatsBar stats={STATS_DATA} />
     </>
   );
 }
 
 /* ─── CountUp number component ─── */
 function CountUp({ end, suffix, duration = 2000 }: { end: number; suffix: string; duration?: number }) {
-  const [count, setCount] = useState(0);
-  const [started, setStarted] = useState(false);
-  const ref = useRef<HTMLSpanElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setStarted(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!started) return;
-    const steps = 60;
-    const increment = end / steps;
-    let current = 0;
-    const stepDuration = duration / steps;
-    const timer = setInterval(() => {
-      current += increment;
-      if (current >= end) {
-        setCount(end);
-        clearInterval(timer);
-      } else {
-        setCount(Math.floor(current));
-      }
-    }, stepDuration);
-    return () => clearInterval(timer);
-  }, [started, end, duration]);
+  const { ref, visible } = useReveal<HTMLSpanElement>({ threshold: 0.3 });
+  const count = useCounter(end, visible, duration);
 
   return <span ref={ref}>{count}{suffix}</span>;
 }
 
 /* ─── Stats bar section ─── */
-function StatsBar({ stats }: { stats: { value: string; label: string; icon: React.ComponentType<{ className?: string }>; numericEnd: number; suffix: string; prefix?: string }[] }) {
+const StatsBar = memo(function StatsBar({ stats }: { stats: { value: string; label: string; icon: ComponentType<{ className?: string }>; numericEnd: number; suffix: string; prefix?: string }[] }) {
   return (
     <div className="relative z-30 bg-[#F4FBFB] border-y border-[#E6F3F3]/80 py-12 md:py-16">
       <div className="container-x">
@@ -205,4 +172,4 @@ function StatsBar({ stats }: { stats: { value: string; label: string; icon: Reac
       </div>
     </div>
   );
-}
+});

@@ -104,7 +104,7 @@ export default function RootLayout({
           'caption': 'TESCA Spoken English Logo'
         },
         'description': 'Master English Fluency from Basic to Advanced — Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
-        'telephone': '+91 98241 52731',
+        'telephone': '+91 84888 05888',
         'email': 'tescavisaconsultancy87@gmail.com',
         'areaServed': 'Surat, Gujarat, India',
         'foundingDate': '2005',

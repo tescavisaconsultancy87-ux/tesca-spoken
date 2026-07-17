@@ -84,7 +84,7 @@ export default function MaintenancePage() {
           </a>
 
           <a
-            href="tel:+919824152731"
+            href="tel:+918488805888"
             className="flex items-center gap-3.5 rounded-2xl border border-black/5 bg-bg-soft p-4 text-left transition-all hover:border-primary/20 hover:shadow-soft group"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary transition-colors group-hover:bg-primary group-hover:text-white">
@@ -92,7 +92,7 @@ export default function MaintenancePage() {
             </div>
             <div className="min-w-0">
               <p className="font-bold text-ink text-xs">Call Support Team</p>
-              <p className="text-[11px] text-ink-muted truncate">+91 98241 52731</p>
+              <p className="text-[11px] text-ink-muted truncate">+91 84888 05888</p>
             </div>
           </a>
         </div>

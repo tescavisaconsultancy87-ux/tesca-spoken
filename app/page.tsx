@@ -107,7 +107,7 @@ export default async function Home() {
     '@id': 'https://tesca.co/#sarthana-branch',
     'name': 'TESCA Spoken English & Visa Consultancy — Sarthana Branch',
     'image': 'https://tesca.co/about_hero.png',
-    'telephone': '+91 98241 52731',
+    'telephone': '+91 84888 05888',
     'url': 'https://tesca.co',
     'address': {
       '@type': 'PostalAddress',
@@ -131,7 +131,7 @@ export default async function Home() {
     '@id': 'https://tesca.co/#mota-varachha-branch',
     'name': 'TESCA Spoken English & Visa Consultancy — Mota Varachha Branch',
     'image': 'https://tesca.co/about_hero.png',
-    'telephone': '+91 98241 52731',
+    'telephone': '+91 84888 05888',
     'url': 'https://tesca.co',
     'address': {
       '@type': 'PostalAddress',
@@ -155,7 +155,7 @@ export default async function Home() {
     '@id': 'https://tesca.co/#hirabaug-branch',
     'name': 'TESCA Spoken English & Visa Consultancy — Hirabaug Branch',
     'image': 'https://tesca.co/about_hero.png',
-    'telephone': '+91 98241 52731',
+    'telephone': '+91 84888 05888',
     'url': 'https://tesca.co',
     'address': {
       '@type': 'PostalAddress',
@@ -179,7 +179,7 @@ export default async function Home() {
     '@id': 'https://tesca.co/#yogichowk-branch',
     'name': 'TESCA Spoken English & Visa Consultancy — Yogichowk Branch',
     'image': 'https://tesca.co/about_hero.png',
-    'telephone': '+91 98241 52731',
+    'telephone': '+91 84888 05888',
     'url': 'https://tesca.co',
     'address': {
       '@type': 'PostalAddress',
