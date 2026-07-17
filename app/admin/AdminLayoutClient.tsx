@@ -15,6 +15,7 @@ import {
   FileText,
   GraduationCap,
   Megaphone,
+  Sparkles,
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
@@ -64,6 +65,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
               { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
               { label: 'Blog Posts', href: '/admin/blog', icon: FileText },
               { label: 'Offer Banner Settings', href: '/admin/banner', icon: Megaphone },
+              { label: 'Promotional Popups', href: '/admin/popup', icon: Sparkles },
               { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
               { label: 'Back to Home', href: '/', icon: Home },
             ],
@@ -112,6 +114,7 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
         { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
         { label: 'Blog Posts', href: '/admin/blog', icon: FileText },
         { label: 'Offer Banner Settings', href: '/admin/banner', icon: Megaphone },
+        { label: 'Promotional Popups', href: '/admin/popup', icon: Sparkles },
         { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
         { label: 'Back to Home', href: '/', icon: Home },
       ],

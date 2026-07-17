@@ -3,6 +3,7 @@ import { Poppins, Inter } from 'next/font/google';
 import './globals.css';
 import OfferBanner from '@/components/OfferBanner';
 import AlertOverlay from '@/components/AlertOverlay';
+import PromoPopup from '@/components/PromoPopup';
 import { DemoModalProvider } from '@/context/DemoModalContext';
 import { AuthProvider } from '@/context/AuthContext';
 import ScrollToTop from '@/components/ScrollToTop';
@@ -151,6 +152,7 @@ export default function RootLayout({
             {/* Offer banner sits above everything, including the navbar */}
             <OfferBanner />
             <AlertOverlay />
+            <PromoPopup />
             {children}
             {/* ─── Bot Honeypot: invisible to users, traps AI crawlers ─── */}
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional: crawlers follow raw <a>, not <Link> */}

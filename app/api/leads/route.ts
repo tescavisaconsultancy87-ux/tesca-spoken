@@ -16,15 +16,27 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes } = body;
+    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle } = body;
 
     // 1. Basic validation
-    if (!type || !name || (type !== 'assessment' && !email)) {
+    if (!type || !name || (type !== 'assessment' && type !== 'popup' && !email)) {
       return NextResponse.json(
         { error: 'Lead type, name, and email are required.' },
         { status: 400 }
       );
     }
+
+    // 2. Initialize Supabase Admin Client (Service Role Key required for bypassing RLS)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const adminSupabase = (supabaseUrl && serviceRoleKey)
+      ? createClient(supabaseUrl, serviceRoleKey, {
+          auth: {
+            autoRefreshToken: false,
+            persistSession: false
+          }
+        })
+      : null;
 
     if (type === 'demo') {
       if (!phone || !timeSlot || !learningMode) {
@@ -61,24 +73,70 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
+    } else if (type === 'popup') {
+      let requiredFields = ["name", "phone"];
+      if (popupId && adminSupabase) {
+        try {
+          const { data: popup } = await adminSupabase
+            .from('popup_settings')
+            .select('required_fields')
+            .eq('id', popupId)
+            .single();
+          if (popup && Array.isArray(popup.required_fields)) {
+            requiredFields = popup.required_fields;
+          }
+        } catch (e) {
+          console.error('[Leads API] Failed to fetch popup required fields:', e);
+        }
+      }
+
+      if (requiredFields.includes("name") && !name) {
+        return NextResponse.json({ error: "Full Name is required." }, { status: 400 });
+      }
+      if (requiredFields.includes("phone") && !phone) {
+        return NextResponse.json({ error: "Mobile Number is required." }, { status: 400 });
+      }
+      if (requiredFields.includes("email") && !email) {
+        return NextResponse.json({ error: "Email Address is required." }, { status: 400 });
+      }
+
+      if (phone) {
+        const cleanedPhone = phone.replace(/\D/g, '');
+        if (cleanedPhone.length !== 10) {
+          return NextResponse.json(
+            { error: 'Phone number must be exactly 10 digits.' },
+            { status: 400 }
+          );
+        }
+      }
+
+      // Deduplication check for popup leads
+      if (adminSupabase && (phone || email)) {
+        const checkQuery = adminSupabase
+          .from('leads')
+          .select('id, status')
+          .neq('status', 'converted')
+          .neq('status', 'rejected');
+
+        const filterOr = [];
+        if (email) filterOr.push(`email.eq.${email}`);
+        if (phone) filterOr.push(`phone.eq.${phone}`);
+        if (filterOr.length > 0) {
+          const { data: existingLeads } = await checkQuery.or(filterOr.join(','));
+          if (existingLeads && existingLeads.length > 0) {
+            return NextResponse.json(
+              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
+              { status: 409 }
+            );
+          }
+        }
+      }
     } else {
       return NextResponse.json(
-        { error: 'Invalid lead type. Must be "contact", "demo", or "assessment".' },
+        { error: 'Invalid lead type. Must be "contact", "demo", "assessment", or "popup".' },
         { status: 400 }
       );
     }
-
-    // 2. Initialize Supabase Admin Client (Service Role Key required for bypassing RLS)
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    const adminSupabase = (supabaseUrl && serviceRoleKey)
-      ? createClient(supabaseUrl, serviceRoleKey, {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false
-          }
-        })
-      : null;
 
     // 3. Format notes and insert lead
     let notes = '';
@@ -88,6 +146,8 @@ export async function POST(request: NextRequest) {
       notes = `Source: Book Free Demo\nRequested Free Demo Class.\nPreferred Time: ${timeSlot}\nLearning Mode: ${learningMode}`;
     } else if (type === 'assessment') {
       notes = assessmentNotes || 'Source: CEFR Assessment';
+    } else if (type === 'popup') {
+      notes = `Source: Popup - ${popupTitle || 'Special Offer'}\nRequested details via promotional popup flyer.`;
     }
 
     const dateAdded = new Date().toLocaleDateString('en-IN', {
@@ -249,6 +309,30 @@ export async function POST(request: NextRequest) {
             </div>
           </div>
         `;
+      } else if (type === 'popup') {
+        studentEmailSubject = `Thank you for registering - ${appName.toUpperCase()}`;
+        studentEmailHtml = `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6; padding: 40px 10px; color: #1f2937;">
+            <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05); border: 1px solid #e5e7eb;">
+              <div style="background-color: #0b3336; padding: 30px; text-align: center;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 800; letter-spacing: 1px;">${appName.toUpperCase()}</h1>
+                <p style="color: #f59e0b; margin: 5px 0 0 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;">Registration Confirmed</p>
+              </div>
+              <div style="padding: 40px 30px;">
+                <h2 style="font-size: 20px; font-weight: 700; color: #0b3336; margin-top: 0;">Hi ${name},</h2>
+                <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">Thank you for registering for our promotion: <strong>${popupTitle || 'Special Offer'}</strong>. Our student coordinator will contact you shortly to review your details and guide you.</p>
+
+                <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">If you need immediate assistance, please chat with us on WhatsApp by clicking the button below.</p>
+                <div style="text-align: center; margin: 30px 0 10px 0;">
+                  <a href="https://wa.me/919824152731" style="background-color: #25d366; color: #ffffff; padding: 12px 25px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block; box-shadow: 0 4px 8px rgba(37, 211, 102, 0.2);">Chat on WhatsApp</a>
+                </div>
+              </div>
+              <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #f3f4f6;">
+                <p style="margin: 0; font-size: 11px; color: #9ca3af;">&copy; 2026 TESCA Spoken English. All rights reserved.</p>
+              </div>
+            </div>
+          </div>
+        `;
       }
 
       // Send student confirmation email if email is provided
@@ -292,6 +376,18 @@ export async function POST(request: NextRequest) {
           <tr style="border-bottom: 1px solid #f3f4f6;">
             <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Lead Source:</td>
             <td style="padding: 10px 0; color: #111827; font-weight: bold;">CEFR Level Assessment</td>
+          </tr>
+        `;
+      } else if (type === 'popup') {
+        badgeLabel = 'Promo Popup';
+        detailSnippet = `
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Popup Title:</td>
+            <td style="padding: 10px 0; color: #111827;">${popupTitle || 'N/A'}</td>
+          </tr>
+          <tr style="border-bottom: 1px solid #f3f4f6;">
+            <td style="padding: 10px 0; color: #6b7280; font-weight: bold;">Popup ID:</td>
+            <td style="padding: 10px 0; color: #111827;">${popupId || 'N/A'}</td>
           </tr>
         `;
       }
