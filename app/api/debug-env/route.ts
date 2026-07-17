@@ -58,9 +58,9 @@ export async function GET(request: NextRequest) {
       publicEnvKeysList: envKeys.filter(k => k.startsWith('NEXT_PUBLIC_') || k.startsWith('APP_') || k.includes('Error')),
     });
   } catch (err: any) {
+    console.error('[Debug Env] Diagnostics failed:', err);
     return NextResponse.json({
-      error: err.message || String(err),
-      stack: err.stack,
-    }, { status: 200 });
+      error: 'Diagnostics failed.',
+    }, { status: 500 });
   }
 }

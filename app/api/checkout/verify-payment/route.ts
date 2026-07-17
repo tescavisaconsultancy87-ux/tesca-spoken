@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/gmail';
 import crypto from 'crypto';
+import { generateSecurePassword } from '@/lib/security';
 
 const PLAN_PRICES: Record<string, { full: number; monthly: number }> = {
   starter: { full: 7999, monthly: 2667 },
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     let studentId = existingProfile?.id;
-    let tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
+    let tempPassword = generateSecurePassword(12);
 
     if (!studentId) {
       // Create user auth account
@@ -246,6 +247,6 @@ export async function POST(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[Verify Payment API Error]:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred during verification.' }, { status: 500 });
+    return NextResponse.json({ error: 'An error occurred during verification.' }, { status: 500 });
   }
 }

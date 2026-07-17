@@ -2,17 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail } from '@/lib/gmail';
 import { supabase } from '@/lib/supabaseClient';
 import { createClient } from '@supabase/supabase-js';
-import { verifyAuthAndRole, checkRateLimit, formatFriendlyError } from '@/lib/security';
-
-// Helper to generate a random password (minimum 8 characters)
-function generateRandomPassword(length = 8): string {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*';
-  let password = '';
-  for (let i = 0; i < length; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
-}
+import { verifyAuthAndRole, checkRateLimit, formatFriendlyError, generateSecurePassword, getClientIp } from '@/lib/security';
 
 // Helper to find a user by email in Supabase Auth
 async function findAuthUserByEmail(adminSupabase: any, email: string): Promise<any | null> {
@@ -41,7 +31,7 @@ async function findAuthUserByEmail(adminSupabase: any, email: string): Promise<a
 export async function POST(request: NextRequest) {
   try {
     // 1. Rate Limiting Check
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+    const ip = getClientIp(request);
     const rateCheck = checkRateLimit(ip, 10, 60000); // Max 10 creations/min
     if (!rateCheck.success) {
       return NextResponse.json(
@@ -79,7 +69,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const password = generateRandomPassword(8);
+    const password = generateSecurePassword(12);
     const appName = process.env.APP_NAME || 'tesca-spoken';
 
     let databaseSaved = false;

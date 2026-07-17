@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyAuthAndRole } from '@/lib/security';
 
 const INDEXNOW_KEY = 'd3b07384d113edec49eaa6238ad5ff00';
 const HOST = 'tesca.co';
@@ -18,6 +19,11 @@ const PUBLIC_URLS = [
 ];
 
 export async function GET(request: NextRequest) {
+  const auth = await verifyAuthAndRole(request, ['admin']);
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error || 'Access denied.' }, { status: auth.status || 401 });
+  }
+
   const searchParams = request.nextUrl.searchParams;
   const pingAll = searchParams.get('pingAll') === 'true';
 
@@ -51,16 +57,16 @@ export async function GET(request: NextRequest) {
         status: response.status,
       });
     } else {
-      const text = await response.text();
+      await response.text();
       return NextResponse.json(
-        { error: 'IndexNow server rejected submission', status: response.status, details: text },
+        { error: 'IndexNow server rejected submission', status: response.status },
         { status: 500 }
       );
     }
   } catch (err: any) {
     console.error('[IndexNow Ping Failed]:', err);
     return NextResponse.json(
-      { error: 'Internal server error pinging IndexNow API', details: err?.message || err },
+      { error: 'Internal server error pinging IndexNow API' },
       { status: 500 }
     );
   }
@@ -68,6 +74,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await verifyAuthAndRole(request, ['admin']);
+    if (!auth.authorized) {
+      return NextResponse.json({ error: auth.error || 'Access denied.' }, { status: auth.status || 401 });
+    }
+
     const body = await request.json();
     const { urlList } = body;
 
@@ -108,16 +119,16 @@ export async function POST(request: NextRequest) {
         status: response.status,
       });
     } else {
-      const text = await response.text();
+      await response.text();
       return NextResponse.json(
-        { error: 'IndexNow server rejected submission', status: response.status, details: text },
+        { error: 'IndexNow server rejected submission', status: response.status },
         { status: 500 }
       );
     }
   } catch (err: any) {
     console.error('[IndexNow POST Failed]:', err);
     return NextResponse.json(
-      { error: 'Internal server error pinging IndexNow API', details: err?.message || err },
+      { error: 'Internal server error pinging IndexNow API' },
       { status: 500 }
     );
   }

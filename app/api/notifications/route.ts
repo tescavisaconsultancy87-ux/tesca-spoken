@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json([]);
   } catch (err: any) {
     console.error('[Notifications GET API] Error:', err);
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }
 
@@ -116,6 +116,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error('[Notifications POST API] Error:', err);
-    return NextResponse.json({ error: err.message || String(err) }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

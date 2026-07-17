@@ -117,6 +117,6 @@ export async function POST(request: NextRequest) {
 
   } catch (err: any) {
     console.error('[Checkout Order API Error]:', err);
-    return NextResponse.json({ error: err.message || 'An error occurred during order creation.' }, { status: 500 });
+    return NextResponse.json({ error: 'An error occurred during order creation.' }, { status: 500 });
   }
 }

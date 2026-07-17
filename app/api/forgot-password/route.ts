@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/gmail';
+import { checkRateLimit, getClientIp, secureRandomInt } from '@/lib/security';
 
 // Create a Supabase admin client using the service role key to bypass RLS
 const getAdminSupabase = () => {
@@ -17,16 +18,43 @@ const getAdminSupabase = () => {
   });
 };
 
+const GENERIC_RESET_RESPONSE = {
+  success: true,
+  message: 'If this email is registered, a verification code has been sent.'
+};
+
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const hash = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+function isValidPassword(password: string): boolean {
+  return password.length >= 8
+    && /[a-z]/.test(password)
+    && /[A-Z]/.test(password)
+    && /\d/.test(password);
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, email, otp, password } = body;
 
-    if (!email) {
+    if (!email || typeof email !== 'string') {
       return NextResponse.json({ success: false, error: 'Email address is required.' }, { status: 400 });
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    const ip = getClientIp(request);
+    const rateKey = `forgot-password:${ip}:${cleanEmail}`;
+    const rateCheck = checkRateLimit(rateKey, 5, 15 * 60 * 1000);
+    if (!rateCheck.success) {
+      return NextResponse.json({ success: false, error: 'Too many reset attempts. Please wait before trying again.' }, { status: 429 });
+    }
+
     const supabaseAdmin = getAdminSupabase();
 
     // ─── ACTION 1: SEND OTP ───
@@ -39,21 +67,19 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (profileError || !profile) {
-        return NextResponse.json({ 
-          success: false, 
-          error: 'This email address is not registered in our system.' 
-        }, { status: 400 });
+        return NextResponse.json(GENERIC_RESET_RESPONSE);
       }
 
-      // 2. Generate a 6-digit OTP code
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+      // 2. Generate and store a hashed 6-digit OTP code
+      const otpCode = secureRandomInt(100000, 1000000).toString();
+      const otpHash = await sha256Hex(otpCode);
       const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString(); // 5 minutes validity
 
       // 3. Store the OTP in the user's profile
       const { error: updateError } = await supabaseAdmin
         .from('profiles')
         .update({
-          reset_otp: otpCode,
+          reset_otp: otpHash,
           reset_otp_expires_at: expiresAt,
         })
         .eq('email', cleanEmail);
@@ -108,7 +134,7 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
       }
 
-      return NextResponse.json({ success: true, message: 'Verification code sent successfully.' });
+      return NextResponse.json(GENERIC_RESET_RESPONSE);
     }
 
     // ─── ACTION 2: VERIFY OTP ───
@@ -118,6 +144,7 @@ export async function POST(request: NextRequest) {
       }
 
       const cleanOtp = otp.trim();
+      const otpHash = await sha256Hex(cleanOtp);
 
       // 1. Fetch OTP and expiration from profile
       const { data: profile, error: profileError } = await supabaseAdmin
@@ -126,15 +153,11 @@ export async function POST(request: NextRequest) {
         .eq('email', cleanEmail)
         .maybeSingle();
 
-      if (profileError || !profile) {
-        return NextResponse.json({ success: false, error: 'Profile not found.' }, { status: 400 });
+      if (profileError || !profile || !profile.reset_otp) {
+        return NextResponse.json({ success: false, error: 'Invalid verification code. Please check and try again.' }, { status: 400 });
       }
 
-      if (!profile.reset_otp) {
-        return NextResponse.json({ success: false, error: 'No verification code has been requested for this email.' }, { status: 400 });
-      }
-
-      if (profile.reset_otp !== cleanOtp) {
+      if (profile.reset_otp !== otpHash) {
         return NextResponse.json({ success: false, error: 'Invalid verification code. Please check and try again.' }, { status: 400 });
       }
 
@@ -150,11 +173,15 @@ export async function POST(request: NextRequest) {
       if (!otp) {
         return NextResponse.json({ success: false, error: 'Verification code is required.' }, { status: 400 });
       }
-      if (!password) {
+      if (!password || typeof password !== 'string') {
         return NextResponse.json({ success: false, error: 'New password is required.' }, { status: 400 });
+      }
+      if (!isValidPassword(password)) {
+        return NextResponse.json({ success: false, error: 'Password must be at least 8 characters and include uppercase, lowercase, and a number.' }, { status: 400 });
       }
 
       const cleanOtp = otp.trim();
+      const otpHash = await sha256Hex(cleanOtp);
 
       // 1. Double check OTP is correct and not expired
       const { data: profile, error: profileError } = await supabaseAdmin
@@ -164,10 +191,10 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (profileError || !profile) {
-        return NextResponse.json({ success: false, error: 'Profile not found.' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Verification credentials mismatch. Please start over.' }, { status: 400 });
       }
 
-      if (!profile.reset_otp || profile.reset_otp !== cleanOtp) {
+      if (!profile.reset_otp || profile.reset_otp !== otpHash) {
         return NextResponse.json({ success: false, error: 'Verification credentials mismatch. Please start over.' }, { status: 400 });
       }
 
@@ -200,6 +227,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Invalid action parameter.' }, { status: 400 });
   } catch (err: any) {
     console.error('[Reset Password API Route Error]:', err);
-    return NextResponse.json({ success: false, error: err.message || 'An unexpected server error occurred.' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'An unexpected server error occurred.' }, { status: 500 });
   }
 }

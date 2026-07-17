@@ -23,12 +23,24 @@ ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'tutor';
 -- Enable Row Level Security (RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read access to profiles" ON profiles
-  FOR SELECT USING (true);
+CREATE OR REPLACE FUNCTION public.current_user_role()
+RETURNS text
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT role::text FROM public.profiles WHERE id = auth.uid()
+$$;
+
+REVOKE ALL ON FUNCTION public.current_user_role() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.current_user_role() TO anon, authenticated;
+
+CREATE POLICY "Allow users and admins read profiles" ON profiles
+  FOR SELECT USING (auth.uid() = id OR public.current_user_role() = 'admin');
 
 CREATE POLICY "Allow individual write access to own profile" ON profiles
   FOR UPDATE USING (auth.uid() = id)
-  WITH CHECK (role IS NOT DISTINCT FROM profiles.role);
+  WITH CHECK (auth.uid() = id AND role::text IS NOT DISTINCT FROM public.current_user_role());
 
 CREATE POLICY "Allow individual insert access to own profile" ON profiles
   FOR INSERT WITH CHECK (auth.uid() = id AND role = 'student');

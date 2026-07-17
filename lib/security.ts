@@ -99,6 +99,18 @@ export function formatFriendlyError(err: any): string {
 // In-memory rate limiting map
 const ipCache = new Map<string, { count: number; resetTime: number }>();
 
+export function getClientIp(request: NextRequest): string {
+  const cloudflareIp = request.headers.get('cf-connecting-ip');
+  if (cloudflareIp) return cloudflareIp;
+
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0]?.trim() || '127.0.0.1';
+  }
+
+  return request.headers.get('x-real-ip') || '127.0.0.1';
+}
+
 export function checkRateLimit(ip: string, limit = 10, windowMs = 60000): { success: boolean; resetTime: number } {
   const now = Date.now();
   const data = ipCache.get(ip);
@@ -114,6 +126,32 @@ export function checkRateLimit(ip: string, limit = 10, windowMs = 60000): { succ
 
   data.count += 1;
   return { success: true, resetTime: data.resetTime };
+}
+
+export function secureRandomInt(min: number, maxExclusive: number): number {
+  if (!Number.isSafeInteger(min) || !Number.isSafeInteger(maxExclusive) || maxExclusive <= min) {
+    throw new Error('Invalid secure random integer bounds.');
+  }
+
+  const range = maxExclusive - min;
+  const max = 0xffffffff;
+  const limit = max - (max % range);
+  const values = new Uint32Array(1);
+
+  do {
+    crypto.getRandomValues(values);
+  } while (values[0] >= limit);
+
+  return min + (values[0] % range);
+}
+
+export function generateSecurePassword(length = 12): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%&*';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(secureRandomInt(0, chars.length));
+  }
+  return password;
 }
 
 // Verify Authorization and Role (Authentication and Authorization for APIs)

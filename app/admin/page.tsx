@@ -165,7 +165,7 @@ export default function AdminDashboardHome() {
           });
         }
 
-        const newLeadsList = leadsList.filter((l: any) => l.status === 'new' || l.status === 'processing' || l.status === 'followup');
+        const newLeadsList = leadsList.filter((l: any) => l.status === 'new' || l.status === 'contacted' || l.status === 'processing' || l.status === 'followup');
         if (newLeadsList.length > 0) {
           const latestLead = newLeadsList[0];
           dbActivities.push({

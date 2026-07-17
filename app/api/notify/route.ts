@@ -336,7 +336,7 @@ export async function POST(request: NextRequest) {
   } catch (err: any) {
     console.error('[Notify API] Internal Error:', err);
     return NextResponse.json(
-      { error: err.message || String(err) },
+      { error: 'Internal server error.' },
       { status: 500 }
     );
   }

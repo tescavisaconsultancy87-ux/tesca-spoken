@@ -17,6 +17,8 @@ import {
   AlertDialogClose,
 } from '@/components/animate-ui/primitives/base/alert-dialog';
 
+type LeadStatus = 'new' | 'contacted' | 'processing' | 'followup' | 'converted' | 'rejected';
+
 interface Lead {
   id: string;
   name: string;
@@ -24,8 +26,67 @@ interface Lead {
   email: string;
   notes: string;
   source?: string;
-  status: 'new' | 'contacted' | 'processing' | 'followup' | 'converted' | 'rejected';
+  status: LeadStatus;
   dateAdded: string;
+}
+
+const LEAD_STATUS_OPTIONS: Array<{
+  value: LeadStatus;
+  label: string;
+  borderClass: string;
+  badgeClass: string;
+  activeButtonClass: string;
+}> = [
+  {
+    value: 'new',
+    label: 'New',
+    borderClass: 'border-l-4 border-l-secondary',
+    badgeClass: 'bg-gray-105 text-gray-500 border border-gray-200',
+    activeButtonClass: 'bg-gray-100 text-gray-600 border-gray-300',
+  },
+  {
+    value: 'contacted',
+    label: 'Contacted',
+    borderClass: 'border-l-4 border-l-indigo-500',
+    badgeClass: 'bg-indigo-50 text-indigo-600',
+    activeButtonClass: 'bg-indigo-50 text-indigo-600 border-indigo-200',
+  },
+  {
+    value: 'processing',
+    label: 'Processing',
+    borderClass: 'border-l-4 border-l-blue-500',
+    badgeClass: 'bg-blue-50 text-blue-600',
+    activeButtonClass: 'bg-blue-50 text-blue-600 border-blue-200',
+  },
+  {
+    value: 'followup',
+    label: 'Follow-up',
+    borderClass: 'border-l-4 border-l-amber-500',
+    badgeClass: 'bg-amber-50 text-amber-600',
+    activeButtonClass: 'bg-amber-50 text-amber-600 border-amber-200',
+  },
+  {
+    value: 'converted',
+    label: 'Converted',
+    borderClass: 'border-l-4 border-l-emerald-500',
+    badgeClass: 'bg-emerald-50 text-emerald-600',
+    activeButtonClass: 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  },
+  {
+    value: 'rejected',
+    label: 'Rejected',
+    borderClass: 'border-l-4 border-l-rose-500',
+    badgeClass: 'bg-rose-50 text-rose-600',
+    activeButtonClass: 'bg-rose-50 text-rose-600 border-rose-200',
+  },
+];
+
+function getLeadStatusMeta(status: LeadStatus) {
+  return LEAD_STATUS_OPTIONS.find((option) => option.value === status) || LEAD_STATUS_OPTIONS[0];
+}
+
+function normalizeLeadStatus(status: string | null | undefined): LeadStatus {
+  return LEAD_STATUS_OPTIONS.some((option) => option.value === status) ? status as LeadStatus : 'new';
 }
 
 function parseLeadNotes(notes: string) {
@@ -52,6 +113,8 @@ export default function AdminLeadsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
+  const [statusError, setStatusError] = useState('');
 
   // Edit & Delete states
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -173,7 +236,7 @@ export default function AdminLeadsPage() {
           email: l.email || '',
           notes: cleanNotes,
           source: source,
-          status: l.status as any,
+          status: normalizeLeadStatus(l.status),
           dateAdded: l.date_added,
         };
       });
@@ -183,14 +246,28 @@ export default function AdminLeadsPage() {
     load();
   }, []);
 
-  const handleUpdateStatus = async (id: string, status: 'processing' | 'followup' | 'converted' | 'rejected') => {
-    await db.updateLeadStatus(id, status);
-    setLeads(leads.map((l) => (l.id === id ? { ...l, status } : l)));
+  const handleUpdateStatus = async (id: string, status: LeadStatus) => {
+    const previousLeads = leads;
+    setStatusError('');
+    setUpdatingStatusId(id);
+    setLeads(previousLeads.map((l) => (l.id === id ? { ...l, status } : l)));
+
+    const updated = await db.updateLeadStatus(id, status);
+    if (!updated) {
+      setLeads(previousLeads);
+      setStatusError('Could not update the lead status. Please try again.');
+    }
+    setUpdatingStatusId(null);
   };
 
+  const normalizedSearchQuery = searchQuery.toLowerCase();
   const filteredLeads = leads.filter((l) =>
-    l.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    l.notes.toLowerCase().includes(searchQuery.toLowerCase())
+    l.name.toLowerCase().includes(normalizedSearchQuery) ||
+    l.phone.toLowerCase().includes(normalizedSearchQuery) ||
+    l.email.toLowerCase().includes(normalizedSearchQuery) ||
+    l.notes.toLowerCase().includes(normalizedSearchQuery) ||
+    (l.source || '').toLowerCase().includes(normalizedSearchQuery) ||
+    getLeadStatusMeta(l.status).label.toLowerCase().includes(normalizedSearchQuery)
   );
 
   return (
@@ -200,6 +277,12 @@ export default function AdminLeadsPage() {
         <h1 className="text-2xl font-extrabold text-gray-800 tracking-tight">Leads & Inquiries</h1>
         <p className="text-xs text-gray-400 font-semibold mt-0.5">Follow up on call inquiries, demo test takers, and level evaluation submissions</p>
       </div>
+
+      {statusError && (
+        <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-600">
+          {statusError}
+        </div>
+      )}
 
       {/* Filter toolbar */}
       <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 w-full md:w-[280px] shadow-soft">
@@ -215,20 +298,14 @@ export default function AdminLeadsPage() {
 
       {/* Leads list cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {filteredLeads.map((lead, index) => (
+        {filteredLeads.map((lead, index) => {
+          const statusMeta = getLeadStatusMeta(lead.status);
+          const isUpdatingStatus = updatingStatusId === lead.id;
+
+          return (
           <div
             key={lead.id || index}
-            className={`bg-white border rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col justify-between space-y-4 ${
-              lead.status === 'processing'
-                ? 'border-l-4 border-l-blue-500'
-                : lead.status === 'followup'
-                ? 'border-l-4 border-l-amber-500'
-                : lead.status === 'converted'
-                ? 'border-l-4 border-l-emerald-500'
-                : lead.status === 'rejected'
-                ? 'border-l-4 border-l-rose-500'
-                : 'border-l-4 border-l-secondary'
-            }`}
+            className={`bg-white border rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all duration-300 flex flex-col justify-between space-y-4 ${statusMeta.borderClass}`}
           >
             <div className="space-y-3">
               <div className="flex justify-between items-start">
@@ -237,22 +314,8 @@ export default function AdminLeadsPage() {
                   <p className="text-[10px] text-gray-400 mt-0.5">Registered: {lead.dateAdded}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${
-                      lead.status === 'processing'
-                        ? 'bg-blue-50 text-blue-600'
-                        : lead.status === 'followup'
-                        ? 'bg-amber-50 text-amber-600'
-                        : lead.status === 'converted'
-                        ? 'bg-emerald-50 text-emerald-600'
-                        : lead.status === 'rejected'
-                        ? 'bg-rose-50 text-rose-600'
-                        : lead.status === 'contacted'
-                        ? 'bg-indigo-50 text-indigo-600'
-                        : 'bg-gray-105 text-gray-500 border border-gray-200' // 'new'
-                    }`}
-                  >
-                    {lead.status}
+                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider ${statusMeta.badgeClass}`}>
+                    {statusMeta.label}
                   </span>
                   <button
                     onClick={() => handleOpenEditModal(lead)}
@@ -290,53 +353,36 @@ export default function AdminLeadsPage() {
             </div>
 
             {/* CTAs */}
-            <div className="pt-3 border-t border-gray-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-bold">
+            <div className="pt-3 border-t border-gray-55 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs font-bold">
               <span className="text-[10px] text-gray-450 uppercase tracking-wider">Pipeline Stage:</span>
               <div className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => handleUpdateStatus(lead.id, 'processing')}
-                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
-                    lead.status === 'processing'
-                      ? 'bg-blue-50 text-blue-600 border-blue-200'
-                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  Processing
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(lead.id, 'followup')}
-                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
-                    lead.status === 'followup'
-                      ? 'bg-amber-50 text-amber-600 border-amber-200'
-                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  Follow-up
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(lead.id, 'converted')}
-                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
-                    lead.status === 'converted'
-                      ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  Converted
-                </button>
-                <button
-                  onClick={() => handleUpdateStatus(lead.id, 'rejected')}
-                  className={`px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider ${
-                    lead.status === 'rejected'
-                      ? 'bg-rose-50 text-rose-600 border-rose-200'
-                      : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
-                  }`}
-                >
-                  Rejected
-                </button>
+                {LEAD_STATUS_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    disabled={isUpdatingStatus}
+                    onClick={() => handleUpdateStatus(lead.id, option.value)}
+                    className={`min-w-[82px] px-3 py-1.5 rounded-lg border text-[10px] font-bold transition-all cursor-pointer uppercase tracking-wider disabled:cursor-wait disabled:opacity-60 ${
+                      lead.status === option.value
+                        ? option.activeButtonClass
+                        : 'bg-white border-gray-150 text-gray-500 hover:bg-gray-50'
+                    }`}
+                  >
+                    {isUpdatingStatus && lead.status === option.value ? (
+                      <span className="flex items-center justify-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        {option.label}
+                      </span>
+                    ) : (
+                      option.label
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Edit Lead Modal */}
@@ -347,7 +393,8 @@ export default function AdminLeadsPage() {
           editingLead.phone === originalLead.phone &&
           editingLead.email === (originalLead.email || '') &&
           editingLead.notes === (originalLead.notes || '') &&
-          editingLead.status === originalLead.status
+          editingLead.status === originalLead.status &&
+          (editingLead.source || '') === (originalLead.source || '')
         ) : false;
 
         return editingLead && (
@@ -415,15 +462,12 @@ export default function AdminLeadsPage() {
                   <label className="text-xs font-bold text-gray-500">Lead Status</label>
                   <select
                     value={editingLead.status}
-                    onChange={(e) => setEditingLead({ ...editingLead, status: e.target.value as any })}
+                    onChange={(e) => setEditingLead({ ...editingLead, status: e.target.value as LeadStatus })}
                     className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                   >
-                    <option value="new">New</option>
-                    <option value="contacted">Contacted</option>
-                    <option value="processing">Processing</option>
-                    <option value="followup">Follow-up</option>
-                    <option value="converted">Converted</option>
-                    <option value="rejected">Rejected</option>
+                    {LEAD_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
 
