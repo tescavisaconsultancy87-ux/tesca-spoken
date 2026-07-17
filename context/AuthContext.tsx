@@ -273,6 +273,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    if (typeof window !== 'undefined' && !window.confirm('Are you sure you want to log out?')) {
+      return;
+    }
     if (supabase) {
       await supabase.auth.signOut();
     } else {
