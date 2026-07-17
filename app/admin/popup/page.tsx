@@ -44,7 +44,15 @@ export default function PromoPopupAdminPage() {
   useEffect(() => {
     async function load() {
       try {
-        const response = await fetch('/api/admin/popup');
+        const headers: Record<string, string> = {};
+        await ensureSupabaseClient();
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+        }
+        const response = await fetch('/api/admin/popup', { headers });
         if (response.ok) {
           const data = await response.json();
           setPopups(data);
@@ -122,9 +130,17 @@ export default function PromoPopupAdminPage() {
     if (!window.confirm('Are you sure you want to delete this promotional popup?')) return;
 
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      await ensureSupabaseClient();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
       const response = await fetch('/api/admin/popup', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ id }),
       });
 
@@ -199,9 +215,18 @@ export default function PromoPopupAdminPage() {
       const url = '/api/admin/popup';
       const method = editingId ? 'PATCH' : 'POST';
 
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      await ensureSupabaseClient();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
       const response = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(payload),
       });
 
