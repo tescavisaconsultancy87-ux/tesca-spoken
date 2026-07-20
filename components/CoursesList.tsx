@@ -298,14 +298,22 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
                       <a
                         href="/courses#curriculum"
                         onClick={(e) => {
+                          e.preventDefault();
                           if (onSelectCurriculum) {
                             onSelectCurriculum(course);
                           }
-                          const el = document.getElementById('curriculum');
-                          if (el) {
-                            e.preventDefault();
-                            el.scrollIntoView({ behavior: 'smooth' });
-                          }
+                          setTimeout(() => {
+                            const el = document.getElementById('curriculum');
+                            if (el) {
+                              const headerOffset = 90;
+                              const elementPosition = el.getBoundingClientRect().top;
+                              const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                              window.scrollTo({
+                                top: offsetPosition,
+                                behavior: 'smooth',
+                              });
+                            }
+                          }, 50);
                         }}
                         className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F766E] hover:text-[#0b544e] transition-colors cursor-pointer"
                       >

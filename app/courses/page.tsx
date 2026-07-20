@@ -331,16 +331,40 @@ export default function CoursesPage() {
   }, [courses, expandedCurriculum]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.hash === '#curriculum') {
-      const timer = setTimeout(() => {
-        const el = document.getElementById('curriculum');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
+    if (!loadingCourses && typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      const urlParams = new URLSearchParams(window.location.search);
+      const selectedCourseParam = urlParams.get('course') || urlParams.get('select');
+
+      if (selectedCourseParam && courses.length > 0) {
+        const idx = courses.findIndex(
+          (c) =>
+            c.id === selectedCourseParam ||
+            c.title.toLowerCase() === selectedCourseParam.toLowerCase() ||
+            c.title.toLowerCase().replace(/\s+/g, '-').includes(selectedCourseParam.toLowerCase())
+        );
+        if (idx !== -1) {
+          setExpandedCurriculum(idx);
         }
-      }, 150);
-      return () => clearTimeout(timer);
+      }
+
+      if (hash === '#curriculum' || selectedCourseParam) {
+        const timer = setTimeout(() => {
+          const el = document.getElementById('curriculum');
+          if (el) {
+            const headerOffset = 90;
+            const elementPosition = el.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            window.scrollTo({
+              top: offsetPosition,
+              behavior: 'smooth',
+            });
+          }
+        }, 150);
+        return () => clearTimeout(timer);
+      }
     }
-  }, []);
+  }, [loadingCourses, courses]);
 
   useEffect(() => {
     async function loadTrainers() {
@@ -715,6 +739,18 @@ export default function CoursesPage() {
                   if (idx !== -1) {
                     setExpandedCurriculum(idx);
                   }
+                  setTimeout(() => {
+                    const el = document.getElementById('curriculum');
+                    if (el) {
+                      const headerOffset = 90;
+                      const elementPosition = el.getBoundingClientRect().top;
+                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                      window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth',
+                      });
+                    }
+                  }, 50);
                 }}
               />
             </div>
@@ -767,7 +803,7 @@ export default function CoursesPage() {
         </section>
 
         {/* ── Curriculum Overview ── */}
-        <section id="curriculum" className="py-20 lg:py-28 bg-bg-soft">
+        <section id="curriculum" className="py-20 lg:py-28 bg-bg-soft scroll-mt-20 lg:scroll-mt-24">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
