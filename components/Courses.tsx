@@ -267,7 +267,7 @@ export default function Courses() {
                             {/* View Full Curriculum Link */}
                             <div className="mt-3.5">
                               <a
-                                href="#curriculum"
+                                href="/courses#curriculum"
                                 onClick={(e) => {
                                   const el = document.getElementById('curriculum');
                                   if (el) {
@@ -275,7 +275,7 @@ export default function Courses() {
                                     el.scrollIntoView({ behavior: 'smooth' });
                                   }
                                 }}
-                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F766E] hover:text-[#0b544e] transition-colors"
+                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F766E] hover:text-[#0b544e] transition-colors cursor-pointer"
                               >
                                 View Full Curriculum
                                 <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />

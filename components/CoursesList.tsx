@@ -29,6 +29,7 @@ interface CoursesListProps {
   courses?: ClientCourse[];
   loading?: boolean;
   onEnroll?: (course: ClientCourse) => void;
+  onSelectCurriculum?: (course: ClientCourse) => void;
 }
 
 // Difficulty helper — determines the difficulty label from the course TITLE
@@ -124,7 +125,7 @@ function getCourseMeta(courseId: string, courseTitle: string) {
   };
 }
 
-export default function CoursesList({ courses: propCourses, loading: propLoading, onEnroll }: CoursesListProps) {
+export default function CoursesList({ courses: propCourses, loading: propLoading, onEnroll, onSelectCurriculum }: CoursesListProps) {
   const [internalCourses, setInternalCourses] = useState<ClientCourse[]>([]);
   const [internalLoading, setInternalLoading] = useState(true);
   const { openModal } = useDemoModal();
@@ -295,15 +296,18 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
                     {/* View Full Curriculum Link */}
                     <div className="mt-3.5">
                       <a
-                        href="#curriculum"
+                        href="/courses#curriculum"
                         onClick={(e) => {
+                          if (onSelectCurriculum) {
+                            onSelectCurriculum(course);
+                          }
                           const el = document.getElementById('curriculum');
                           if (el) {
                             e.preventDefault();
                             el.scrollIntoView({ behavior: 'smooth' });
                           }
                         }}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F766E] hover:text-[#0b544e] transition-colors"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F766E] hover:text-[#0b544e] transition-colors cursor-pointer"
                       >
                         View Full Curriculum
                         <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />

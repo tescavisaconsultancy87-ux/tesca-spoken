@@ -331,6 +331,18 @@ export default function CoursesPage() {
   }, [courses, expandedCurriculum]);
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash === '#curriculum') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('curriculum');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  useEffect(() => {
     async function loadTrainers() {
       try {
         const data = await db.getTrainers();
@@ -698,6 +710,12 @@ export default function CoursesPage() {
                 })} 
                 loading={loadingCourses} 
                 onEnroll={handleEnroll} 
+                onSelectCurriculum={(selectedCourse) => {
+                  const idx = courses.findIndex(c => c.id === selectedCourse.id || c.title.toLowerCase() === selectedCourse.title.toLowerCase());
+                  if (idx !== -1) {
+                    setExpandedCurriculum(idx);
+                  }
+                }}
               />
             </div>
           </div>
@@ -749,7 +767,7 @@ export default function CoursesPage() {
         </section>
 
         {/* ── Curriculum Overview ── */}
-        <section className="py-20 lg:py-28 bg-bg-soft">
+        <section id="curriculum" className="py-20 lg:py-28 bg-bg-soft">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
