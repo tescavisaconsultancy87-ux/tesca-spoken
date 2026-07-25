@@ -58,7 +58,7 @@ export default function Hero() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
             
             {/* Left Column: Typography & CTA */}
-            <div className="lg:col-span-6 xl:col-span-5 max-w-md sm:max-w-lg lg:max-w-xl space-y-7 text-left order-1 lg:order-1 z-10">
+            <div className="lg:col-span-6 xl:col-span-5 max-w-md sm:max-w-lg lg:max-w-xl space-y-2 text-left order-1 lg:order-1 z-10">
               
               {/* Eyebrow Tag */}
               <div className="inline-flex">
@@ -69,10 +69,9 @@ export default function Hero() {
 
               {/* Heading */}
               <h1 className="font-heading text-3xl sm:text-4xl lg:text-[44px] xl:text-[52px] font-extrabold leading-[1.15] lg:leading-[1.2] tracking-tight text-white lg:text-slate-900">
-                Speak English Confidently. <br className="hidden sm:inline" />
-                Shape Your{' '}
+                Speak English Confidently <br className="hidden sm:inline" />
                 <span className="relative inline-block text-secondary lg:text-primary whitespace-nowrap">
-                  Bright Future.
+                  Today.
                   {/* Custom hand-drawn SVG wave underline */}
                   <svg
                     className="absolute -bottom-2.5 left-0 w-full h-3 text-secondary lg:text-primary pointer-events-none select-none"
