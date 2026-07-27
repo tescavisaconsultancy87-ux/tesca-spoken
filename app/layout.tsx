@@ -6,6 +6,7 @@ import AlertOverlay from '@/components/AlertOverlay';
 import PromoPopup from '@/components/PromoPopup';
 import { DemoModalProvider } from '@/context/DemoModalContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { ToastProvider } from '@/context/ToastContext';
 import ScrollToTop from '@/components/ScrollToTop';
 
 const poppins = Poppins({
@@ -147,24 +148,26 @@ export default function RootLayout({
           }}
         />
         <ScrollToTop />
-        <AuthProvider>
-          <DemoModalProvider>
-            {/* Offer banner sits above everything, including the navbar */}
-            <OfferBanner />
-            <AlertOverlay />
-            <PromoPopup />
-            {children}
-            {/* ─── Bot Honeypot: invisible to users, traps AI crawlers ─── */}
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional: crawlers follow raw <a>, not <Link> */}
-            <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
-              <a href="/bot-labyrinth/honeypot/admin-panel">Admin</a>
-              <a href="/bot-labyrinth/honeypot/wp-admin">Dashboard</a>
-              <a href="/bot-labyrinth/honeypot/sitemap-private">Sitemap</a>
-              <a href="/bot-labyrinth/honeypot/.env">Config</a>
-              <a href="/bot-labyrinth/honeypot/backup.sql">Backup</a>
-            </div>
-          </DemoModalProvider>
-        </AuthProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <DemoModalProvider>
+              {/* Offer banner sits above everything, including the navbar */}
+              <OfferBanner />
+              <AlertOverlay />
+              <PromoPopup />
+              {children}
+              {/* ─── Bot Honeypot: invisible to users, traps AI crawlers ─── */}
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional: crawlers follow raw <a>, not <Link> */}
+              <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
+                <a href="/bot-labyrinth/honeypot/admin-panel">Admin</a>
+                <a href="/bot-labyrinth/honeypot/wp-admin">Dashboard</a>
+                <a href="/bot-labyrinth/honeypot/sitemap-private">Sitemap</a>
+                <a href="/bot-labyrinth/honeypot/.env">Config</a>
+                <a href="/bot-labyrinth/honeypot/backup.sql">Backup</a>
+              </div>
+            </DemoModalProvider>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

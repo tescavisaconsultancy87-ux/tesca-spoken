@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, memo, ComponentType } from 'react';
 import { CalendarCheck, Users, GraduationCap, TrendingUp, ShieldCheck, Phone, PhoneCall, CheckCircle2 } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
+import { useToast } from '@/context/ToastContext';
 import { useCounter } from '@/hooks/useCounter';
 import { useReveal } from '@/hooks/useReveal';
 
@@ -40,17 +41,15 @@ const STATS_DATA = [
 
 export default function Hero() {
   const { openModal } = useDemoModal();
+  const { toast } = useToast();
   const [quickPhone, setQuickPhone] = useState('');
   const [quickLoading, setQuickLoading] = useState(false);
-  const [quickSuccess, setQuickSuccess] = useState(false);
-  const [quickError, setQuickError] = useState('');
 
   const handleQuickSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setQuickError('');
     const cleaned = quickPhone.replace(/\D/g, '');
     if (cleaned.length !== 10) {
-      setQuickError('Please enter a valid 10-digit mobile number.');
+      toast.error('Please enter a valid 10-digit mobile number.', 'Invalid Phone Number');
       return;
     }
     setQuickLoading(true);
@@ -62,21 +61,21 @@ export default function Hero() {
           type: 'demo',
           name: 'Website Call Request',
           phone: cleaned,
-          email: `${cleaned}@phone.tesca.co`,
+          email: '',
           course: 'General Spoken English',
           timeSlot: 'Flexible',
           learningMode: 'Online — Zoom / Meet',
         }),
       });
       if (res.ok) {
-        setQuickSuccess(true);
+        toast.success('Our counselor will call you back in a while.', 'Request Received! 🎉', 6000);
         setQuickPhone('');
       } else {
         const data = await res.json();
-        setQuickError(data.error || 'Failed to submit call request.');
+        toast.error(data.error || 'Failed to submit call request.', 'Submission Failed');
       }
     } catch (err) {
-      setQuickError('Something went wrong. Please try again.');
+      toast.error('Something went wrong. Please try again.', 'Error');
     } finally {
       setQuickLoading(false);
     }
@@ -160,30 +159,17 @@ export default function Hero() {
                   </button>
                 </form>
 
-                {quickError && (
-                  <p className="text-xs font-semibold text-red-400 bg-red-950/40 border border-red-500/30 rounded-xl p-2.5 max-w-lg">
-                    {quickError}
-                  </p>
-                )}
-
-                {quickSuccess ? (
-                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-3 max-w-lg">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span>Request received! Our counselor will call you back in a while.</span>
-                  </div>
-                ) : (
-                  <p className="text-[11px] font-medium text-slate-300 lg:text-slate-500 flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                    <span>Our team will call you back in a while. Or</span>
-                    <button
-                      type="button"
-                      onClick={openModal}
-                      className="font-bold text-secondary lg:text-primary hover:underline cursor-pointer ml-0.5"
-                    >
-                      Book Free Demo Class →
-                    </button>
-                  </p>
-                )}
+                <p className="text-[11px] font-medium text-slate-300 lg:text-slate-500 flex items-center gap-1.5 pt-1">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span>Our team will call you back in a while. Or</span>
+                  <button
+                    type="button"
+                    onClick={openModal}
+                    className="font-bold text-secondary lg:text-primary hover:underline cursor-pointer ml-0.5"
+                  >
+                    Book Free Demo Class →
+                  </button>
+                </p>
               </div>
 
             </div>

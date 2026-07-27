@@ -26,11 +26,14 @@ import {
   DropdownMenuItem,
 } from '@/components/animate-ui/primitives/radix/dropdown-menu';
 
+import { useToast } from '@/context/ToastContext';
+
 interface DemoModalProps {
   onClose: () => void;
 }
 
 export default function DemoModal({ onClose }: DemoModalProps) {
+  const { toast } = useToast();
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -91,14 +94,16 @@ export default function DemoModal({ onClose }: DemoModalProps) {
     // Phone validation: must be exactly 10 digits
     const cleanedPhone = form.phone.replace(/\D/g, '');
     if (cleanedPhone.length !== 10) {
-      setError('Phone number must be exactly 10 digits.');
+      const errMsg = 'Phone number must be exactly 10 digits.';
+      setError(errMsg);
+      toast.error(errMsg, 'Validation Error');
       return;
     }
 
     setLoading(true);
 
     const nameValue = form.name.trim() || 'Prospective Student';
-    const emailValue = form.email.trim() || `${cleanedPhone}@phone.tesca.co`;
+    const emailValue = form.email.trim();
     const courseValue = form.course || 'General Spoken English';
     const timeValue = form.time || 'Flexible';
     const modeValue = form.mode || 'Online — Zoom / Meet';
@@ -127,9 +132,12 @@ export default function DemoModal({ onClose }: DemoModalProps) {
       }
 
       setSubmitted(true);
+      toast.success('Our support team will call you back in a while to schedule your free demo class.', 'Demo Request Sent! 🎉', 6000);
     } catch (err: any) {
       console.error('Demo submit error:', err);
-      setError(err.message || 'An unexpected error occurred. Please try again.');
+      const errMsg = err.message || 'An unexpected error occurred. Please try again.';
+      setError(errMsg);
+      toast.error(errMsg, 'Submission Failed');
     } finally {
       setLoading(false);
     }

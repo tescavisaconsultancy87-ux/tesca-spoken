@@ -19,9 +19,9 @@ export async function POST(request: NextRequest) {
     const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle, course } = body;
 
     // 1. Basic validation
-    if (!type || !name || (type !== 'assessment' && type !== 'popup' && !email)) {
+    if (!type || !name) {
       return NextResponse.json(
-        { error: 'Lead type, name, and email are required.' },
+        { error: 'Lead type and name are required.' },
         { status: 400 }
       );
     }
@@ -339,8 +339,18 @@ export async function POST(request: NextRequest) {
         `;
       }
 
-      // Send student confirmation email if email is provided
-      if (email && email !== 'N/A' && studentEmailSubject) {
+      // Only send student confirmation email if email is a real external address
+      const isRealEmail =
+        email &&
+        email !== 'N/A' &&
+        email.includes('@') &&
+        email.includes('.') &&
+        !email.endsWith('@phone.tesca.co') &&
+        !email.endsWith('@lead.tesca.co') &&
+        !email.endsWith('@dummy.com') &&
+        !email.endsWith('@example.com');
+
+      if (isRealEmail && studentEmailSubject) {
         const studentResult = await sendEmail(email, studentEmailSubject, studentEmailHtml);
         if (studentResult.success) {
           studentEmailSent = true;
