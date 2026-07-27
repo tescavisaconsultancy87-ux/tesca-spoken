@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Image from 'next/image';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
+import { useTracking } from '@/hooks/useTracking';
 import { WHATSAPP_URL } from '@/lib/data/content';
 import {
   Mail,
@@ -85,6 +86,7 @@ export default function ContactPage() {
     type: 'Suggestion',
     message: '',
   });
+  const { getLeadEnrichment, trackEvent } = useTracking();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -94,6 +96,7 @@ export default function ContactPage() {
     setLoading(true);
     setError('');
 
+    const enrichment = getLeadEnrichment();
     try {
       const response = await fetch('/api/leads', {
         method: 'POST',
@@ -106,6 +109,7 @@ export default function ContactPage() {
           email: form.email,
           topic: form.type,
           message: form.message,
+          ...enrichment,
         }),
       });
 
@@ -116,6 +120,7 @@ export default function ContactPage() {
       }
 
       setSubmitted(true);
+      trackEvent('lead_form_submit', { formType: 'contact', topic: form.type });
     } catch (err: any) {
       console.error('Contact submit error:', err);
       setError(err.message || 'An unexpected error occurred. Please try again.');

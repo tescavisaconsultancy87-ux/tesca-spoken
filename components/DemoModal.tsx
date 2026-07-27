@@ -27,6 +27,7 @@ import {
 } from '@/components/animate-ui/primitives/radix/dropdown-menu';
 
 import { useToast } from '@/context/ToastContext';
+import { useTracking } from '@/hooks/useTracking';
 
 interface DemoModalProps {
   onClose: () => void;
@@ -34,6 +35,7 @@ interface DemoModalProps {
 
 export default function DemoModal({ onClose }: DemoModalProps) {
   const { toast } = useToast();
+  const { getLeadEnrichment, trackEvent } = useTracking();
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -109,6 +111,8 @@ export default function DemoModal({ onClose }: DemoModalProps) {
     const modeValue = form.mode || 'Online — Zoom / Meet';
 
     try {
+      const enrichment = getLeadEnrichment();
+
       const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
@@ -122,6 +126,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
           course: courseValue,
           timeSlot: timeValue,
           learningMode: modeValue,
+          ...enrichment,
         }),
       });
 
@@ -132,6 +137,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
       }
 
       setSubmitted(true);
+      trackEvent('lead_form_submit', { formType: 'demo', course: courseValue });
       toast.success('Our support team will call you back in a while to schedule your free demo class.', 'Demo Request Sent! 🎉', 6000);
     } catch (err: any) {
       console.error('Demo submit error:', err);

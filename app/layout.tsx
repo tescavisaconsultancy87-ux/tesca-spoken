@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Poppins, Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import OfferBanner from '@/components/OfferBanner';
 import AlertOverlay from '@/components/AlertOverlay';
@@ -8,6 +9,10 @@ import { DemoModalProvider } from '@/context/DemoModalContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
 import ScrollToTop from '@/components/ScrollToTop';
+
+const GTM_ID = 'GTM-524RC24K';
+const GA_ID = 'G-XM5S1GJJXV';
+const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_ID || '';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -140,7 +145,41 @@ export default function RootLayout({
 
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
+      <head>
+        {/* Google Tag Manager */}
+        <Script id="gtm-script" strategy="afterInteractive">
+          {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+          new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+          j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+          'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+          })(window,document,'script','dataLayer','${GTM_ID}');`}
+        </Script>
+        {/* Google tag (gtag.js) */}
+        <Script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
+        <Script id="ga4-init">
+          {`window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_ID}');`}
+        </Script>
+      </head>
       <body className="font-body text-ink antialiased overflow-x-hidden">
+        {/* Google Tag Manager (noscript) */}
+        <noscript>
+          <iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0" width="0" style={{ display: 'none', visibility: 'hidden' }}
+          />
+        </noscript>
+        {/* Microsoft Clarity */}
+        {CLARITY_ID && (
+          <Script id="clarity" strategy="afterInteractive">
+            {`(function(c,l,a,r,i,t,y){
+              c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+              t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+              y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+            })(window, document, "clarity", "script", "${CLARITY_ID}");`}
+          </Script>
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

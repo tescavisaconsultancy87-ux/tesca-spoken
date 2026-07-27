@@ -6,6 +6,7 @@ import { useDemoModal } from '@/context/DemoModalContext';
 import { useToast } from '@/context/ToastContext';
 import { useCounter } from '@/hooks/useCounter';
 import { useReveal } from '@/hooks/useReveal';
+import { useTracking } from '@/hooks/useTracking';
 
 const STATS_DATA = [
   {
@@ -42,6 +43,7 @@ const STATS_DATA = [
 export default function Hero() {
   const { openModal } = useDemoModal();
   const { toast } = useToast();
+  const { getLeadEnrichment, trackEvent } = useTracking();
   const [quickPhone, setQuickPhone] = useState('');
   const [quickLoading, setQuickLoading] = useState(false);
 
@@ -53,6 +55,7 @@ export default function Hero() {
       return;
     }
     setQuickLoading(true);
+    const enrichment = getLeadEnrichment();
     try {
       const res = await fetch('/api/leads', {
         method: 'POST',
@@ -65,9 +68,11 @@ export default function Hero() {
           course: 'General Spoken English',
           timeSlot: 'Flexible',
           learningMode: 'Online — Zoom / Meet',
+          ...enrichment,
         }),
       });
       if (res.ok) {
+        trackEvent('lead_form_submit', { formType: 'hero_quick_call' });
         toast.success('Our counselor will call you back in a while.', 'Request Received! 🎉', 6000);
         setQuickPhone('');
       } else {

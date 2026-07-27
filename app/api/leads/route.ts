@@ -5,18 +5,21 @@ import { checkRateLimit, formatFriendlyError } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Rate Limiting check (Max 5 leads/min)
-    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
-    const rateCheck = checkRateLimit(ip, 5, 60000);
+    // 1. Rate Limiting check (Max 10 leads/min, using Cloudflare IP)
+    const ip = request.headers.get('cf-connecting-ip')
+      || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+      || request.headers.get('x-real-ip')
+      || '127.0.0.1';
+    const rateCheck = checkRateLimit(ip, 10, 60000);
     if (!rateCheck.success) {
       return NextResponse.json(
-        { error: 'Too many submissions. Please wait a minute before submitting again.' },
+        { error: 'Too many submissions. Please wait a moment before submitting again.' },
         { status: 429 }
       );
     }
 
     const body = await request.json();
-    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle, course } = body;
+    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle, course, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, page_url } = body;
 
     // 1. Basic validation
     if (!type || !name) {
@@ -167,7 +170,14 @@ export async function POST(request: NextRequest) {
         email: email || 'N/A',
         notes,
         status: 'new',
-        date_added: dateAdded
+        date_added: dateAdded,
+        utm_source: utm_source || null,
+        utm_medium: utm_medium || null,
+        utm_campaign: utm_campaign || null,
+        utm_term: utm_term || null,
+        utm_content: utm_content || null,
+        referrer: referrer || null,
+        page_url: page_url || null,
       });
 
       if (dbError) {
