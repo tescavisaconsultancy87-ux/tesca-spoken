@@ -42,7 +42,9 @@ export default function Navbar() {
     >
       <nav className="container-x flex h-14 items-center justify-between py-2 lg:h-16">
         <Link href="/" className="group flex items-center gap-2" aria-label="TESCA home">
-          <Image src="/Tesca_logo.png" alt="TESCA Logo" width={150} height={36} priority style={{ width: 'auto' }} className="h-8 lg:h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]" />
+          <div className="bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-black/5 shadow-soft-sm group-hover:shadow-soft transition-all duration-300 flex items-center">
+            <Image src="/Tesca_logo.png" alt="TESCA Logo" width={160} height={40} priority style={{ width: 'auto' }} className="h-9 lg:h-10 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02]" />
+          </div>
         </Link>
 
         {/* Desktop nav */}
