@@ -1,133 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowRight, HelpCircle, Award, BookOpen, MessageCircle, RotateCcw, Loader2 } from 'lucide-react';
-
-interface Question {
-  id: number;
-  text: string;
-  options: string[];
-  answer: number; // index of correct option
-}
-
-const QUESTIONS: Question[] = [
-  {
-    id: 1,
-    text: "Choose the correct sentence:",
-    options: [
-      "She don't like coffee in the morning.",
-      "She doesn't likes coffee in the morning.",
-      "She doesn't like coffee in the morning.",
-      "She not likes coffee in the morning."
-    ],
-    answer: 2
-  },
-  {
-    id: 2,
-    text: "Which word best completes: 'If it rains tomorrow, we _______ stay at home.'",
-    options: [
-      "would",
-      "will",
-      "are",
-      "have"
-    ],
-    answer: 1
-  },
-  {
-    id: 3,
-    text: "Identify the antonym of the word 'AMBIGUOUS':",
-    options: [
-      "Unclear",
-      "Vague",
-      "Precise",
-      "Cryptic"
-    ],
-    answer: 2
-  },
-  {
-    id: 4,
-    text: "Complete the idiom: 'By working hard, he finally got the ball _______.'",
-    options: [
-      "rolling",
-      "playing",
-      "spinning",
-      "moving"
-    ],
-    answer: 0
-  },
-  {
-    id: 5,
-    text: "Choose the correct past participle form: 'They have _______ all the juice.'",
-    options: [
-      "drank",
-      "drunk",
-      "drinked",
-      "drunken"
-    ],
-    answer: 1
-  },
-  {
-    id: 6,
-    text: "Which sentence uses the present perfect continuous tense correctly?",
-    options: [
-      "I am learning English for three years.",
-      "I learned English for three years.",
-      "I have been learning English for three years.",
-      "I have learned English for three years."
-    ],
-    answer: 2
-  },
-  {
-    id: 7,
-    text: "What does 'I am looking forward to meeting you' mean?",
-    options: [
-      "I am searching for you.",
-      "I am excited about our future meeting.",
-      "I am looking at your face.",
-      "I met you in the past."
-    ],
-    answer: 1
-  },
-  {
-    id: 8,
-    text: "Select the correct word: 'The company's new policy has had a major _______ on employee morale.'",
-    options: [
-      "affect",
-      "effect",
-      "effection",
-      "affection"
-    ],
-    answer: 1
-  },
-  {
-    id: 9,
-    text: "Complete: 'Had I known about the storm, I _______ stayed indoors.'",
-    options: [
-      "will have",
-      "would have",
-      "should",
-      "had"
-    ],
-    answer: 1
-  },
-  {
-    id: 10,
-    text: "What is the closest synonym to the word 'METICULOUS'?",
-    options: [
-      "Careless",
-      "Thorough",
-      "Quick",
-      "Lazy"
-    ],
-    answer: 1
-  }
-];
+import { Question, getRandomQuestions } from '@/lib/data/assessmentQuestions';
 
 export default function AssessmentPage() {
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [mounted, setMounted] = useState<boolean>(false);
   const [currentIdx, setCurrentIdx] = useState<number>(0);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [quizFinished, setQuizFinished] = useState<boolean>(false);
@@ -136,12 +19,17 @@ export default function AssessmentPage() {
   const [submittingLead, setSubmittingLead] = useState<boolean>(false);
   const [leadError, setLeadError] = useState<string>('');
 
+  useEffect(() => {
+    setQuestions(getRandomQuestions(10));
+    setMounted(true);
+  }, []);
+
   const handleSelectOption = (qId: number, optIdx: number) => {
     setAnswers(prev => ({ ...prev, [qId]: optIdx }));
   };
 
   const handleNext = () => {
-    if (currentIdx < QUESTIONS.length - 1) {
+    if (currentIdx < questions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
       setShowLeadModal(true);
@@ -155,6 +43,7 @@ export default function AssessmentPage() {
   };
 
   const handleRestart = () => {
+    setQuestions(getRandomQuestions(10));
     setCurrentIdx(0);
     setAnswers({});
     setQuizFinished(false);
@@ -177,7 +66,7 @@ export default function AssessmentPage() {
     setSubmittingLead(true);
 
     try {
-      const notesPayload = `Source: CEFR Assessment\nCEFR Level: ${cefrLevel}\nRecommended Course: ${courseRecommendation}\nCorrect Answers: ${totalCorrect}/${QUESTIONS.length}`;
+      const notesPayload = `Source: CEFR Assessment\nCEFR Level: ${cefrLevel}\nRecommended Course: ${courseRecommendation}\nCorrect Answers: ${totalCorrect}/${questions.length}`;
 
       const response = await fetch('/api/leads', {
         method: 'POST',
@@ -209,7 +98,7 @@ export default function AssessmentPage() {
   };
 
   // Compute Results
-  const totalCorrect = QUESTIONS.filter(q => answers[q.id] === q.answer).length;
+  const totalCorrect = questions.filter(q => answers[q.id] === q.answer).length;
   
   let cefrLevel = '';
   let courseRecommendation = '';
@@ -233,8 +122,8 @@ export default function AssessmentPage() {
     colorTheme = 'from-purple-50 to-fuchsia-50 border-purple-200 text-purple-700';
   }
 
-  const currentQuestion = QUESTIONS[currentIdx];
-  const progressPercent = Math.round(((currentIdx + 1) / QUESTIONS.length) * 100);
+  const currentQuestion = questions[currentIdx];
+  const progressPercent = questions.length > 0 ? Math.round(((currentIdx + 1) / questions.length) * 100) : 0;
 
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
@@ -266,117 +155,123 @@ export default function AssessmentPage() {
       <main className="flex-grow pt-40 pb-20 lg:pt-48 lg:pb-28 bg-gradient-to-b from-primary-50/20 via-white to-secondary-50/20">
         <div className="container-x max-w-4xl">
           
-          <AnimatePresence mode="wait">
-            {!quizFinished ? (
-              <motion.div
-                key="quiz"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-[2.5rem] border border-black/5 p-6 sm:p-12 shadow-soft-xl space-y-8"
-              >
-                {/* Header info */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest bg-primary-50 px-3 py-1 rounded-full">
-                      English Assessment Test
+          {!mounted || questions.length === 0 ? (
+            <div className="bg-white rounded-[2.5rem] border border-black/5 p-12 shadow-soft-xl flex flex-col items-center justify-center space-y-4 min-h-[400px]">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm font-semibold text-gray-500">Preparing your assessment test...</p>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              {!quizFinished ? (
+                <motion.div
+                  key="quiz"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-white rounded-[2.5rem] border border-black/5 p-6 sm:p-12 shadow-soft-xl space-y-8"
+                >
+                  {/* Header info */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-primary uppercase tracking-widest bg-primary-50 px-3 py-1 rounded-full">
+                        English Assessment Test
+                      </span>
+                      <h2 className="text-xl font-extrabold text-gray-800 tracking-tight leading-snug">
+                        Assess your CEFR Level
+                      </h2>
+                    </div>
+                    <span className="text-xs font-bold text-gray-400 self-start sm:self-center">
+                      Question {currentIdx + 1} of {questions.length}
                     </span>
-                    <h2 className="text-xl font-extrabold text-gray-800 tracking-tight leading-snug">
-                      Assess your CEFR Level
-                    </h2>
                   </div>
-                  <span className="text-xs font-bold text-gray-400 self-start sm:self-center">
-                    Question {currentIdx + 1} of {QUESTIONS.length}
-                  </span>
-                </div>
 
-                {/* Progress bar */}
-                <div className="space-y-1">
-                  <div className="h-2 w-full bg-gray-150 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary rounded-full transition-all duration-350"
-                      style={{ width: `${progressPercent}%` }}
-                    />
+                  {/* Progress bar */}
+                  <div className="space-y-1">
+                    <div className="h-2 w-full bg-gray-150 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary rounded-full transition-all duration-350"
+                        style={{ width: `${progressPercent}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Question body */}
-                <div className="space-y-6">
-                  <h3 className="font-heading text-lg sm:text-xl font-bold text-gray-800 flex gap-2">
-                    <HelpCircle className="h-6 w-6 text-primary shrink-0" />
-                    {currentQuestion.text}
-                  </h3>
+                  {/* Question body */}
+                  <div className="space-y-6">
+                    <h3 className="font-heading text-lg sm:text-xl font-bold text-gray-800 flex gap-2">
+                      <HelpCircle className="h-6 w-6 text-primary shrink-0" />
+                      {currentQuestion.text}
+                    </h3>
 
-                  <div className="grid gap-3">
-                    {currentQuestion.options.map((opt, optIdx) => {
-                      const isSelected = answers[currentQuestion.id] === optIdx;
-                      return (
-                        <button
-                          key={optIdx}
-                          type="button"
-                          onClick={() => handleSelectOption(currentQuestion.id, optIdx)}
-                          className={`w-full text-left p-4 rounded-2xl border text-xs sm:text-sm font-semibold transition-all flex items-center justify-between group cursor-pointer ${
-                            isSelected 
-                              ? 'border-primary bg-primary/5 text-primary shadow-soft' 
-                              : 'border-black/5 bg-bg-soft hover:bg-black/5 text-gray-700 hover:text-black'
-                          }`}
-                        >
-                          <span>{opt}</span>
-                          <div className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
-                            isSelected ? 'bg-primary border-primary text-white' : 'border-gray-300 bg-white group-hover:border-gray-400'
-                          }`}>
-                            {isSelected && <Check className="h-3.5 w-3.5" />}
-                          </div>
-                        </button>
-                      );
-                    })}
+                    <div className="grid gap-3">
+                      {currentQuestion.options.map((opt, optIdx) => {
+                        const isSelected = answers[currentQuestion.id] === optIdx;
+                        return (
+                          <button
+                            key={optIdx}
+                            type="button"
+                            onClick={() => handleSelectOption(currentQuestion.id, optIdx)}
+                            className={`w-full text-left p-4 rounded-2xl border text-xs sm:text-sm font-semibold transition-all flex items-center justify-between group cursor-pointer ${
+                              isSelected 
+                                ? 'border-primary bg-primary/5 text-primary shadow-soft' 
+                                : 'border-black/5 bg-bg-soft hover:bg-black/5 text-gray-700 hover:text-black'
+                            }`}
+                          >
+                            <span>{opt}</span>
+                            <div className={`h-5 w-5 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                              isSelected ? 'bg-primary border-primary text-white' : 'border-gray-300 bg-white group-hover:border-gray-400'
+                            }`}>
+                              {isSelected && <Check className="h-3.5 w-3.5" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
 
-                {/* Controls */}
-                <div className="flex items-center justify-between border-t border-black/5 pt-6 mt-4">
-                  <button
-                    type="button"
-                    disabled={currentIdx === 0}
-                    onClick={handlePrev}
-                    className="btn-secondary text-xs disabled:opacity-55 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    type="button"
-                    disabled={answers[currentQuestion.id] === undefined}
-                    onClick={handleNext}
-                    className="btn-primary text-xs cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
-                  >
-                    {currentIdx === QUESTIONS.length - 1 ? 'See My CEFR Result' : 'Next Question'}
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="results"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4 }}
-                className="bg-white rounded-[2.5rem] border border-black/5 p-6 sm:p-12 shadow-soft-xl space-y-8 text-center"
-              >
-                {/* Result header */}
-                <div className="flex flex-col items-center justify-center space-y-4">
-                  <div className="h-16 w-16 bg-secondary/15 rounded-full flex items-center justify-center text-secondary shadow-soft">
-                    <Award className="h-8 w-8" />
+                  {/* Controls */}
+                  <div className="flex items-center justify-between border-t border-black/5 pt-6 mt-4">
+                    <button
+                      type="button"
+                      disabled={currentIdx === 0}
+                      onClick={handlePrev}
+                      className="btn-secondary text-xs disabled:opacity-55 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      disabled={answers[currentQuestion.id] === undefined}
+                      onClick={handleNext}
+                      className="btn-primary text-xs cursor-pointer disabled:opacity-55 disabled:cursor-not-allowed"
+                    >
+                      {currentIdx === questions.length - 1 ? 'See My CEFR Result' : 'Next Question'}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
                   </div>
-                  <div>
-                    <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight leading-tight">
-                      Assessment Completed!
-                    </h2>
-                    <p className="text-sm text-gray-400 font-semibold mt-1">
-                      You answered {totalCorrect} out of {QUESTIONS.length} questions correctly.
-                    </p>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="results"
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4 }}
+                  className="bg-white rounded-[2.5rem] border border-black/5 p-6 sm:p-12 shadow-soft-xl space-y-8 text-center"
+                >
+                  {/* Result header */}
+                  <div className="flex flex-col items-center justify-center space-y-4">
+                    <div className="h-16 w-16 bg-secondary/15 rounded-full flex items-center justify-center text-secondary shadow-soft">
+                      <Award className="h-8 w-8" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-800 tracking-tight leading-tight">
+                        Assessment Completed!
+                      </h2>
+                      <p className="text-sm text-gray-400 font-semibold mt-1">
+                        You answered {totalCorrect} out of {questions.length} questions correctly.
+                      </p>
+                    </div>
                   </div>
-                </div>
 
                 {/* Result Card */}
                 <div className={`p-6 sm:p-8 rounded-[2rem] border bg-gradient-to-br text-left space-y-4 ${colorTheme}`}>
@@ -443,6 +338,7 @@ export default function AssessmentPage() {
               </motion.div>
             )}
           </AnimatePresence>
+          )}
           
         </div>
       </main>
