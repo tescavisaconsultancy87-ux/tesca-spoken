@@ -847,6 +847,69 @@ export default function CoursesPage() {
           </div>
         </section>
 
+        {/* ── How Enrollment Works Process Section ── */}
+        <section className="py-16 bg-gradient-to-b from-white to-primary-50/40 border-t border-black/5">
+          <div className="container-x">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+                Simple 4-Step Process
+              </span>
+              <h2 className="font-heading mt-3 text-3xl font-extrabold text-ink sm:text-4xl">
+                How Student Enrollment Works
+              </h2>
+              <p className="mt-3 text-sm text-ink-muted leading-relaxed">
+                From choosing your course to accessing your student portal — here is what happens step by step.
+              </p>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto relative">
+              {/* Step 1 */}
+              <div className="relative z-10 bg-white border border-gray-150 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
+                <div className="h-12 w-12 rounded-2xl bg-primary text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
+                  01
+                </div>
+                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Choose Course</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Select the course plan that matches your learning goals (Spoken English, Corporate Prep, IELTS/PTE).
+                </p>
+              </div>
+
+              {/* Step 2 */}
+              <div className="relative z-10 bg-white border border-gray-150 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
+                <div className="h-12 w-12 rounded-2xl bg-primary text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
+                  02
+                </div>
+                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Fill Enroll Form</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Click <strong>Enroll Now</strong> and enter your name, email, 10-digit phone number, and city.
+                </p>
+              </div>
+
+              {/* Step 3 */}
+              <div className="relative z-10 bg-white border border-gray-150 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
+                <div className="h-12 w-12 rounded-2xl bg-secondary text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
+                  03
+                </div>
+                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Pay via Razorpay</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Complete your secure payment using UPI (GPay, PhonePe, Paytm), Debit/Credit Card, or NetBanking.
+                </p>
+              </div>
+
+              {/* Step 4 */}
+              <div className="relative z-10 bg-white border border-emerald-200 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
+                <div className="h-12 w-12 rounded-2xl bg-emerald-600 text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
+                  04
+                </div>
+                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Instant Access</h3>
+                <p className="text-xs text-ink-muted leading-relaxed">
+                  Your student account is created instantly. Receive an email with your generated password and start learning!
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── Who is this program for ── */}
         <section className="py-20 lg:py-24 bg-slate-50/30 relative overflow-hidden border-y border-[#E8EDF3]">
           {/* Faint blueprint grid background */}
@@ -1410,9 +1473,25 @@ export default function CoursesPage() {
                   <h3 className="text-lg font-heading font-extrabold text-gray-850 tracking-tight">
                     Join {selectedPlanForPurchase.title || selectedPlanForPurchase.name}
                   </h3>
-                  <p className="text-xs text-gray-400 font-medium">
+                  <p className="text-xs text-gray-400 font-medium mb-3">
                     Please provide your contact information to initiate the secure payment gateway.
                   </p>
+
+                  {/* Step-by-step Enrollment Progress Banner */}
+                  <div className="bg-primary-50/60 border border-primary-100 rounded-2xl p-3 space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-bold">
+                      <span className="flex items-center gap-1 text-green-700">
+                        <CheckCircle className="h-3.5 w-3.5 text-green-600" /> 1. Course Selected
+                      </span>
+                      <span className="flex items-center gap-1 text-primary">
+                        <span className="h-2 w-2 rounded-full bg-secondary animate-ping" /> 2. Fill Details
+                      </span>
+                      <span className="text-gray-400">3. Pay & Access</span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 leading-normal border-t border-primary-100/60 pt-2">
+                      💡 <strong>What happens after payment?</strong> Your student account is created automatically and your password & access link will be emailed to you immediately.
+                    </p>
+                  </div>
                 </div>
 
                 {/* Billing toggle inside the modal - Hidded for now (Full payment only) */}
