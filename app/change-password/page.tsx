@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Lock, Eye, EyeOff, ShieldAlert, CheckCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { getRoleDashboardUrl } from '@/lib/authCookies';
 
 export default function ChangePasswordPage() {
   const { user, loading, refreshUser } = useAuth();
@@ -85,12 +86,11 @@ export default function ChangePasswordPage() {
       
       // Delay redirect slightly so user sees success state
       setTimeout(() => {
-        if (user.role === 'admin') {
-          router.push('/admin');
-        } else if (user.role === 'tutor') {
-          router.push('/tutor');
+        const targetUrl = getRoleDashboardUrl(user?.role || 'student');
+        if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+          window.location.href = targetUrl;
         } else {
-          router.push('/student');
+          router.push(targetUrl);
         }
       }, 1500);
     } catch (err: any) {

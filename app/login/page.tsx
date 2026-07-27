@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
+import { getRoleDashboardUrl } from '@/lib/authCookies';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -42,12 +43,13 @@ export default function LoginPage() {
       setLoading(false);
       if (result.needsPasswordChange) {
         router.push('/change-password');
-      } else if (result.role === 'admin') {
-        router.push('/admin');
-      } else if (result.role === 'tutor') {
-        router.push('/tutor');
       } else {
-        router.push('/student');
+        const targetUrl = getRoleDashboardUrl(result.role || 'student');
+        if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+          window.location.href = targetUrl;
+        } else {
+          router.push(targetUrl);
+        }
       }
     } else {
       setLoading(false);

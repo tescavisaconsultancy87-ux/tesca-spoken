@@ -1,4 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
+import { customCookieStorage } from './authCookies';
+
+const clientOptions = {
+  auth: {
+    storage: customCookieStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+};
 
 // Helper to get client dynamically (especially for server-side where process.env is populated at runtime)
 const getInitialClient = () => {
@@ -6,7 +16,7 @@ const getInitialClient = () => {
   const anonKey = (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
   if (url && anonKey) {
     try {
-      return createClient(url, anonKey);
+      return createClient(url, anonKey, clientOptions);
     } catch (e: any) {
       console.error('[Supabase Client] Static Init Error:', e);
     }
@@ -23,7 +33,7 @@ export function initializeDynamicSupabase(url: string, anonKey: string) {
   const cleanKey = (anonKey || '').trim();
   if (cleanUrl && cleanKey) {
     try {
-      activeClient = createClient(cleanUrl, cleanKey);
+      activeClient = createClient(cleanUrl, cleanKey, clientOptions);
       supabase = activeClient;
       return activeClient;
     } catch (e: any) {

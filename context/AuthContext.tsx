@@ -4,6 +4,12 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { isAdminEmail, isTutorEmail, formatFriendlyError } from '@/lib/security';
+import {
+  setSessionActiveCookie,
+  clearSessionActiveCookie,
+  setMockSessionCookie,
+  clearMockSessionCookie,
+} from '@/lib/authCookies';
 
 interface UserProfile {
   id: string;
@@ -74,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
               if (session?.user) {
                 // Ensure session cookie is set for server middleware
-                document.cookie = 'sb-session-active=true; path=/; max-age=86400;';
+                setSessionActiveCookie();
 
                 const email = session.user.email || '';
                 const { data: profile } = await supabase!.from('profiles').select('role, name, needs_password_change').eq('id', session.user.id).single();
@@ -104,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 });
               } else {
                 // Clear session cookie for server middleware
-                document.cookie = 'sb-session-active=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;';
+                clearSessionActiveCookie();
                 setUser(null);
               }
             });
@@ -136,7 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (savedSession) {
             setUser(JSON.parse(savedSession));
             // Keep the mock middleware session cookie active
-            document.cookie = `sb-mock-session=true; path=/; max-age=86400;`;
+            setMockSessionCookie();
           }
         }
         setLoading(false);
@@ -174,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       };
       sessionStorage.setItem('tesca_dev_session', JSON.stringify(profile));
       // Write mock session cookie to satisfy middleware check
-      document.cookie = `sb-mock-session=true; path=/; max-age=86400;`;
+      setMockSessionCookie();
       setUser(profile);
       return { success: true, role, needsPasswordChange: isTemp };
     } else {
@@ -209,7 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           if (data.user) {
             // Write session cookie synchronously before redirecting to satisfy middleware
-            document.cookie = 'sb-session-active=true; path=/; max-age=86400;';
+            setSessionActiveCookie();
 
             const email = data.user.email || '';
             const { data: profile } = await supabase
@@ -282,7 +288,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem('tesca_dev_session');
     }
     // Expire mock session cookie
-    document.cookie = `sb-mock-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+    clearSessionActiveCookie();
+    clearMockSessionCookie();
     setUser(null);
     router.push('/login');
   };
