@@ -35,7 +35,7 @@ function isKnownBot(ua: string): 'ai' | 'legitimate' | null {
   return null;
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') || '';
   const hostName = host.split(':')[0].toLowerCase();
@@ -73,7 +73,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // Skip middleware for labyrinth pages (they handle themselves)
+  // Skip proxy for labyrinth pages (they handle themselves)
   if (pathname.startsWith(LABYRINTH_BASE)) {
     return NextResponse.next();
   }
@@ -196,7 +196,6 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  runtime: 'experimental-edge',
   matcher: [
     // Match all routes except static files, api routes, and _next internals
     '/((?!_next/static|_next/image|favicon\\.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',

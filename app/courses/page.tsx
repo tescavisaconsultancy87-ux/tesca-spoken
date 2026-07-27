@@ -30,9 +30,13 @@ import {
   Star,
   X,
   Phone,
+  AlertTriangle,
+  RefreshCw,
+  UserCheck,
+  Search,
 } from 'lucide-react';
 
-const DISABLE_ONLINE_PURCHASE = true; // Toggle to disable online Razorpay payments and show contact info instead
+const DISABLE_ONLINE_PURCHASE = false; // Enabled real online Razorpay payments
 
 const FEATURES = [
   { icon: Video, label: 'Live Interactive Classes' },
@@ -405,7 +409,26 @@ export default function CoursesPage() {
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [billing, setBilling] = useState<'monthly' | 'full'>('full');
+  const [alreadyEnrolled, setAlreadyEnrolled] = useState(false);
 
+  // Check enrollment when user finishes typing email
+  const checkEnrollment = async (email: string, planId: string) => {
+    if (!email || !planId || !email.includes('@')) {
+      setAlreadyEnrolled(false);
+      return;
+    }
+    try {
+      const res = await fetch('/api/checkout/check-enrollment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), planId }),
+      });
+      const data = await res.json();
+      setAlreadyEnrolled(data.enrolled === true);
+    } catch {
+      setAlreadyEnrolled(false);
+    }
+  };
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       if ((window as any).Razorpay) {
@@ -427,6 +450,69 @@ export default function CoursesPage() {
     setPaymentError(null);
     setAgreedToTerms(false);
     setBilling('full');
+    setAlreadyEnrolled(false);
+  };
+
+  // Sanitize error messages — never show internal/technical details to users
+  const sanitizeErrorForUser = (raw: string): string => {
+    if (!raw) return 'Something went wrong. Please try again or contact us for help.';
+    const lower = raw.toLowerCase();
+    // If it already looks like a user-friendly message from our API, use it
+    if (
+      lower.startsWith('please') ||
+      lower.startsWith('something went wrong') ||
+      lower.startsWith('unable to') ||
+      lower.startsWith('we received') ||
+      lower.startsWith('payment verification') ||
+      lower.startsWith('the selected course') ||
+      lower.startsWith('you must agree')
+    ) {
+      return raw;
+    }
+    // Block any internal error details from reaching the user
+    if (
+      lower.includes('supabase') ||
+      lower.includes('database') ||
+      lower.includes('postgres') ||
+      lower.includes('razorpay') ||
+      lower.includes('secret') ||
+      lower.includes('key') ||
+      lower.includes('config') ||
+      lower.includes('fetch') ||
+      lower.includes('network') ||
+      lower.includes('500') ||
+      lower.includes('502') ||
+      lower.includes('timeout') ||
+      lower.includes('econnrefused') ||
+      lower.includes('json')
+    ) {
+      return 'Something went wrong. Please try again or contact us for help.';
+    }
+    return raw;
+  };
+
+  // Map Razorpay payment failure reasons to user-friendly messages
+  const getPaymentFailureMessage = (error: any): string => {
+    const reason = error?.reason || '';
+    const description = (error?.description || '').toLowerCase();
+    const code = error?.code || '';
+
+    if (reason === 'payment_cancelled' || description.includes('cancelled')) {
+      return 'Payment was cancelled. No amount has been deducted from your account. You can try again whenever you are ready.';
+    }
+    if (reason === 'payment_failed' || description.includes('declined') || description.includes('insufficient')) {
+      return 'Your bank declined the transaction. This could be due to insufficient funds, daily limits, or bank restrictions. Please try a different payment method or contact your bank.';
+    }
+    if (description.includes('timeout') || description.includes('timed out') || description.includes('upi')) {
+      return 'The payment timed out. No amount was deducted. Please try again — if using UPI, ensure you approve the request within 5 minutes.';
+    }
+    if (description.includes('otp') || description.includes('authentication')) {
+      return 'Payment authentication failed. Please ensure you enter the correct OTP or approve the transaction from your banking app.';
+    }
+    if (code === 'BAD_REQUEST_ERROR' && description.includes('bank')) {
+      return 'Your bank was unable to process this payment. Please try a different payment method.';
+    }
+    return 'Payment could not be completed. No amount has been deducted. Please try again or use a different payment method.';
   };
 
   const handlePurchaseSubmit = async (e: React.FormEvent) => {
@@ -452,13 +538,13 @@ export default function CoursesPage() {
 
       const orderData = await res.json();
       if (!res.ok || orderData.error) {
-        throw new Error(orderData.error || 'Failed to initialize transaction order.');
+        throw new Error(orderData.error || 'Something went wrong. Please try again or contact us for help.');
       }
 
       // 2. Load Razorpay script
       const scriptLoaded = await loadRazorpayScript();
       if (!scriptLoaded) {
-        throw new Error('Razorpay client script failed to load. Check your internet connection.');
+        throw new Error('Unable to load the payment gateway. Please check your internet connection and try again.');
       }
 
       // 3. Launch Razorpay Checkout Overlay
@@ -494,10 +580,10 @@ export default function CoursesPage() {
             if (verifyRes.ok && verifyData.success) {
               setPaymentSuccess(true);
             } else {
-              setPaymentError(verifyData.error || 'Payment validation failed.');
+              setPaymentError(sanitizeErrorForUser(verifyData.error || 'Payment verification encountered an issue. Our team has been notified and will contact you shortly.'));
             }
           } catch (err: any) {
-            setPaymentError(err.message || 'Signature verification call encountered an error.');
+            setPaymentError('We received your payment but encountered a verification issue. Our team has been notified and will ensure your enrollment is completed. Please contact us if needed.');
           } finally {
             setIsPurchasing(false);
           }
@@ -521,14 +607,18 @@ export default function CoursesPage() {
       };
 
       const rzp = new (window as any).Razorpay(options);
+
+      // Handle payment failures (bank decline, UPI timeout, etc.)
+      rzp.on('payment.failed', function (response: any) {
+        const failureMsg = getPaymentFailureMessage(response.error);
+        setPaymentError(failureMsg);
+        setIsPurchasing(false);
+      });
+
       rzp.open();
 
     } catch (err: any) {
-      let msg = err.message || 'An error occurred during payment setup.';
-      if (msg.includes('receipt') || msg.includes('validation') || msg.includes('Razorpay') || msg.includes('400') || msg.includes('500')) {
-        msg = 'Unable to initialize secure checkout. Please refresh the page or try again in a few moments.';
-      }
-      setPaymentError(msg);
+      setPaymentError(sanitizeErrorForUser(err.message));
       setIsPurchasing(false);
     }
   };
@@ -1325,7 +1415,8 @@ export default function CoursesPage() {
                   </p>
                 </div>
 
-                {/* Billing toggle inside the modal */}
+                {/* Billing toggle inside the modal - Hidded for now (Full payment only) */}
+                {/* 
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-500">Choose Payment Method</label>
                   <div className="flex gap-2 p-1 bg-gray-50 border border-gray-100 rounded-xl">
@@ -1349,11 +1440,37 @@ export default function CoursesPage() {
                     </button>
                   </div>
                 </div>
+                */}
 
                 {paymentError && (
-                  <div className="p-3.5 bg-rose-50 border border-rose-100 text-rose-600 rounded-xl text-xs font-semibold leading-relaxed flex gap-2">
-                    <span className="h-2 w-2 rounded-full bg-rose-500 mt-1.5 flex-shrink-0" />
-                    <span>{paymentError}</span>
+                  <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl space-y-3">
+                    <div className="flex gap-2.5 items-start">
+                      <div className="h-8 w-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <AlertTriangle className="h-4 w-4" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-rose-800">Payment Issue</p>
+                        <p className="text-[11px] text-rose-700 leading-relaxed">{paymentError}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setPaymentError(null)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-[11px] font-bold bg-rose-600 text-white hover:bg-rose-700 transition-colors"
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Try Again
+                      </button>
+                      <a
+                        href="/payment-status"
+                        target="_blank"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-[11px] font-bold border border-rose-200 text-rose-700 bg-white hover:bg-rose-50 transition-colors"
+                      >
+                        <Search className="h-3 w-3" />
+                        Check Status
+                      </a>
+                    </div>
                   </div>
                 )}
 
@@ -1379,10 +1496,30 @@ export default function CoursesPage() {
                       placeholder="e.g. john@example.com"
                       value={checkoutForm.email}
                       onChange={(e) => setCheckoutForm({ ...checkoutForm, email: e.target.value })}
+                      onBlur={(e) => checkEnrollment(e.target.value, selectedPlanForPurchase?.id)}
                       className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                       required
                     />
                   </div>
+
+                  {/* Already enrolled banner */}
+                  {alreadyEnrolled && (
+                    <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl flex gap-2.5 items-start">
+                      <div className="h-7 w-7 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <UserCheck className="h-3.5 w-3.5" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <p className="text-[11px] font-bold text-blue-800">You're already enrolled in this course!</p>
+                        <p className="text-[10px] text-blue-700 leading-relaxed">This email is already registered with an active enrollment. You can log in to access your course.</p>
+                        <a
+                          href="/login"
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 hover:text-blue-900 underline"
+                        >
+                          Go to Student Login <ArrowRight className="h-2.5 w-2.5" />
+                        </a>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Phone */}
                   <div className="space-y-1.5">
@@ -1422,12 +1559,7 @@ export default function CoursesPage() {
                   <div className="border-t border-b border-gray-100 py-3 mt-4 space-y-1.5">
                     <div className="flex justify-between text-xs text-gray-500 font-medium">
                       <span>Subtotal:</span>
-                      <span>
-                        ₹{(billing === 'monthly'
-                          ? Math.ceil(selectedPlanForPurchase.price / (selectedPlanForPurchase.duration?.includes('3') ? 3 : selectedPlanForPurchase.duration?.includes('4') ? 4 : selectedPlanForPurchase.duration?.includes('5') ? 5 : selectedPlanForPurchase.duration?.includes('6') ? 6 : 1))
-                          : selectedPlanForPurchase.price
-                        ).toLocaleString('en-IN')}
-                      </span>
+                      <span>₹{selectedPlanForPurchase.price?.toLocaleString('en-IN')}</span>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500 font-medium">
                       <span>Taxes & Processing Fees:</span>
@@ -1435,12 +1567,7 @@ export default function CoursesPage() {
                     </div>
                     <div className="flex justify-between text-sm text-gray-800 font-extrabold pt-1">
                       <span>Total Amount:</span>
-                      <span className="text-primary">
-                        ₹{(billing === 'monthly'
-                          ? Math.ceil(selectedPlanForPurchase.price / (selectedPlanForPurchase.duration?.includes('3') ? 3 : selectedPlanForPurchase.duration?.includes('4') ? 4 : selectedPlanForPurchase.duration?.includes('5') ? 5 : selectedPlanForPurchase.duration?.includes('6') ? 6 : 1))
-                          : selectedPlanForPurchase.price
-                        ).toLocaleString('en-IN')}
-                      </span>
+                      <span className="text-primary">₹{selectedPlanForPurchase.price?.toLocaleString('en-IN')}</span>
                     </div>
                   </div>
 
@@ -1473,8 +1600,16 @@ export default function CoursesPage() {
                     </button>
                     <button
                       type="submit"
-                      disabled={isPurchasing}
-                      className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft flex items-center justify-center gap-1.5"
+                      disabled={
+                        !checkoutForm.name.trim() ||
+                        !checkoutForm.email.trim() ||
+                        checkoutForm.phone.length !== 10 ||
+                        !checkoutForm.city.trim() ||
+                        !agreedToTerms ||
+                        alreadyEnrolled ||
+                        isPurchasing
+                      }
+                      className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary transition-all"
                     >
                       {isPurchasing ? (
                         <>

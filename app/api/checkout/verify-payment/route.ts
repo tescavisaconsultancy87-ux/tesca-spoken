@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/gmail';
 import crypto from 'crypto';
 import { generateSecurePassword } from '@/lib/security';
+import { sendErrorAlert } from '@/lib/error-alerts';
 
 const PLAN_PRICES: Record<string, { full: number; monthly: number }> = {
   starter: { full: 7999, monthly: 2667 },
@@ -10,38 +11,65 @@ const PLAN_PRICES: Record<string, { full: number; monthly: number }> = {
   premium: { full: 22999, monthly: 3834 },
 };
 
+// User-friendly error messages — never expose internals
+const USER_ERRORS = {
+  MISSING_FIELDS: 'Please fill in all required fields and complete the payment.',
+  SIGNATURE_INVALID: 'Payment verification failed. If your money was deducted, our team has been notified and will resolve this within 24 hours. You can also contact us on WhatsApp.',
+  SERVER_ERROR: 'Something went wrong on our end. Our team has been notified. If your payment was deducted, we will ensure your enrollment is completed. Please contact us if you need immediate assistance.',
+  VERIFICATION_FAILED: 'We received your payment but encountered a verification issue. Our team has been notified and will contact you shortly to complete your enrollment.',
+} as const;
+
 export async function POST(request: NextRequest) {
+  let customerEmail = '';
+  let customerName = '';
+  let customerPhone = '';
+  let planId = '';
+  let billing = 'full';
+  let razorpay_payment_id = '';
+  let razorpay_order_id = '';
+
   try {
     const body = await request.json();
-    const {
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-      name,
-      email,
-      phone,
-      city,
-      planId,
-      billing = 'full',
-    } = body;
+    razorpay_payment_id = body.razorpay_payment_id || '';
+    razorpay_order_id = body.razorpay_order_id || '';
+    const razorpay_signature = body.razorpay_signature || '';
+    customerName = body.name || '';
+    customerEmail = body.email || '';
+    customerPhone = body.phone || '';
+    const city = body.city || '';
+    planId = body.planId || '';
+    billing = body.billing || 'full';
 
     // 1. Validate inputs
     if (
       !razorpay_payment_id ||
       !razorpay_order_id ||
       !razorpay_signature ||
-      !name ||
-      !email ||
-      !phone ||
+      !customerName ||
+      !customerEmail ||
+      !customerPhone ||
       !city ||
       !planId
     ) {
-      return NextResponse.json({ error: 'Missing required payment validation inputs.' }, { status: 400 });
+      return NextResponse.json({ error: USER_ERRORS.MISSING_FIELDS }, { status: 400 });
     }
 
     const secret = process.env.RAZORPAY_KEY_SECRET;
     if (!secret) {
-      return NextResponse.json({ error: 'Razorpay secret key is missing on the server.' }, { status: 500 });
+      console.error('[Verify Payment] Razorpay secret key missing');
+      await sendErrorAlert({
+        errorType: 'payment-verification',
+        errorMessage: 'RAZORPAY_KEY_SECRET is not configured in environment variables.',
+        customerEmail,
+        customerName,
+        customerPhone,
+        planId,
+        billing,
+        paymentId: razorpay_payment_id,
+        orderId: razorpay_order_id,
+        extra: 'CRITICAL: Customer has likely already paid. Manual enrollment required.',
+      });
+      return NextResponse.json({ error: USER_ERRORS.SERVER_ERROR }, { status: 500 });
     }
 
     // 2. Verify signature
@@ -52,7 +80,20 @@ export async function POST(request: NextRequest) {
       .digest('hex');
 
     if (generatedSignature !== razorpay_signature) {
-      return NextResponse.json({ error: 'Payment verification failed. Invalid signature.' }, { status: 400 });
+      console.error('[Verify Payment] Signature mismatch');
+      await sendErrorAlert({
+        errorType: 'payment-verification',
+        errorMessage: 'Razorpay signature verification failed. Possible tampered request or key mismatch.',
+        customerEmail,
+        customerName,
+        customerPhone,
+        planId,
+        billing,
+        paymentId: razorpay_payment_id,
+        orderId: razorpay_order_id,
+        extra: 'SECURITY: This could be a legitimate payment with a key rotation issue, or a tampered request. Verify on Razorpay Dashboard.',
+      });
+      return NextResponse.json({ error: USER_ERRORS.SIGNATURE_INVALID }, { status: 400 });
     }
 
     // 3. Initialize admin Supabase client using service role key (bypasses RLS constraints)
@@ -60,7 +101,20 @@ export async function POST(request: NextRequest) {
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
     if (!url || !key) {
-      return NextResponse.json({ error: 'Supabase configuration is missing on the server.' }, { status: 500 });
+      console.error('[Verify Payment] Supabase configuration missing');
+      await sendErrorAlert({
+        errorType: 'payment-verification',
+        errorMessage: 'Supabase URL or Service Role Key is not configured. Payment was verified successfully but enrollment cannot proceed.',
+        customerEmail,
+        customerName,
+        customerPhone,
+        planId,
+        billing,
+        paymentId: razorpay_payment_id,
+        orderId: razorpay_order_id,
+        extra: 'CRITICAL: Payment signature verified OK. Customer paid but cannot be enrolled. Manual enrollment required.',
+      });
+      return NextResponse.json({ error: USER_ERRORS.VERIFICATION_FAILED }, { status: 500 });
     }
 
     const adminSupabase = createClient(url, key, {
@@ -100,19 +154,31 @@ export async function POST(request: NextRequest) {
     // 4. Save to payments table
     const { error: paymentError } = await adminSupabase.from('payments').insert({
       id: razorpay_payment_id,
-      student_name: name,
-      email: email,
+      student_name: customerName,
+      email: customerEmail,
       amount: amountInRupees,
       date: new Date().toLocaleDateString('en-IN', { month: 'short', day: '2-digit', year: 'numeric' }),
       method: 'Razorpay',
       status: 'success',
-      phone: phone,
+      phone: customerPhone,
       city: city,
     });
 
     if (paymentError) {
-      console.error('[Verify API] Failed to save payment:', paymentError.message);
-      // Proceed anyway, we want to try enrolling the user even if payment logs fail
+      console.error('[Verify Payment] Failed to save payment record:', paymentError.message);
+      await sendErrorAlert({
+        errorType: 'payment-verification',
+        errorMessage: `Failed to save payment record to database: ${paymentError.message}`,
+        customerEmail,
+        customerName,
+        customerPhone,
+        planId,
+        billing,
+        paymentId: razorpay_payment_id,
+        orderId: razorpay_order_id,
+        extra: `Amount: ₹${amountInRupees}. Payment was captured by Razorpay but DB insert failed. Proceeding with enrollment attempt.`,
+      });
+      // Proceed anyway — we want to try enrolling the user even if payment logs fail
     }
 
     // 5. Account Setup & Course Enrollment
@@ -120,7 +186,7 @@ export async function POST(request: NextRequest) {
     const { data: existingProfile } = await adminSupabase
       .from('profiles')
       .select('id')
-      .eq('email', email)
+      .eq('email', customerEmail)
       .maybeSingle();
 
     let studentId = existingProfile?.id;
@@ -129,30 +195,54 @@ export async function POST(request: NextRequest) {
     if (!studentId) {
       // Create user auth account
       const { data: authUser, error: authError } = await adminSupabase.auth.admin.createUser({
-        email: email,
+        email: customerEmail,
         email_confirm: true,
         password: tempPassword,
-        user_metadata: { name, role: 'student' },
+        user_metadata: { name: customerName, role: 'student' },
       });
 
       if (authError || !authUser.user) {
-        console.error('[Verify API] Failed to create auth user:', authError?.message);
+        console.error('[Verify Payment] Failed to create auth user:', authError?.message);
+        await sendErrorAlert({
+          errorType: 'account-setup',
+          errorMessage: `Failed to create auth user: ${authError?.message || 'Unknown error'}`,
+          customerEmail,
+          customerName,
+          customerPhone,
+          planId,
+          billing,
+          paymentId: razorpay_payment_id,
+          orderId: razorpay_order_id,
+          extra: `Amount: ₹${amountInRupees}. Payment verified OK. Auth user creation failed — manual account setup required.`,
+        });
       } else {
         studentId = authUser.user.id;
 
         // Create profile
         const { error: profileError } = await adminSupabase.from('profiles').insert({
           id: studentId,
-          email: email,
+          email: customerEmail,
           role: 'student',
-          name: name,
-          phone: phone,
+          name: customerName,
+          phone: customerPhone,
           location: city,
           needs_password_change: true,
         });
 
         if (profileError) {
-          console.error('[Verify API] Failed to create profile:', profileError.message);
+          console.error('[Verify Payment] Failed to create profile:', profileError.message);
+          await sendErrorAlert({
+            errorType: 'account-setup',
+            errorMessage: `Auth user created but profile insert failed: ${profileError.message}`,
+            customerEmail,
+            customerName,
+            customerPhone,
+            planId,
+            billing,
+            paymentId: razorpay_payment_id,
+            orderId: razorpay_order_id,
+            extra: `Student ID: ${studentId}. Auth user exists but profile row is missing.`,
+          });
         }
       }
     } else {
@@ -162,7 +252,16 @@ export async function POST(request: NextRequest) {
       });
 
       if (updateError) {
-        console.error('[Verify API] Failed to update existing user password:', updateError.message);
+        console.error('[Verify Payment] Failed to update existing user password:', updateError.message);
+        await sendErrorAlert({
+          errorType: 'account-setup',
+          errorMessage: `Failed to update password for existing user: ${updateError.message}`,
+          customerEmail,
+          customerName,
+          planId,
+          paymentId: razorpay_payment_id,
+          extra: `Student ID: ${studentId}. Existing user, password reset failed.`,
+        });
       } else {
         const { error: profileUpdateError } = await adminSupabase
           .from('profiles')
@@ -170,7 +269,7 @@ export async function POST(request: NextRequest) {
           .eq('id', studentId);
 
         if (profileUpdateError) {
-          console.error('[Verify API] Failed to update profile needs_password_change flag:', profileUpdateError.message);
+          console.error('[Verify Payment] Failed to update profile needs_password_change flag:', profileUpdateError.message);
         }
       }
     }
@@ -187,7 +286,7 @@ export async function POST(request: NextRequest) {
             Do not share these credentials with anyone. For your security, when you log in with this temporary password for the first time, you will be required to change it to a password of your choice.
           </p>
           <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
-            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Student Log In ID (Email):</strong> ${email}</p>
+            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Student Log In ID (Email):</strong> ${customerEmail}</p>
             <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Temporary Password:</strong> <code style="background: #fee2e2; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 14px; color: #b91c1c;">${tempPassword}</code></p>
           </div>
         </div>
@@ -200,7 +299,7 @@ export async function POST(request: NextRequest) {
               <h1 style="color: #ffffff; margin: 0; font-size: 24px; letter-spacing: 1px;">TESCA SPOKEN ENGLISH</h1>
             </div>
             <div style="padding: 40px 30px; line-height: 1.6;">
-              <h2 style="color: #0b3336; margin-top: 0;">Welcome, ${name}!</h2>
+              <h2 style="color: #0b3336; margin-top: 0;">Welcome, ${customerName}!</h2>
               <p>Your payment of <strong>₹${amountInRupees.toLocaleString('en-IN')}</strong> has been successfully verified, and your enrollment is now active.</p>
               
               ${credentialsSection}
@@ -213,9 +312,18 @@ export async function POST(request: NextRequest) {
         </div>
       `;
 
-      await sendEmail(email, emailSubject, emailHtml);
-    } catch (emailErr) {
-      console.error('[Verify API] Failed to send welcome email:', emailErr);
+      await sendEmail(customerEmail, emailSubject, emailHtml);
+    } catch (emailErr: any) {
+      console.error('[Verify Payment] Failed to send welcome email:', emailErr);
+      await sendErrorAlert({
+        errorType: 'enrollment',
+        errorMessage: `Welcome email failed to send: ${emailErr.message || String(emailErr)}`,
+        customerEmail,
+        customerName,
+        planId,
+        paymentId: razorpay_payment_id,
+        extra: 'Payment and enrollment succeeded, but the student did not receive their login credentials via email. Manually send credentials.',
+      });
     }
 
     // 6. Enroll student in the corresponding course
@@ -239,14 +347,35 @@ export async function POST(request: NextRequest) {
       }, { onConflict: 'student_id,course_id' });
 
       if (enrollError) {
-        console.error('[Verify API] Failed to create/update enrollment:', enrollError.message);
+        console.error('[Verify Payment] Failed to create/update enrollment:', enrollError.message);
+        await sendErrorAlert({
+          errorType: 'enrollment',
+          errorMessage: `Enrollment DB insert failed: ${enrollError.message}`,
+          customerEmail,
+          customerName,
+          planId,
+          paymentId: razorpay_payment_id,
+          extra: `Student ID: ${studentId}, Course ID: ${courseId}. Payment verified, account created, but enrollment record failed. Manual enrollment required.`,
+        });
       }
     }
 
     return NextResponse.json({ success: true });
 
   } catch (err: any) {
-    console.error('[Verify Payment API Error]:', err);
-    return NextResponse.json({ error: 'An error occurred during verification.' }, { status: 500 });
+    console.error('[Verify Payment] Unhandled error:', err);
+    await sendErrorAlert({
+      errorType: 'payment-verification',
+      errorMessage: err.message || String(err),
+      customerEmail,
+      customerName,
+      customerPhone,
+      planId,
+      billing,
+      paymentId: razorpay_payment_id,
+      orderId: razorpay_order_id,
+      extra: err.stack ? err.stack.split('\n').slice(0, 5).join('\n') : undefined,
+    });
+    return NextResponse.json({ error: USER_ERRORS.SERVER_ERROR }, { status: 500 });
   }
 }
