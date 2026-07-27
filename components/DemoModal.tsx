@@ -95,12 +95,13 @@ export default function DemoModal({ onClose }: DemoModalProps) {
       return;
     }
 
-    if (!form.course || !form.time || !form.mode) {
-      setError('Please select a course, preferred time slot, and learning mode.');
-      return;
-    }
-    
     setLoading(true);
+
+    const nameValue = form.name.trim() || 'Prospective Student';
+    const emailValue = form.email.trim() || `${cleanedPhone}@phone.tesca.co`;
+    const courseValue = form.course || 'General Spoken English';
+    const timeValue = form.time || 'Flexible';
+    const modeValue = form.mode || 'Online — Zoom / Meet';
 
     try {
       const response = await fetch('/api/leads', {
@@ -110,12 +111,12 @@ export default function DemoModal({ onClose }: DemoModalProps) {
         },
         body: JSON.stringify({
           type: 'demo',
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          course: form.course,
-          timeSlot: form.time,
-          learningMode: form.mode,
+          name: nameValue,
+          email: emailValue,
+          phone: cleanedPhone,
+          course: courseValue,
+          timeSlot: timeValue,
+          learningMode: modeValue,
         }),
       });
 
@@ -204,7 +205,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                 Demo Request Sent! 🎉
               </h3>
               <p className="mt-4 text-base text-ink-muted max-w-md">
-                Our support team will contact you within 24 hours to schedule your free demo class on your preferred time.
+                Our support team will call you back in a while to schedule your free demo class.
               </p>
               <button
                 type="button"
@@ -285,7 +286,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
               {/* Email */}
               <div>
                 <label htmlFor="modal-email" className="block text-xs font-semibold text-ink mb-1.5">
-                  Email Address <span className="text-accent">*</span>
+                  Email Address <span className="text-gray-400 font-normal">(Optional)</span>
                 </label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-ink-muted">
@@ -294,7 +295,6 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                   <input
                     id="modal-email"
                     type="email"
-                    required
                     value={form.email}
                     onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                     placeholder="your@email.com"
@@ -306,7 +306,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
               {/* Course Selection */}
               <div className="flex flex-col">
                 <span className="block text-xs font-semibold text-ink mb-1.5">
-                  Course of Interest <span className="text-accent">*</span>
+                  Course of Interest <span className="text-gray-400 font-normal">(Optional)</span>
                 </span>
                 <DropdownMenu>
                   <DropdownMenuTrigger>
@@ -339,7 +339,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                 {/* Time Preference */}
                 <div className="flex flex-col">
                   <span className="block text-xs font-semibold text-ink mb-1.5">
-                    Preferred Time Slot <span className="text-accent">*</span>
+                    Preferred Time Slot <span className="text-gray-400 font-normal">(Optional)</span>
                   </span>
                   <DropdownMenu>
                     <DropdownMenuTrigger>
@@ -378,7 +378,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
                 {/* Mode Preference */}
                 <div className="flex flex-col">
                   <span className="block text-xs font-semibold text-ink mb-1.5">
-                    Preferred Learning Mode <span className="text-accent">*</span>
+                    Preferred Learning Mode <span className="text-gray-400 font-normal">(Optional)</span>
                   </span>
                   <DropdownMenu>
                     <DropdownMenuTrigger>

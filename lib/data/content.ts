@@ -8,7 +8,7 @@ export const NAV_LINKS = [
   { label: 'Contact', href: '/contact' },
 ];
 
-export const WHATSAPP_URL = 'https://wa.me/918488805888?text=Hi%20TESCA,%20I%20would%20like%20to%20book%20a%20free%20demo%20class.';
+export const WHATSAPP_URL = 'https://wa.me/918488805888?text=Hi%20TESCA%20team%2C%20I%20am%20interested%20in%20joining%20spoken%20English%20classes.%20Please%20share%20course%20details%20and%20fee%20structure.';
 
 export const TRUST_STATS = [
   { value: 2005, label: 'Years of Trust', suffix: '', isYear: true, prefix: 'Since ' },

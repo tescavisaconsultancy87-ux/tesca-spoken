@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, memo, ComponentType } from 'react';
-import { CalendarCheck, Users, GraduationCap, TrendingUp, ShieldCheck } from 'lucide-react';
+import { CalendarCheck, Users, GraduationCap, TrendingUp, ShieldCheck, Phone, PhoneCall, CheckCircle2 } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { useCounter } from '@/hooks/useCounter';
 import { useReveal } from '@/hooks/useReveal';
@@ -40,6 +40,47 @@ const STATS_DATA = [
 
 export default function Hero() {
   const { openModal } = useDemoModal();
+  const [quickPhone, setQuickPhone] = useState('');
+  const [quickLoading, setQuickLoading] = useState(false);
+  const [quickSuccess, setQuickSuccess] = useState(false);
+  const [quickError, setQuickError] = useState('');
+
+  const handleQuickSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setQuickError('');
+    const cleaned = quickPhone.replace(/\D/g, '');
+    if (cleaned.length !== 10) {
+      setQuickError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    setQuickLoading(true);
+    try {
+      const res = await fetch('/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'demo',
+          name: 'Website Call Request',
+          phone: cleaned,
+          email: `${cleaned}@phone.tesca.co`,
+          course: 'General Spoken English',
+          timeSlot: 'Flexible',
+          learningMode: 'Online — Zoom / Meet',
+        }),
+      });
+      if (res.ok) {
+        setQuickSuccess(true);
+        setQuickPhone('');
+      } else {
+        const data = await res.json();
+        setQuickError(data.error || 'Failed to submit call request.');
+      }
+    } catch (err) {
+      setQuickError('Something went wrong. Please try again.');
+    } finally {
+      setQuickLoading(false);
+    }
+  };
 
   return (
     <>
@@ -94,14 +135,55 @@ export default function Hero() {
                 Master fluent communication, ace international exams (IELTS/PTE), and accelerate your career. Learn 1-on-1 from expert trainers with interactive live practice.
               </p>
 
-              {/* CTA Button */}
-              <div className="pt-2">
-                <button 
-                  onClick={openModal} 
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-8 py-4 text-sm font-bold text-white shadow-soft transition-all duration-300 hover:-translate-y-0.5 hover:bg-primary-600 hover:shadow-soft-lg active:translate-y-0 cursor-pointer w-full sm:w-auto"
-                >
-                  Book Free Demo Class
-                </button>
+              {/* Quick 1-Field Call Back Form & CTA */}
+              <div className="pt-3 space-y-3">
+                <form onSubmit={handleQuickSubmit} className="flex flex-col sm:flex-row items-stretch gap-2 max-w-lg">
+                  <div className="relative flex-grow">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Phone className="h-4 w-4" />
+                    </span>
+                    <input
+                      type="tel"
+                      value={quickPhone}
+                      onChange={(e) => setQuickPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      placeholder="Enter 10-digit Mobile Number"
+                      className="w-full rounded-xl border border-white/20 bg-white text-slate-800 placeholder:text-slate-400 pl-10 pr-4 py-3.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={quickLoading}
+                    className="rounded-xl bg-primary hover:bg-primary-600 text-white font-bold text-xs px-6 py-3.5 shadow-soft transition-all duration-300 active:scale-95 cursor-pointer whitespace-nowrap flex items-center justify-center gap-2 disabled:opacity-70"
+                  >
+                    {quickLoading ? 'Submitting...' : 'Request Call Back'}
+                    <PhoneCall className="h-4 w-4" />
+                  </button>
+                </form>
+
+                {quickError && (
+                  <p className="text-xs font-semibold text-red-400 bg-red-950/40 border border-red-500/30 rounded-xl p-2.5 max-w-lg">
+                    {quickError}
+                  </p>
+                )}
+
+                {quickSuccess ? (
+                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 rounded-xl p-3 max-w-lg">
+                    <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Request received! Our counselor will call you back in a while.</span>
+                  </div>
+                ) : (
+                  <p className="text-[11px] font-medium text-slate-300 lg:text-slate-500 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    <span>Our team will call you back in a while. Or</span>
+                    <button
+                      type="button"
+                      onClick={openModal}
+                      className="font-bold text-secondary lg:text-primary hover:underline cursor-pointer ml-0.5"
+                    >
+                      Book Free Demo Class →
+                    </button>
+                  </p>
+                )}
               </div>
 
             </div>
