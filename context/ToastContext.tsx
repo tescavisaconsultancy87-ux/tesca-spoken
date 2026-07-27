@@ -34,9 +34,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const showToast = useCallback(
-    ({ message, title, type = 'info', duration = 4500 }: { message: string; title?: string; type?: ToastType; duration?: number }) => {
+    ({ message, title, type = 'info', duration = 3000 }: { message: string; title?: string; type?: ToastType; duration?: number }) => {
       const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-      setToasts((prev) => [...prev.slice(-4), { id, message, title, type, duration }]);
+      setToasts((prev) => [...prev.slice(-3), { id, message, title, type, duration }]);
     },
     []
   );
@@ -64,13 +64,13 @@ export function useToast() {
   return context;
 }
 
-/* ─── Toast Container Component ─── */
+/* ─── Toast Container Component (Positioned Bottom-Right) ─── */
 function ToastContainer({ toasts, onRemove }: { toasts: ToastItem[]; onRemove: (id: string) => void }) {
   if (toasts.length === 0) return null;
 
   return (
     <div
-      className="fixed top-5 right-4 sm:right-6 z-[99999] flex flex-col gap-3 max-w-[92vw] sm:max-w-md w-full pointer-events-none"
+      className="fixed bottom-20 md:bottom-6 right-4 sm:right-6 z-[99999] flex flex-col-reverse gap-3 max-w-[92vw] sm:max-w-md w-full pointer-events-none"
       aria-live="polite"
       aria-atomic="true"
     >
@@ -81,31 +81,19 @@ function ToastContainer({ toasts, onRemove }: { toasts: ToastItem[]; onRemove: (
   );
 }
 
-/* ─── Individual Premium Toast Card Component ─── */
+/* ─── Individual Premium Toast Card Component (No progress bar, 3s duration) ─── */
 function ToastCard({ toast, onRemove }: { toast: ToastItem; onRemove: (id: string) => void }) {
   const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(100);
-
-  const duration = toast.duration || 4500;
+  const duration = toast.duration || 3000;
 
   useEffect(() => {
     if (isPaused) return;
-
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const remainingPct = Math.max(0, 100 - (elapsed / duration) * 100);
-      setProgress(remainingPct);
-    }, 30);
 
     const timer = setTimeout(() => {
       onRemove(toast.id);
     }, duration);
 
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [toast.id, duration, isPaused, onRemove]);
 
   const config = {
@@ -113,7 +101,6 @@ function ToastCard({ toast, onRemove }: { toast: ToastItem; onRemove: (id: strin
       icon: CheckCircle2,
       iconColor: 'text-emerald-400',
       badgeBg: 'bg-emerald-500/20 border-emerald-500/30',
-      progressBg: 'bg-emerald-400',
       glow: 'shadow-[0_12px_32px_rgba(16,185,129,0.22)]',
       defaultTitle: 'Success',
     },
@@ -121,7 +108,6 @@ function ToastCard({ toast, onRemove }: { toast: ToastItem; onRemove: (id: strin
       icon: AlertCircle,
       iconColor: 'text-rose-400',
       badgeBg: 'bg-rose-500/20 border-rose-500/30',
-      progressBg: 'bg-rose-400',
       glow: 'shadow-[0_12px_32px_rgba(244,63,94,0.22)]',
       defaultTitle: 'Attention',
     },
@@ -129,7 +115,6 @@ function ToastCard({ toast, onRemove }: { toast: ToastItem; onRemove: (id: strin
       icon: AlertTriangle,
       iconColor: 'text-amber-400',
       badgeBg: 'bg-amber-500/20 border-amber-500/30',
-      progressBg: 'bg-amber-400',
       glow: 'shadow-[0_12px_32px_rgba(245,158,11,0.22)]',
       defaultTitle: 'Notice',
     },
@@ -137,7 +122,6 @@ function ToastCard({ toast, onRemove }: { toast: ToastItem; onRemove: (id: strin
       icon: Info,
       iconColor: 'text-teal-400',
       badgeBg: 'bg-teal-500/20 border-teal-500/30',
-      progressBg: 'bg-teal-400',
       glow: 'shadow-[0_12px_32px_rgba(20,184,166,0.22)]',
       defaultTitle: 'Information',
     },
@@ -176,19 +160,11 @@ function ToastCard({ toast, onRemove }: { toast: ToastItem; onRemove: (id: strin
       <button
         type="button"
         onClick={() => onRemove(toast.id)}
-        className="absolute top-3.5 right-3.5 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+        className="absolute top-3.5 right-3.5 p-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
         aria-label="Dismiss message"
       >
         <X className="h-4 w-4" />
       </button>
-
-      {/* Progress Line */}
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/10">
-        <div
-          className={`h-full ${config.progressBg} transition-all ease-linear`}
-          style={{ width: `${progress}%` }}
-        />
-      </div>
     </div>
   );
 }
