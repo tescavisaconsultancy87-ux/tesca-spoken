@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -44,28 +44,31 @@ export default function BlogPostPage() {
     load();
   }, [params.slug]);
 
-  return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      <main>
-        {loading ? (
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main>
           <div className="pt-40 pb-20 text-center text-ink-muted">
             <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             <p className="mt-2 text-xs font-semibold">Loading post...</p>
           </div>
-        ) : !post ? (
-          <section className="pt-40 pb-20 lg:pt-48 lg:pb-28">
-            <div className="container-x text-center space-y-6">
-              <h1 className="font-heading text-3xl font-bold text-ink">Post Not Found</h1>
-              <p className="text-ink-muted">The blog post you&apos;re looking for doesn&apos;t exist or has been removed.</p>
-              <Link href="/blog" className="btn-warm inline-flex">
-                <ArrowLeft className="h-4 w-4" />
-                Back to Blog
-              </Link>
-            </div>
-          </section>
-        ) : (
-          <article>
+        </main>
+        <Footer />
+        <FloatingActions />
+      </div>
+    );
+  }
+
+  if (!post) {
+    notFound();
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      <main>
+        <article>
             {/* Hero */}
             <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-16 lg:pt-48 lg:pb-20">
               <div className="container-x relative z-10 max-w-3xl mx-auto">
@@ -156,7 +159,6 @@ export default function BlogPostPage() {
               </div>
             </section>
           </article>
-        )}
       </main>
       <Footer />
       <FloatingActions />

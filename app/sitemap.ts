@@ -1,5 +1,14 @@
 import type { MetadataRoute } from 'next';
 import { db } from '@/lib/db';
+import { COURSES } from '@/lib/data/content';
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://tesca.co';
@@ -69,26 +78,53 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const dynamicRoutes: MetadataRoute.Sitemap = [];
+  const addedCourseUrls = new Set<string>();
 
+  // 1. Static course URLs from content catalog
+  COURSES.forEach((c) => {
+    const slug = slugify(c.title);
+    const url = `${baseUrl}/courses/${slug}`;
+    if (!addedCourseUrls.has(url)) {
+      addedCourseUrls.add(url);
+      dynamicRoutes.push({
+        url,
+        lastModified: currentDate,
+        changeFrequency: 'weekly',
+        priority: 0.8,
+      });
+    }
+  });
+
+  // 2. DB courses
   try {
     const courses = await db.getCourses();
     if (courses && courses.length > 0) {
-      const courseRoutes = courses.map((course: any) => ({
-        url: `${baseUrl}/courses/${course.id}`,
-        lastModified: currentDate,
-        changeFrequency: 'weekly' as const,
-        priority: 0.8,
-      }));
-      dynamicRoutes.push(...courseRoutes);
+      courses.forEach((course: any) => {
+        const idOrSlug = course.id || (course.title ? slugify(course.title) : '');
+        if (idOrSlug) {
+          const url = `${baseUrl}/courses/${idOrSlug}`;
+          if (!addedCourseUrls.has(url)) {
+            addedCourseUrls.add(url);
+            dynamicRoutes.push({
+              url,
+              lastModified: currentDate,
+              changeFrequency: 'weekly',
+              priority: 0.8,
+            });
+          }
+        }
+      });
     }
   } catch (err) {
     console.error('Failed to load courses for sitemap generation:', err);
   }
 
+  // 3. Blog posts (only published ones)
   try {
     const posts = await db.getBlogPosts();
     if (posts && posts.length > 0) {
-      const blogRoutes = posts.map((post: any) => ({
+      const publishedPosts = posts.filter((post: any) => post.published !== false);
+      const blogRoutes = publishedPosts.map((post: any) => ({
         url: `${baseUrl}/blog/${post.slug || post.id}`,
         lastModified: new Date(post.updated_at || post.created_at || currentDate),
         changeFrequency: 'monthly' as const,
