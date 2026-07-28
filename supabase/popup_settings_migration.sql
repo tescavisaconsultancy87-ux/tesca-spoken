@@ -8,11 +8,17 @@ CREATE TABLE IF NOT EXISTS public.popup_settings (
     delay_seconds INTEGER NOT NULL DEFAULT 5,
     button_text TEXT NOT NULL DEFAULT 'Get Details',
     link_url TEXT NOT NULL DEFAULT '',
+    click_action TEXT NOT NULL DEFAULT 'link',
+    open_in_new_tab BOOLEAN NOT NULL DEFAULT false,
     lead_capture_enabled BOOLEAN NOT NULL DEFAULT false,
     required_fields JSONB NOT NULL DEFAULT '["name", "phone"]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Ensure columns exist for existing tables
+ALTER TABLE public.popup_settings ADD COLUMN IF NOT EXISTS click_action TEXT NOT NULL DEFAULT 'link';
+ALTER TABLE public.popup_settings ADD COLUMN IF NOT EXISTS open_in_new_tab BOOLEAN NOT NULL DEFAULT false;
 
 -- Seed with a default row if empty
 INSERT INTO public.popup_settings (is_active, image_url, title, subtitle, delay_seconds, button_text, link_url)

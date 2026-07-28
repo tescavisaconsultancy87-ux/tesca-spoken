@@ -14,6 +14,8 @@ interface PopupSetting {
   delay_seconds: number;
   button_text: string;
   link_url: string;
+  click_action?: 'link' | 'form';
+  open_in_new_tab?: boolean;
   lead_capture_enabled: boolean;
   required_fields: string[];
 }
@@ -27,6 +29,8 @@ export default function PromoPopupAdminPage() {
   // Form states
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isActive, setIsActive] = useState(false);
+  const [clickAction, setClickAction] = useState<'link' | 'form'>('link');
+  const [openInNewTab, setOpenInNewTab] = useState(false);
   const [leadCaptureEnabled, setLeadCaptureEnabled] = useState(false);
   const [requiredEmail, setRequiredEmail] = useState(false);
   const [delaySeconds, setDelaySeconds] = useState(5);
@@ -96,6 +100,8 @@ export default function PromoPopupAdminPage() {
   const resetForm = () => {
     setEditingId(null);
     setIsActive(false);
+    setClickAction('link');
+    setOpenInNewTab(false);
     setLeadCaptureEnabled(false);
     setRequiredEmail(false);
     setDelaySeconds(5);
@@ -112,6 +118,8 @@ export default function PromoPopupAdminPage() {
   const handleEdit = (p: PopupSetting) => {
     setEditingId(p.id);
     setIsActive(p.is_active);
+    setClickAction(p.click_action || (p.link_url ? 'link' : 'form'));
+    setOpenInNewTab(Boolean(p.open_in_new_tab));
     setLeadCaptureEnabled(p.lead_capture_enabled);
     setRequiredEmail((p.required_fields || []).includes('email'));
     setDelaySeconds(p.delay_seconds);
@@ -207,6 +215,8 @@ export default function PromoPopupAdminPage() {
         delay_seconds: delaySeconds,
         button_text: buttonText,
         link_url: linkUrl,
+        click_action: clickAction,
+        open_in_new_tab: openInNewTab,
         lead_capture_enabled: leadCaptureEnabled,
         required_fields: finalRequiredFields,
       };
@@ -411,16 +421,93 @@ export default function PromoPopupAdminPage() {
               </div>
             </div>
 
-            {/* Custom Link Redirect URL */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-500">Optional Redirect Link URL (Overrides Landing Page)</label>
-              <input
-                type="text"
-                value={linkUrl}
-                onChange={(e) => setLinkUrl(e.target.value)}
-                placeholder="e.g. https://tesca.co/courses/ielts-prep"
-                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none transition-colors"
-              />
+            {/* Image Click Action Selector */}
+            <div className="space-y-3 p-4 bg-gray-50/70 border border-gray-100 rounded-xl">
+              <div className="space-y-0.5">
+                <label className="text-xs font-bold text-gray-800 uppercase tracking-wider block">
+                  Image Click Action
+                </label>
+                <p className="text-[10px] text-gray-400 font-semibold">
+                  Choose what happens when website visitors click on the flyer image
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                {/* Option 1: Direct Link */}
+                <div
+                  onClick={() => setClickAction('link')}
+                  className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all cursor-pointer ${
+                    clickAction === 'link'
+                      ? 'bg-primary-50/70 border-primary shadow-sm'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="clickAction"
+                    checked={clickAction === 'link'}
+                    onChange={() => setClickAction('link')}
+                    className="mt-0.5 text-primary focus:ring-primary accent-primary"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-gray-800 block">🔗 Redirect to Link / URL</span>
+                    <span className="text-[10px] text-gray-400 block mt-0.5 leading-snug">
+                      Opens target web address directly instead of form
+                    </span>
+                  </div>
+                </div>
+
+                {/* Option 2: Registration Form */}
+                <div
+                  onClick={() => setClickAction('form')}
+                  className={`flex items-start gap-2.5 p-3 rounded-xl border transition-all cursor-pointer ${
+                    clickAction === 'form'
+                      ? 'bg-primary-50/70 border-primary shadow-sm'
+                      : 'bg-white border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="clickAction"
+                    checked={clickAction === 'form'}
+                    onChange={() => setClickAction('form')}
+                    className="mt-0.5 text-primary focus:ring-primary accent-primary"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-gray-800 block">📋 Open Lead Form</span>
+                    <span className="text-[10px] text-gray-400 block mt-0.5 leading-snug">
+                      Opens lead capture registration page
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Conditional Redirect Link Input */}
+              {clickAction === 'link' && (
+                <div className="space-y-3 pt-2">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-700">Target Redirect URL / Link <span className="text-rose-500">*</span></label>
+                    <input
+                      type="text"
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      placeholder="e.g. https://tesca.co/courses or https://wa.me/918488805888"
+                      className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:border-primary outline-none transition-colors"
+                      required={clickAction === 'link'}
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs text-gray-600 font-semibold cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={openInNewTab}
+                      onChange={(e) => setOpenInNewTab(e.target.checked)}
+                      className="rounded border-gray-300 text-primary focus:ring-primary accent-primary"
+                    />
+                    <span>Open link in a new browser tab</span>
+                  </label>
+                </div>
+              )}
             </div>
 
             {/* Upload File */}
@@ -510,6 +597,9 @@ export default function PromoPopupAdminPage() {
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${p.is_active ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
                             {p.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                          <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary-50 text-primary border border-primary-100">
+                            {p.click_action === 'form' || (!p.click_action && !p.link_url) ? '📋 Form' : '🔗 Link'}
                           </span>
                           <span className="text-[9px] text-gray-400 font-semibold">{p.delay_seconds}s delay</span>
                         </div>

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { is_active, image_url, title, subtitle, delay_seconds, button_text, link_url, lead_capture_enabled, required_fields } = body;
+    const { is_active, image_url, title, subtitle, delay_seconds, button_text, link_url, click_action, open_in_new_tab, lead_capture_enabled, required_fields } = body;
 
     if (!image_url || !title) {
       return NextResponse.json({ error: 'Image URL and Title are required.' }, { status: 400 });
@@ -86,6 +86,8 @@ export async function POST(request: NextRequest) {
         delay_seconds: parseInt(delay_seconds, 10) || 5,
         button_text: button_text || 'Get Details',
         link_url: link_url || '',
+        click_action: click_action || 'link',
+        open_in_new_tab: !!open_in_new_tab,
         lead_capture_enabled: !!lead_capture_enabled,
         required_fields: required_fields || ['name', 'phone']
       })
@@ -115,7 +117,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, is_active, image_url, title, subtitle, delay_seconds, button_text, link_url, lead_capture_enabled, required_fields } = body;
+    const { id, is_active, image_url, title, subtitle, delay_seconds, button_text, link_url, click_action, open_in_new_tab, lead_capture_enabled, required_fields } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Popup id is required.' }, { status: 400 });
@@ -137,6 +139,8 @@ export async function PATCH(request: NextRequest) {
     if (delay_seconds !== undefined) updates.delay_seconds = parseInt(delay_seconds, 10) || 5;
     if (button_text !== undefined) updates.button_text = button_text;
     if (link_url !== undefined) updates.link_url = link_url;
+    if (click_action !== undefined) updates.click_action = click_action;
+    if (open_in_new_tab !== undefined) updates.open_in_new_tab = !!open_in_new_tab;
     if (lead_capture_enabled !== undefined) updates.lead_capture_enabled = !!lead_capture_enabled;
     if (required_fields !== undefined) updates.required_fields = required_fields;
     updates.updated_at = new Date().toISOString();

@@ -13,6 +13,8 @@ interface PopupSetting {
   delay_seconds: number;
   button_text: string;
   link_url: string;
+  click_action?: 'link' | 'form';
+  open_in_new_tab?: boolean;
   lead_capture_enabled: boolean;
   required_fields: string[];
 }
@@ -50,6 +52,8 @@ export default function PromoPopup() {
               delay_seconds: 2,
               is_active: true,
               link_url: '',
+              click_action: 'link',
+              open_in_new_tab: false,
               lead_capture_enabled: true,
               required_fields: ['name', 'phone'],
             },
@@ -100,9 +104,14 @@ export default function PromoPopup() {
 
     handleClose();
 
-    if (currentPopup.link_url) {
-      // External or custom link redirect
-      window.location.href = currentPopup.link_url;
+    const isLinkAction = currentPopup.click_action === 'link' || (currentPopup.click_action !== 'form' && Boolean(currentPopup.link_url));
+
+    if (isLinkAction && currentPopup.link_url) {
+      if (currentPopup.open_in_new_tab) {
+        window.open(currentPopup.link_url, '_blank', 'noopener,noreferrer');
+      } else {
+        window.location.href = currentPopup.link_url;
+      }
     } else {
       // Dedicated registration landing page
       router.push(`/promo/${currentPopup.id}`);
