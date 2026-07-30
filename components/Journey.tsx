@@ -1,10 +1,11 @@
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
+import WaveDivider from '@/components/WaveDivider';
 import { JOURNEY_STEPS } from '@/lib/data/content';
 
 export default function Journey() {
   return (
-    <section className="relative overflow-hidden bg-white py-20 lg:py-28">
+    <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
       <div className="container-x">
         <SectionHeading
           eyebrow="Your Journey"
@@ -81,6 +82,7 @@ export default function Journey() {
           </div>
         </div>
       </div>
+      <WaveDivider position="bottom" fillColor="text-[#062426]" variant={3} className="mt-8 lg:mt-12" />
     </section>
   );
 }

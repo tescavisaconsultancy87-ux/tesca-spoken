@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
+import WaveDivider from '@/components/WaveDivider';
 import { WHY_TESCA } from '@/lib/data/content';
 
 const ICONS: Record<string, LucideIcon> = {
@@ -85,7 +86,7 @@ const CARD_THEMES = [
 
 export default function WhyTesca() {
   return (
-    <section id="why-tesca" className="bg-white py-14 lg:py-20">
+    <section id="why-tesca" className="relative bg-white pt-14 pb-0 lg:pt-20 lg:pb-0">
       <div className="container-x">
         <SectionHeading
           eyebrow="Why TESCA"
@@ -144,6 +145,7 @@ export default function WhyTesca() {
           })}
         </div>
       </div>
+      <WaveDivider position="bottom" fillColor="text-[#062426]" variant={1} className="mt-8 lg:mt-12" />
     </section>
   );
 }

@@ -5,6 +5,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import AboutTrainers from '@/components/AboutTrainers';
+import WaveDivider from '@/components/WaveDivider';
+import Reveal from '@/components/Reveal';
 import {
   GraduationCap,
   Users,
@@ -170,14 +172,14 @@ export default function AboutPage() {
 
       <main>
         {/* ── Hero ── */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-20 lg:pt-48 lg:pb-28">
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-0 lg:pt-48 lg:pb-0">
           {/* Decorative blobs */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
             <div className="absolute bottom-0 left-1/4 h-60 w-60 rounded-full bg-secondary/5 blur-3xl" />
           </div>
 
-          <div className="container-x relative z-10">
+          <div className="container-x relative z-10 pb-8">
             <div className="grid items-center gap-12 lg:grid-cols-12">
               {/* Left Column: Text Content */}
               <div className="text-center lg:text-left lg:col-span-7 space-y-6">
@@ -226,10 +228,11 @@ export default function AboutPage() {
               </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={1} className="mt-6" />
         </section>
 
         {/* ── Mission & Story ── */}
-        <section className="py-20 lg:py-28">
+        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="grid items-center gap-12 lg:grid-cols-2">
               {/* Story text */}
@@ -309,10 +312,11 @@ export default function AboutPage() {
               </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-[#F8FAFC]" variant={2} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Values ── */}
-        <section className="bg-bg-soft py-20 lg:py-28">
+        <section className="relative bg-bg-soft pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
@@ -337,10 +341,11 @@ export default function AboutPage() {
               ))}
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={3} className="mt-8 lg:mt-12" />
         </section>
 
-        {/* ── Timeline ── */}
-        <section className="py-20 lg:py-28">
+        {/* ── Timeline / Our Journey ── */}
+        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="text-xs font-bold uppercase tracking-widest text-primary">
@@ -351,40 +356,69 @@ export default function AboutPage() {
               </h2>
             </div>
 
-            <div className="relative mx-auto max-w-3xl">
-              {/* Timeline line */}
-              <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-primary-100 lg:left-1/2" />
+            <div className="relative mt-14 lg:mt-20">
+              {/* Desktop center progress line */}
+              <div
+                className="absolute left-1/2 top-0 hidden h-full w-px -translate-x-1/2 lg:block"
+                aria-hidden="true"
+              >
+                <div className="h-full w-full bg-gradient-to-b from-primary via-primary-300 to-secondary" />
+              </div>
 
-              {MILESTONES.map((milestone, i) => (
-                <div
-                  key={milestone.year}
-                  className={`relative mb-8 flex gap-6 ${
-                    i % 2 === 0 ? 'lg:flex-row' : 'lg:flex-row-reverse'
-                  }`}
-                >
-                  {/* Dot */}
-                  <div className="absolute left-6 top-3 z-10 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-primary bg-white shadow-soft lg:left-1/2" />
+              {/* Mobile vertical progress line */}
+              <div
+                className="absolute left-[27px] top-0 h-full w-px bg-gradient-to-b from-primary via-primary-200 to-secondary lg:hidden"
+                aria-hidden="true"
+              />
 
-                  {/* Card */}
-                  <div className={`ml-14 flex-1 lg:ml-0 ${i % 2 === 0 ? 'lg:pr-12' : 'lg:pl-12'}`}>
-                    <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-soft">
-                      <span className="inline-block rounded-full bg-primary-50 px-3 py-1 text-xs font-bold text-primary mb-2">
-                        {milestone.year}
-                      </span>
-                      <p className="text-sm text-ink-muted leading-relaxed">{milestone.event}</p>
-                    </div>
-                  </div>
+              <div className="space-y-8 lg:space-y-0">
+                {MILESTONES.map((milestone, i) => {
+                  const isLeft = i % 2 === 0;
+                  return (
+                    <Reveal key={milestone.year} delay={i * 60}>
+                      <div
+                        className={`relative flex items-start gap-5 pl-0 lg:mb-[-2px] lg:gap-0 ${
+                          isLeft ? 'lg:flex-row' : 'lg:flex-row-reverse'
+                        }`}
+                      >
+                        {/* Circle node (no numbers) */}
+                        <div className="relative z-10 flex shrink-0 items-center lg:order-2 lg:mx-auto">
+                          <span className="relative flex h-14 w-14 items-center justify-center rounded-full border-4 border-bg-soft bg-white shadow-soft-lg lg:h-16 lg:w-16">
+                            <span className="h-4 w-4 rounded-full bg-gradient-to-tr from-primary to-primary-600" />
+                            <span className="absolute inset-0 animate-ping rounded-full bg-primary-200 opacity-40" />
+                          </span>
+                        </div>
 
-                  {/* Spacer for the other side on desktop */}
-                  <div className="hidden flex-1 lg:block" />
-                </div>
-              ))}
+                        {/* Content card */}
+                        <div
+                          className={`flex-1 lg:order-1 lg:w-[calc(50%-3rem)] lg:flex-none lg:justify-end ${
+                            isLeft ? 'lg:pr-12 lg:text-right' : 'lg:pl-12'
+                          }`}
+                        >
+                          <div className="rounded-2xl border border-black/5 bg-white p-5 shadow-soft transition-all duration-300 hover:shadow-soft-lg hover:-translate-y-1 lg:p-6">
+                            <span className="inline-block rounded-full bg-primary-50 px-3.5 py-1 text-xs font-bold text-primary mb-2">
+                              {milestone.year}
+                            </span>
+                            <p className="mt-1 text-sm leading-relaxed text-ink-muted">
+                              {milestone.event}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Spacer for desktop */}
+                        <div className="hidden lg:order-3 lg:block lg:w-[calc(50%-3rem)]" />
+                      </div>
+                    </Reveal>
+                  );
+                })}
+              </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-[#011616]" variant={4} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Faculty Team ── */}
-        <section className="bg-[#011616] py-20 lg:py-28 relative overflow-hidden">
+        <section className="bg-[#011616] pt-20 pb-0 lg:pt-28 lg:pb-0 relative overflow-hidden">
           {/* Decorative background glow */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-primary/10 blur-3xl" />
@@ -451,10 +485,11 @@ export default function AboutPage() {
               ))}
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-[#F8FAFC]" variant={1} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Trainers ── */}
-        <section className="bg-bg-soft py-20 lg:py-28">
+        <section className="relative bg-bg-soft pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="text-xs font-bold uppercase tracking-widest text-primary">
@@ -471,10 +506,11 @@ export default function AboutPage() {
 
             <AboutTrainers />
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={2} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── CTA ── */}
-        <section className="py-20 lg:py-28">
+        <section className="relative bg-white py-20 lg:py-28">
           <div className="container-x">
             <div className="rounded-3xl bg-gradient-to-br from-primary-900 to-primary-700 px-8 py-16 text-center relative overflow-hidden">
               <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -509,3 +545,4 @@ export default function AboutPage() {
     </div>
   );
 }
+

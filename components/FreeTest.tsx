@@ -1,6 +1,7 @@
 import { Clock, Award, Sparkles, ArrowRight, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import WaveDivider from '@/components/WaveDivider';
 
 const TEST_PERKS = [
   { icon: Clock, label: 'Takes only 5 minutes' },
@@ -11,7 +12,7 @@ const TEST_PERKS = [
 
 export default function FreeTest() {
   return (
-    <section className="bg-white py-20 lg:py-28">
+    <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
       <div className="container-x">
         <Reveal>
           <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary via-primary-600 to-primary-800 p-8 shadow-soft-xl lg:p-16">
@@ -84,6 +85,7 @@ export default function FreeTest() {
           </div>
         </Reveal>
       </div>
+      <WaveDivider position="bottom" fillColor="text-[#F8FAFC]" variant={4} className="mt-8 lg:mt-12" />
     </section>
   );
 }

@@ -96,16 +96,32 @@ export function formatFriendlyError(err: any): string {
   return msg;
 }
 
+export async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const hash = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(hash))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 // In-memory rate limiting map
 const ipCache = new Map<string, { count: number; resetTime: number }>();
 
 export function getClientIp(request: NextRequest): string {
+  // x-real-ip is set by Cloudflare and is the most reliable
+  const realIp = request.headers.get('x-real-ip');
+  if (realIp) return realIp;
+
+  // cf-connecting-ip is set by Cloudflare at the edge
   const cloudflareIp = request.headers.get('cf-connecting-ip');
   if (cloudflareIp) return cloudflareIp;
 
+  // x-forwarded-for may contain spoofed values — take the last IP (set by trusted proxy)
   const forwardedFor = request.headers.get('x-forwarded-for');
   if (forwardedFor) {
-    return forwardedFor.split(',')[0]?.trim() || '127.0.0.1';
+    const ips = forwardedFor.split(',').map(ip => ip.trim()).filter(Boolean);
+    const lastIp = ips[ips.length - 1];
+    if (lastIp) return lastIp;
   }
 
   return request.headers.get('x-real-ip') || '127.0.0.1';
@@ -175,9 +191,8 @@ export async function verifyAuthAndRole(
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      // In dev mode without supabase url, bypass security to allow testing
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('[Security] Supabase config missing. Dev Sandbox authentication bypass.');
+      if (process.env.ALLOW_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV === 'development') {
+        console.warn('[Security] Supabase config missing. Dev Sandbox authentication bypass (ALLOW_DEV_AUTH_BYPASS enabled).');
         return { authorized: true, user: { id: 'dev-admin-id', email: 'admin@tesca.com', role: 'admin' } };
       }
       return { authorized: false, error: 'Database configuration missing.', status: 500 };
@@ -193,6 +208,21 @@ export async function verifyAuthAndRole(
     const { data: { user }, error } = await client.auth.getUser(token);
     if (error || !user) {
       return { authorized: false, error: 'Invalid or expired session. Please log in again.', status: 401 };
+    }
+
+    // Check if token has been blacklisted (logged out)
+    try {
+      const tokenHash = await sha256Hex(token);
+      const { data: blacklisted } = await client
+        .from('token_blacklist')
+        .select('id')
+        .eq('token_hash', tokenHash)
+        .maybeSingle();
+      if (blacklisted) {
+        return { authorized: false, error: 'Session has been revoked. Please log in again.', status: 401 };
+      }
+    } catch (_) {
+      // Blacklist check failure is non-fatal — token still validated by Supabase Auth
     }
 
     const email = user.email || '';

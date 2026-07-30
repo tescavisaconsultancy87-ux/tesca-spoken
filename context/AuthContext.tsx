@@ -283,11 +283,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     if (supabase) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.access_token) {
+        try {
+          const bytes = new TextEncoder().encode(session.access_token);
+          const hash = await crypto.subtle.digest('SHA-256', bytes);
+          const tokenHash = Array.from(new Uint8Array(hash))
+            .map((byte) => byte.toString(16).padStart(2, '0'))
+            .join('');
+          await supabase.from('token_blacklist').insert({ token_hash: tokenHash, user_id: session.user.id });
+        } catch (_) {
+          // Blacklist insertion is best-effort
+        }
+      }
       await supabase.auth.signOut();
     } else {
       sessionStorage.removeItem('tesca_dev_session');
     }
-    // Expire mock session cookie
     clearSessionActiveCookie();
     clearMockSessionCookie();
     setUser(null);

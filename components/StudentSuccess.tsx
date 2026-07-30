@@ -3,6 +3,7 @@
 import { TrendingUp, Quote } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
+import WaveDivider from '@/components/WaveDivider';
 import { SUCCESS_METRICS, TRANSFORMATIONS } from '@/lib/data/content';
 import { useCounter } from '@/hooks/useCounter';
 import { useReveal } from '@/hooks/useReveal';
@@ -36,7 +37,7 @@ export default function StudentSuccess() {
   const { ref, visible } = useReveal<HTMLDivElement>({ threshold: 0.25 });
 
   return (
-    <section id="success" className="bg-[#062426] py-20 lg:py-28">
+    <section id="success" className="relative bg-[#062426] pt-20 pb-0 lg:pt-28 lg:pb-0">
       <div className="container-x">
         <SectionHeading
           theme="dark"
@@ -135,6 +136,7 @@ export default function StudentSuccess() {
           ))}
         </div>
       </div>
+      <WaveDivider position="bottom" fillColor="text-[#F8FAFC]" variant={4} className="mt-8 lg:mt-12" />
     </section>
   );
 }

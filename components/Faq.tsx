@@ -4,13 +4,14 @@ import { useState } from 'react';
 import { Plus, HelpCircle } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
+import WaveDivider from '@/components/WaveDivider';
 import { FAQS } from '@/lib/data/content';
 
 export default function Faq() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <section className="bg-[#062426] py-20 lg:py-28">
+    <section className="relative bg-[#062426] pt-20 pb-0 lg:pt-28 lg:pb-0">
       <div className="container-x">
         <SectionHeading
           theme="dark"
@@ -103,6 +104,7 @@ export default function Faq() {
           </Reveal>
         </div>
       </div>
+      <WaveDivider position="bottom" fillColor="text-white" variant={3} className="mt-8 lg:mt-12" />
     </section>
   );
 }

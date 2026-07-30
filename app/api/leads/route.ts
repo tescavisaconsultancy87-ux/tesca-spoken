@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Deduplication check for popup leads
+      // Deduplication check for popup leads (parameterized — no string interpolation)
       if (adminSupabase && (phone || email)) {
         const checkQuery = adminSupabase
           .from('leads')
@@ -121,11 +121,31 @@ export async function POST(request: NextRequest) {
           .neq('status', 'converted')
           .neq('status', 'rejected');
 
-        const filterOr = [];
-        if (email) filterOr.push(`email.eq.${email}`);
-        if (phone) filterOr.push(`phone.eq.${phone}`);
-        if (filterOr.length > 0) {
-          const { data: existingLeads } = await checkQuery.or(filterOr.join(','));
+        if (email && phone) {
+          const { data: existingByEmail } = await checkQuery.eq('email', email);
+          if (existingByEmail && existingByEmail.length > 0) {
+            return NextResponse.json(
+              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
+              { status: 409 }
+            );
+          }
+          const { data: existingByPhone } = await checkQuery.eq('phone', phone);
+          if (existingByPhone && existingByPhone.length > 0) {
+            return NextResponse.json(
+              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
+              { status: 409 }
+            );
+          }
+        } else if (email) {
+          const { data: existingLeads } = await checkQuery.eq('email', email);
+          if (existingLeads && existingLeads.length > 0) {
+            return NextResponse.json(
+              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
+              { status: 409 }
+            );
+          }
+        } else if (phone) {
+          const { data: existingLeads } = await checkQuery.eq('phone', phone);
           if (existingLeads && existingLeads.length > 0) {
             return NextResponse.json(
               { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },

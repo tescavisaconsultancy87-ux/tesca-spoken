@@ -3,6 +3,30 @@
 import React, { useRef, useEffect } from 'react';
 import { Bold, Italic, Heading2, Heading3, List, ListOrdered } from 'lucide-react';
 
+function sanitizeHtml(html: string): string {
+  const doc = document.createElement('div');
+  doc.innerHTML = html;
+  const scripts = doc.querySelectorAll('script, iframe, embed, object, form, input, button, style, link, meta');
+  scripts.forEach(el => el.remove());
+  const allElements = doc.querySelectorAll('*');
+  allElements.forEach(el => {
+    const attrs = el.attributes;
+    for (let i = attrs.length - 1; i >= 0; i--) {
+      const name = attrs[i].name.toLowerCase();
+      if (name.startsWith('on') || name === 'src' || name === 'href' || name === 'xlink:href') {
+        const val = attrs[i].value.toLowerCase();
+        if (val.startsWith('javascript:') || val.startsWith('data:') || val.startsWith('vbscript:')) {
+          el.removeAttribute(attrs[i].name);
+        }
+      }
+      if (name.startsWith('on')) {
+        el.removeAttribute(attrs[i].name);
+      }
+    }
+  });
+  return doc.innerHTML;
+}
+
 interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -12,7 +36,6 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
 
-  // Sync internal HTML with external value ONLY when they differ to avoid cursor reset
   useEffect(() => {
     if (editorRef.current) {
       if (editorRef.current.innerHTML !== value) {
@@ -22,7 +45,7 @@ export default function RichTextEditor({ value, onChange, placeholder }: RichTex
   }, [value]);
 
   const handleInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const html = e.currentTarget.innerHTML;
+    const html = sanitizeHtml(e.currentTarget.innerHTML);
     onChange(html);
   };
 

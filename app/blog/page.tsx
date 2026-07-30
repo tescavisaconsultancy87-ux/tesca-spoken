@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
+import WaveDivider from '@/components/WaveDivider';
 import { db } from '@/lib/db';
 import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
 import Link from 'next/link';
@@ -44,13 +45,13 @@ export default function BlogPage() {
       <Navbar />
       <main>
         {/* Hero */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-20 lg:pt-48 lg:pb-28">
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-0 lg:pt-48 lg:pb-0">
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             <div className="absolute -top-20 right-0 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
             <div className="absolute bottom-0 -left-20 h-60 w-60 rounded-full bg-secondary/5 blur-3xl" />
           </div>
 
-          <div className="container-x relative z-10 text-center max-w-3xl mx-auto space-y-6">
+          <div className="container-x relative z-10 text-center max-w-3xl mx-auto space-y-6 pb-8">
             <span className="inline-flex items-center gap-2 rounded-full bg-primary-50 border border-primary-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
               Our Blog
             </span>
@@ -63,10 +64,11 @@ export default function BlogPage() {
               Expert advice, study strategies, and success stories to help you on your English learning journey.
             </p>
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={1} className="mt-6" />
         </section>
 
         {/* Blog List */}
-        <section className="py-20 lg:py-28">
+        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             {loading ? (
               <div className="py-12 text-center text-ink-muted">
@@ -138,6 +140,7 @@ export default function BlogPage() {
               </div>
             )}
           </div>
+          <WaveDivider position="bottom" fillColor="text-primary-900" variant={2} className="mt-8 lg:mt-12" />
         </section>
       </main>
       <Footer />

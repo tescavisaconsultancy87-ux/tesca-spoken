@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
 import TrainerCard from '@/components/TrainerCard';
+import WaveDivider from '@/components/WaveDivider';
 import { TRAINERS } from '@/lib/data/content';
 import { db } from '@/lib/db';
 
@@ -115,7 +116,7 @@ export default function Trainers() {
   }, [scrollToDotIndex, dotsCount]);
 
   return (
-    <section className="bg-bg-soft py-20 lg:py-28 overflow-hidden">
+    <section className="relative bg-bg-soft pt-20 pb-0 lg:pt-28 lg:pb-0 overflow-hidden">
       <div className="container-x">
         <SectionHeading
           eyebrow="Meet Our Trainers"
@@ -218,6 +219,7 @@ export default function Trainers() {
           )}
         </div>
       </div>
+      <WaveDivider position="bottom" fillColor="text-white" variant={2} className="mt-8 lg:mt-12" />
     </section>
   );
 }

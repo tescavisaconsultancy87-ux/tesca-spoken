@@ -1,6 +1,7 @@
 'use client';
 
 import SectionHeading from '@/components/SectionHeading';
+import WaveDivider from '@/components/WaveDivider';
 import Image from 'next/image';
 
 const SCHOOLS = [
@@ -24,7 +25,7 @@ export default function SchoolMarquee() {
   const marqueeItems = [...SCHOOLS, ...SCHOOLS];
 
   return (
-    <section className="bg-bg-soft py-16 border-y border-slate-100 overflow-hidden">
+    <section className="relative bg-bg-soft pt-16 pb-0 overflow-hidden">
       <div className="container-x">
         <SectionHeading
           eyebrow="Associated Schools"
@@ -70,6 +71,7 @@ export default function SchoolMarquee() {
           ))}
         </div>
       </div>
+      <WaveDivider position="bottom" fillColor="text-white" variant={1} className="mt-6" />
     </section>
   );
 }

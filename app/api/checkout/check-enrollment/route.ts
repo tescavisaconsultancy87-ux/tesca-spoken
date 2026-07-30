@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { checkRateLimit, getClientIp } from '@/lib/security';
 
 /**
  * Check if a user is already enrolled in a course.
@@ -7,6 +8,12 @@ import { createClient } from '@supabase/supabase-js';
  */
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rateCheck = checkRateLimit(ip, 20, 60000);
+    if (!rateCheck.success) {
+      return NextResponse.json({ enrolled: false });
+    }
+
     const body = await request.json();
     const { email, planId } = body;
 
@@ -18,7 +25,6 @@ export async function POST(request: NextRequest) {
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
     if (!url || !key) {
-      // Can't check — let them proceed
       return NextResponse.json({ enrolled: false });
     }
 

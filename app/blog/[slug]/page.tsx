@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
+import WaveDivider from '@/components/WaveDivider';
 import { db } from '@/lib/db';
 import { Calendar, User, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
@@ -70,8 +71,8 @@ export default function BlogPostPage() {
       <main>
         <article>
             {/* Hero */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-16 lg:pt-48 lg:pb-20">
-              <div className="container-x relative z-10 max-w-3xl mx-auto">
+            <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-0 lg:pt-48 lg:pb-0">
+              <div className="container-x relative z-10 max-w-3xl mx-auto pb-8">
                 <Link
                   href="/blog"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary-600 transition-colors mb-8"
@@ -101,6 +102,7 @@ export default function BlogPostPage() {
                   </div>
                 </div>
               </div>
+              <WaveDivider position="bottom" fillColor="text-white" variant={1} className="mt-4" />
             </section>
 
             {/* Featured Image */}
@@ -120,7 +122,7 @@ export default function BlogPostPage() {
             )}
 
             {/* Content */}
-            <section className="py-16 lg:py-20">
+            <section className="relative bg-white pt-16 pb-0 lg:pt-20 lg:pb-0">
               <div className="container-x max-w-3xl mx-auto">
                 {/<[a-z][\s\S]*>/i.test(post.content) ? (
                   <div 
@@ -157,6 +159,7 @@ export default function BlogPostPage() {
                   </Link>
                 </div>
               </div>
+              <WaveDivider position="bottom" fillColor="text-primary-900" variant={2} className="mt-8 lg:mt-12" />
             </section>
           </article>
       </main>

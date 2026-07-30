@@ -35,7 +35,8 @@ function isValidPassword(password: string): boolean {
   return password.length >= 8
     && /[a-z]/.test(password)
     && /[A-Z]/.test(password)
-    && /\d/.test(password);
+    && /\d/.test(password)
+    && /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(password);
 }
 
 export async function POST(request: NextRequest) {
@@ -49,10 +50,19 @@ export async function POST(request: NextRequest) {
 
     const cleanEmail = email.trim().toLowerCase();
     const ip = getClientIp(request);
-    const rateKey = `forgot-password:${ip}:${cleanEmail}`;
-    const rateCheck = checkRateLimit(rateKey, 5, 15 * 60 * 1000);
-    if (!rateCheck.success) {
+
+    // Rate limit per IP+email combination (prevents rapid-fire from one source)
+    const ipRateKey = `forgot-password:ip:${ip}:${cleanEmail}`;
+    const ipRateCheck = checkRateLimit(ipRateKey, 5, 15 * 60 * 1000);
+    if (!ipRateCheck.success) {
       return NextResponse.json({ success: false, error: 'Too many reset attempts. Please wait before trying again.' }, { status: 429 });
+    }
+
+    // Rate limit per email globally (prevents distributed brute-force across many IPs)
+    const emailRateKey = `forgot-password:email:${cleanEmail}`;
+    const emailRateCheck = checkRateLimit(emailRateKey, 10, 60 * 60 * 1000);
+    if (!emailRateCheck.success) {
+      return NextResponse.json({ success: false, error: 'Too many reset attempts for this account. Please try again later.' }, { status: 429 });
     }
 
     const supabaseAdmin = getAdminSupabase();
@@ -177,7 +187,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'New password is required.' }, { status: 400 });
       }
       if (!isValidPassword(password)) {
-        return NextResponse.json({ success: false, error: 'Password must be at least 8 characters and include uppercase, lowercase, and a number.' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Password must be at least 8 characters and include uppercase, lowercase, a number, and a special character.' }, { status: 400 });
       }
 
       const cleanOtp = otp.trim();

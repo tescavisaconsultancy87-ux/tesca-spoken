@@ -1,21 +1,25 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import DemoModal from '@/components/DemoModal';
 
-interface DemoModalContextType {
-  isOpen: boolean;
+interface DemoModalActionsContextType {
   openModal: () => void;
   closeModal: () => void;
 }
 
-const DemoModalContext = createContext<DemoModalContextType | undefined>(undefined);
+interface DemoModalStateContextType {
+  isOpen: boolean;
+}
+
+const DemoModalActionsContext = createContext<DemoModalActionsContextType | undefined>(undefined);
+const DemoModalStateContext = createContext<DemoModalStateContextType | undefined>(undefined);
 
 export function DemoModalProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const openModal = React.useCallback(() => setIsOpen(true), []);
-  const closeModal = React.useCallback(() => setIsOpen(false), []);
+  const openModal = useCallback(() => setIsOpen(true), []);
+  const closeModal = useCallback(() => setIsOpen(false), []);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -23,33 +27,39 @@ export function DemoModalProvider({ children }: { children: ReactNode }) {
         const params = new URLSearchParams(window.location.search);
         if (params.get('demo') === 'true') {
           setIsOpen(true);
-          // Clean up the URL parameter without reloading
           const newUrl = window.location.pathname + window.location.hash;
           window.history.replaceState({ path: newUrl }, '', newUrl);
         }
       };
-      
+
       checkDemoParam();
-      // Listen for popstate changes too (e.g., back navigation)
       window.addEventListener('popstate', checkDemoParam);
       return () => window.removeEventListener('popstate', checkDemoParam);
     }
   }, []);
 
-  const value = React.useMemo(() => ({ isOpen, openModal, closeModal }), [isOpen, openModal, closeModal]);
-
   return (
-    <DemoModalContext.Provider value={value}>
-      {children}
-      {isOpen && <DemoModal onClose={closeModal} />}
-    </DemoModalContext.Provider>
+    <DemoModalActionsContext.Provider value={{ openModal, closeModal }}>
+      <DemoModalStateContext.Provider value={{ isOpen }}>
+        {children}
+        {isOpen && <DemoModal onClose={closeModal} />}
+      </DemoModalStateContext.Provider>
+    </DemoModalActionsContext.Provider>
   );
 }
 
 export function useDemoModal() {
-  const context = useContext(DemoModalContext);
+  const context = useContext(DemoModalActionsContext);
   if (!context) {
     throw new Error('useDemoModal must be used within a DemoModalProvider');
+  }
+  return context;
+}
+
+export function useDemoModalState() {
+  const context = useContext(DemoModalStateContext);
+  if (!context) {
+    throw new Error('useDemoModalState must be used within a DemoModalProvider');
   }
   return context;
 }

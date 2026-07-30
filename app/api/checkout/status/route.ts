@@ -1,13 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { verifyAuthAndRole, checkRateLimit, getClientIp } from '@/lib/security';
 
 /**
- * Payment Status Check API
- * Allows users to check their payment status by email or payment ID.
- * Returns sanitized info only — no internal details.
+ * Payment Status Check API (Authenticated)
+ * Users can only check their own payment status.
  */
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rateCheck = checkRateLimit(ip, 10, 60000);
+    if (!rateCheck.success) {
+      return NextResponse.json({ error: 'Too many requests. Please wait before trying again.' }, { status: 429 });
+    }
+
+    const auth = await verifyAuthAndRole(request, ['student', 'admin', 'tutor']);
+    if (!auth.authorized || !auth.user) {
+      return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { email, paymentId } = body;
 
@@ -15,6 +26,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         error: 'Please provide your email address or payment ID to check status.',
       }, { status: 400 });
+    }
+
+    // Ownership check: users can only query their own email
+    const cleanEmail = email ? email.toLowerCase().trim() : '';
+    if (cleanEmail && cleanEmail !== auth.user.email.toLowerCase()) {
+      return NextResponse.json({ error: 'You can only check your own payment status.' }, { status: 403 });
     }
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -37,9 +54,10 @@ export async function POST(request: NextRequest) {
       .limit(5);
 
     if (paymentId) {
-      query = query.eq('id', paymentId.trim());
-    } else if (email) {
-      query = query.eq('email', email.toLowerCase().trim());
+      // When querying by payment ID, also verify ownership
+      query = query.eq('id', paymentId.trim()).eq('email', auth.user.email);
+    } else {
+      query = query.eq('email', cleanEmail);
     }
 
     const { data: payments, error } = await query;
@@ -54,7 +72,7 @@ export async function POST(request: NextRequest) {
     if (!payments || payments.length === 0) {
       return NextResponse.json({
         found: false,
-        message: 'No payment records found. If you recently made a payment, it may take a few minutes to reflect. You can also contact us for immediate assistance.',
+        message: 'No payment records found.',
       });
     }
 

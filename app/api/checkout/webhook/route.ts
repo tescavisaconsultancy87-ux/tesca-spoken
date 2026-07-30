@@ -59,17 +59,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
     }
 
-    // 2. Verify webhook signature
-    if (webhookSignature) {
-      const expectedSignature = crypto
-        .createHmac('sha256', secret)
-        .update(rawBody)
-        .digest('hex');
+    // 2. Verify webhook signature — mandatory, no fallback
+    if (!webhookSignature) {
+      console.error('[Webhook] Missing signature header — rejecting');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    }
 
-      if (expectedSignature !== webhookSignature) {
-        console.error('[Webhook] Signature mismatch — possible tampered request');
-        return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
-      }
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(rawBody)
+      .digest('hex');
+
+    if (expectedSignature !== webhookSignature) {
+      console.error('[Webhook] Signature mismatch — possible tampered request');
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
     // 3. Parse event
@@ -230,18 +233,9 @@ export async function POST(request: NextRequest) {
                 <div style="padding: 40px 30px; line-height: 1.6;">
                   <h2 style="color: #0b3336; margin-top: 0;">Welcome, ${name || 'Student'}!</h2>
                   <p>Your payment of <strong>₹${amountInRupees.toLocaleString('en-IN')}</strong> has been successfully received and your enrollment is now active.</p>
-                  <div style="background: #fff8f8; border: 1px solid #fee2e2; border-radius: 12px; padding: 25px; margin: 25px 0;">
-                    <p style="margin: 0 0 12px 0; font-size: 14px; color: #991b1b; font-weight: bold;">⚠️ IMPORTANT SECURITY DISCLAIMER:</p>
-                    <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
-                      Do not share these credentials with anyone. When you log in for the first time, you will be required to change your password.
-                    </p>
-                    <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
-                      <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Email:</strong> ${email}</p>
-                      <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Temporary Password:</strong> <code style="background: #fee2e2; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 14px; color: #b91c1c;">${tempPassword}</code></p>
-                    </div>
-                  </div>
+                  <p>To get started, please set up your password by clicking the button below.</p>
                   <div style="text-align: center; margin: 30px 0 10px 0;">
-                    <a href="${origin}/login" style="background-color: #0b3336; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">Log In to Student Portal</a>
+                    <a href="${origin}/forgot-password" style="background-color: #0b3336; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">Set Up Your Password</a>
                   </div>
                 </div>
               </div>

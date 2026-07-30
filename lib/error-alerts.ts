@@ -46,15 +46,22 @@ export async function sendErrorAlert({
 
     const subject = `🚨 PAYMENT ALERT: ${typeLabels[errorType] || 'Checkout Error'} — Immediate Action Required`;
 
-    // Sanitize the error message — strip any env vars / secrets that might be in stack traces
-    const sanitizedError = errorMessage
-      .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '[JWT_REDACTED]')
-      .replace(/rzp_(test|live)_[A-Za-z0-9]+/g, '[RAZORPAY_KEY_REDACTED]')
-      .replace(/[A-Za-z0-9]{20,}/g, (match) => {
-        // Only redact if it looks like a secret (long alphanumeric string without spaces)
-        if (/^[A-Za-z0-9+/=_-]{30,}$/.test(match)) return '[SECRET_REDACTED]';
-        return match;
-      });
+    // Sanitize the error message — strip any env vars / secrets / stack traces
+    function sanitizeValue(val: string): string {
+      return val
+        .replace(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g, '[JWT_REDACTED]')
+        .replace(/rzp_(test|live)_[A-Za-z0-9]+/g, '[RAZORPAY_KEY_REDACTED]')
+        .replace(/[A-Za-z0-9]{20,}/g, (match) => {
+          if (/^[A-Za-z0-9+/=_-]{30,}$/.test(match)) return '[SECRET_REDACTED]';
+          return match;
+        })
+        .replace(/at\s+\S+\s*\(.*?\)/g, '[STACK_FRAME_REDACTED]')
+        .replace(/Error:\s*/g, '')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .split('\n').slice(0, 3).join('\n');
+    }
+    const sanitizedError = sanitizeValue(errorMessage);
+    const sanitizedExtra = extra ? sanitizeValue(extra) : undefined;
 
     const detailRows = [
       { label: 'Error Type', value: typeLabels[errorType] || errorType },
@@ -99,10 +106,10 @@ export async function sendErrorAlert({
               <pre style="font-size: 12px; color: #7f1d1d; margin: 0; white-space: pre-wrap; word-break: break-word; font-family: monospace; background: #fff5f5; padding: 10px; border-radius: 6px;">${sanitizedError}</pre>
             </div>
 
-            ${extra ? `
+            ${sanitizedExtra ? `
             <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 16px; margin: 20px 0;">
               <p style="font-size: 12px; font-weight: bold; color: #92400e; margin: 0 0 8px 0;">Additional Context:</p>
-              <p style="font-size: 12px; color: #78350f; margin: 0;">${extra}</p>
+              <p style="font-size: 12px; color: #78350f; margin: 0;">${sanitizedExtra}</p>
             </div>
             ` : ''}
 

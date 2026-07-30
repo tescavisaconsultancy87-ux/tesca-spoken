@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Image from 'next/image';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
+import WaveDivider from '@/components/WaveDivider';
 import { useTracking } from '@/hooks/useTracking';
 import { WHATSAPP_URL } from '@/lib/data/content';
 import {
@@ -184,13 +185,13 @@ export default function ContactPage() {
 
       <main>
         {/* ── Hero ── */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-16 lg:pt-48 lg:pb-24">
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-0 lg:pt-48 lg:pb-0">
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             <div className="absolute -top-16 right-0 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
             <div className="absolute bottom-0 -left-16 h-56 w-56 rounded-full bg-secondary/5 blur-3xl" />
           </div>
 
-          <div className="container-x relative z-10">
+          <div className="container-x relative z-10 pb-8">
             <div className="grid items-center gap-12 lg:grid-cols-12">
               {/* Left Column: Text Content */}
               <div className="text-center lg:text-left lg:col-span-7 space-y-6">
@@ -239,10 +240,11 @@ export default function ContactPage() {
               </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-[#F8FAFC]" variant={1} className="mt-6" />
         </section>
 
         {/* ── Main Form Container ── */}
-        <section className="pb-20 lg:pb-28">
+        <section className="relative bg-bg-soft pt-16 pb-0 lg:pt-20 lg:pb-0">
           <div className="container-x">
             <div className="mx-auto max-w-5xl overflow-hidden rounded-[2.5rem] border border-black/5 bg-white shadow-soft-xl grid lg:grid-cols-5">
               
@@ -475,10 +477,11 @@ export default function ContactPage() {
 
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={2} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Location Section ── */}
-        <section className="pb-20 lg:pb-28">
+        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="text-center mb-10">
               <h2 className="font-heading text-3xl font-bold text-ink">Our Locations</h2>
@@ -526,6 +529,7 @@ export default function ContactPage() {
               ))}
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-primary-900" variant={3} className="mt-8 lg:mt-12" />
         </section>
       </main>
 

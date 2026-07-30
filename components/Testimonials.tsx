@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Star, Quote, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import SectionHeading from '@/components/SectionHeading';
+import WaveDivider from '@/components/WaveDivider';
 import { TESTIMONIALS } from '@/lib/data/content';
 
 const AUTO_INTERVAL = 6000;
@@ -23,7 +24,7 @@ export default function Testimonials() {
   }, [next, paused]);
 
   return (
-    <section className="bg-white py-20 lg:py-28">
+    <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
       <div className="container-x">
         <SectionHeading
           eyebrow="Testimonials"
@@ -139,6 +140,7 @@ export default function Testimonials() {
           </div>
         </div>
       </div>
+      <WaveDivider position="bottom" fillColor="text-[#F8FAFC]" variant={3} className="mt-8 lg:mt-12" />
     </section>
   );
 }

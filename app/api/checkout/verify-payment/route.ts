@@ -96,6 +96,61 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: USER_ERRORS.SIGNATURE_INVALID }, { status: 400 });
     }
 
+    // 2b. Verify actual payment amount from Razorpay API (reject client billing manipulation)
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '';
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || '';
+    let amountInRupees = 0;
+    if (keyId && keySecret) {
+      try {
+        const credentials = btoa(`${keyId}:${keySecret}`);
+        const paymentResp = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
+          headers: { 'Authorization': `Basic ${credentials}` },
+        });
+        if (paymentResp.ok) {
+          const paymentData: any = await paymentResp.json();
+          amountInRupees = Math.round((paymentData.amount || 0) / 100);
+        }
+      } catch (_) {
+        // Amount fetch failure is non-blocking
+      }
+    }
+
+    // 2c. Fallback: compute amount server-side if Razorpay API unavailable
+    if (!amountInRupees) {
+      if (PLAN_PRICES[planId]) {
+        const plan = PLAN_PRICES[planId];
+        amountInRupees = billing === 'monthly' ? plan.monthly : plan.full;
+      } else {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+        const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+        if (url && key) {
+          const fallbackClient = createClient(url, key, {
+            auth: { autoRefreshToken: false, persistSession: false },
+          });
+          const { data: course } = await fallbackClient
+            .from('courses')
+            .select('*')
+            .eq('id', planId)
+            .maybeSingle();
+          if (course) {
+            const price = Number(course.price || 0);
+            if (billing === 'monthly') {
+              const durationStr = course.duration || '3 Months';
+              let divisor = 3;
+              if (durationStr.includes('3')) divisor = 3;
+              else if (durationStr.includes('4')) divisor = 4;
+              else if (durationStr.includes('5')) divisor = 5;
+              else if (durationStr.includes('6')) divisor = 6;
+              else if (durationStr.toLowerCase().includes('week')) divisor = 1;
+              amountInRupees = Math.ceil(price / divisor);
+            } else {
+              amountInRupees = price;
+            }
+          }
+        }
+      }
+    }
+
     // 3. Initialize admin Supabase client using service role key (bypasses RLS constraints)
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -123,33 +178,6 @@ export async function POST(request: NextRequest) {
         persistSession: false,
       },
     });
-
-    let amountInRupees = 0;
-    if (PLAN_PRICES[planId]) {
-      const plan = PLAN_PRICES[planId];
-      amountInRupees = billing === 'monthly' ? plan.monthly : plan.full;
-    } else {
-      const { data: course } = await adminSupabase
-        .from('courses')
-        .select('*')
-        .eq('id', planId)
-        .maybeSingle();
-      if (course) {
-        const price = Number(course.price || 0);
-        if (billing === 'monthly') {
-          const durationStr = course.duration || '3 Months';
-          let divisor = 3;
-          if (durationStr.includes('3')) divisor = 3;
-          else if (durationStr.includes('4')) divisor = 4;
-          else if (durationStr.includes('5')) divisor = 5;
-          else if (durationStr.includes('6')) divisor = 6;
-          else if (durationStr.toLowerCase().includes('week')) divisor = 1;
-          amountInRupees = Math.ceil(price / divisor);
-        } else {
-          amountInRupees = price;
-        }
-      }
-    }
 
     // 4. Save to payments table
     const { error: paymentError } = await adminSupabase.from('payments').insert({
@@ -274,23 +302,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Send Welcome Email
+    // Send Welcome Email (no plaintext passwords — user sets password via reset flow)
     try {
       const origin = request.nextUrl.origin || 'http://localhost:3000';
       const emailSubject = 'Welcome to TESCA Spoken English! Your Student Account is Ready';
-
-      const credentialsSection = `
-        <div style="background: #fff8f8; border: 1px solid #fee2e2; border-radius: 12px; padding: 25px; margin: 25px 0;">
-          <p style="margin: 0 0 12px 0; font-size: 14px; color: #991b1b; font-weight: bold;">⚠️ IMPORTANT SECURITY DISCLAIMER:</p>
-          <p style="margin: 0 0 15px 0; font-size: 13px; color: #7f1d1d; line-height: 1.5;">
-            Do not share these credentials with anyone. For your security, when you log in with this temporary password for the first time, you will be required to change it to a password of your choice.
-          </p>
-          <div style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
-            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Student Log In ID (Email):</strong> ${customerEmail}</p>
-            <p style="margin: 5px 0; font-size: 14px; color: #111827;"><strong>Temporary Password:</strong> <code style="background: #fee2e2; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-family: monospace; font-size: 14px; color: #b91c1c;">${tempPassword}</code></p>
-          </div>
-        </div>
-      `;
 
       const emailHtml = `
         <div style="font-family: Arial, sans-serif; background-color: #f3f4f6; padding: 40px 10px; color: #1f2937;">
@@ -301,12 +316,11 @@ export async function POST(request: NextRequest) {
             <div style="padding: 40px 30px; line-height: 1.6;">
               <h2 style="color: #0b3336; margin-top: 0;">Welcome, ${customerName}!</h2>
               <p>Your payment of <strong>₹${amountInRupees.toLocaleString('en-IN')}</strong> has been successfully verified, and your enrollment is now active.</p>
-              
-              ${credentialsSection}
-              
+              <p>To get started, please set up your password by clicking the button below. For security, never share your password with anyone.</p>
               <div style="text-align: center; margin: 30px 0 10px 0;">
-                <a href="${origin}/login" style="background-color: #0b3336; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">Log In to Student Portal</a>
+                <a href="${origin}/forgot-password" style="background-color: #0b3336; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 14px; display: inline-block;">Set Up Your Password</a>
               </div>
+              <p style="font-size: 13px; color: #6b7280;">After setting your password, log in at <a href="${origin}/login" style="color: #0b3336;">${origin}/login</a> to access your courses.</p>
             </div>
           </div>
         </div>

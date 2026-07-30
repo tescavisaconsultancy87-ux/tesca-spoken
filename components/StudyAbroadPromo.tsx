@@ -2,10 +2,11 @@
 
 import { GraduationCap, Globe, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
+import WaveDivider from '@/components/WaveDivider';
 
 export default function StudyAbroadPromo() {
   return (
-    <section className="relative bg-bg-soft py-20 lg:py-24 overflow-hidden border-t border-b border-black/5">
+    <section className="relative bg-bg-soft pt-20 pb-0 lg:pt-24 lg:pb-0 overflow-hidden">
       {/* Decorative background glows */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-primary-100/40 blur-3xl" />
@@ -99,6 +100,7 @@ export default function StudyAbroadPromo() {
           </div>
         </Reveal>
       </div>
+      <WaveDivider position="bottom" fillColor="text-[#062426]" variant={1} className="mt-8 lg:mt-12" />
     </section>
   );
 }

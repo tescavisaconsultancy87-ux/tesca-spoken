@@ -41,15 +41,23 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const toastHelpers = {
-    success: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'success', duration }),
-    error: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'error', duration }),
-    info: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'info', duration }),
-    warning: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'warning', duration }),
-  };
+  const toastHelpers = React.useMemo(
+    () => ({
+      success: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'success', duration }),
+      error: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'error', duration }),
+      info: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'info', duration }),
+      warning: (message: string, title?: string, duration?: number) => showToast({ message, title, type: 'warning', duration }),
+    }),
+    [showToast]
+  );
+
+  const value = React.useMemo(
+    () => ({ showToast, toast: toastHelpers, removeToast }),
+    [showToast, toastHelpers, removeToast]
+  );
 
   return (
-    <ToastContext.Provider value={{ showToast, toast: toastHelpers, removeToast }}>
+    <ToastContext.Provider value={value}>
       {children}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </ToastContext.Provider>

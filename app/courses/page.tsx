@@ -5,6 +5,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import CoursesList from '@/components/CoursesList';
+import WaveDivider from '@/components/WaveDivider';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
 import { COURSES, TRAINERS, COURSE_FAQS } from '@/lib/data/content';
@@ -656,13 +657,13 @@ export default function CoursesPage() {
 
       <main>
         {/* ── Hero ── */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-20 lg:pt-48 lg:pb-28">
+        <section className="relative overflow-hidden bg-gradient-to-br from-primary-50 via-white to-secondary-50 pt-40 pb-0 lg:pt-48 lg:pb-0">
           <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
             <div className="absolute -top-16 right-0 h-72 w-72 rounded-full bg-primary/5 blur-3xl" />
             <div className="absolute bottom-0 -left-16 h-56 w-56 rounded-full bg-secondary/5 blur-3xl" />
           </div>
 
-          <div className="container-x relative z-10">
+          <div className="container-x relative z-10 pb-8">
             <div className="grid items-center gap-12 lg:grid-cols-12">
               <div className="text-center lg:text-left lg:col-span-7 space-y-6">
                 <span className="inline-flex items-center gap-2 rounded-full bg-primary-50 border border-primary-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
@@ -705,6 +706,7 @@ export default function CoursesPage() {
               </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={1} className="mt-6" />
         </section>
 
         {/* ── Promo Banner (from settings) ── */}
@@ -747,7 +749,7 @@ export default function CoursesPage() {
         )}
 
         {/* ── Course Cards (no pricing) ── */}
-        <section className="py-20 lg:py-28" id="courses">
+        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0" id="courses">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="text-xs font-bold uppercase tracking-widest text-primary">Our Courses</span>
@@ -845,10 +847,11 @@ export default function CoursesPage() {
               />
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-primary-50/40" variant={2} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── How Enrollment Works Process Section ── */}
-        <section className="py-16 bg-gradient-to-b from-white to-primary-50/40 border-t border-black/5">
+        <section className="relative pt-16 pb-0 bg-gradient-to-b from-white to-primary-50/40 border-t border-black/5">
           <div className="container-x">
             <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
@@ -908,10 +911,11 @@ export default function CoursesPage() {
               </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-slate-50/30" variant={3} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Who is this program for ── */}
-        <section className="py-20 lg:py-24 bg-slate-50/30 relative overflow-hidden border-y border-[#E8EDF3]">
+        <section className="relative pt-20 pb-0 lg:pt-24 lg:pb-0 bg-slate-50/30 overflow-hidden border-y border-[#E8EDF3]">
           {/* Faint blueprint grid background */}
           <div className="absolute inset-0 opacity-[0.2]" style={{
             backgroundImage: `linear-gradient(to right, #CBD5E1 1px, transparent 1px), linear-gradient(to bottom, #CBD5E1 1px, transparent 1px)`,
@@ -953,10 +957,11 @@ export default function CoursesPage() {
               ))}
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-bg-soft" variant={4} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Curriculum Overview ── */}
-        <section id="curriculum" className="py-20 lg:py-28 bg-bg-soft scroll-mt-20 lg:scroll-mt-24">
+        <section id="curriculum" className="relative pt-20 pb-0 lg:pt-28 lg:pb-0 bg-bg-soft scroll-mt-20 lg:scroll-mt-24">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
@@ -1078,10 +1083,11 @@ export default function CoursesPage() {
               })()
             )}
           </div>
+          <WaveDivider position="bottom" fillColor="text-[#062426]" variant={1} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Teaching Method / What's Included ── */}
-        <section className="bg-[#062426] py-20 lg:py-28">
+        <section className="relative bg-[#062426] pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-white">
@@ -1150,10 +1156,11 @@ export default function CoursesPage() {
               ))}
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={2} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Our Trainers ── */}
-        <section className="py-20 lg:py-28 overflow-hidden">
+        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0 overflow-hidden">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary">
@@ -1265,10 +1272,11 @@ export default function CoursesPage() {
               )}
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-bg-soft" variant={3} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Certification ── */}
-        <section className="py-20 lg:py-28 bg-bg-soft">
+        <section className="relative pt-20 pb-0 lg:pt-28 lg:pb-0 bg-bg-soft">
           <div className="container-x">
             <div className="max-w-3xl mx-auto text-center">
               <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary-50 border border-primary-100 shadow-soft">
@@ -1297,10 +1305,11 @@ export default function CoursesPage() {
               </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-white" variant={4} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── Course FAQ ── */}
-        <section className="py-20 lg:py-28">
+        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="text-center mb-14">
               <span className="text-xs font-bold uppercase tracking-widest text-primary">FAQ</span>
@@ -1343,10 +1352,11 @@ export default function CoursesPage() {
               })}
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-bg-soft" variant={1} className="mt-8 lg:mt-12" />
         </section>
 
         {/* ── CTA ── */}
-        <section className="py-20 lg:py-28 bg-bg-soft">
+        <section className="relative bg-bg-soft pt-20 pb-0 lg:pt-28 lg:pb-0">
           <div className="container-x">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 to-primary-700 px-8 py-16 text-center">
               <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -1368,6 +1378,7 @@ export default function CoursesPage() {
               </div>
             </div>
           </div>
+          <WaveDivider position="bottom" fillColor="text-primary-900" variant={2} className="mt-8 lg:mt-12" />
         </section>
       </main>
 

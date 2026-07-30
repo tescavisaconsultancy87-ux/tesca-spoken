@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import Image from 'next/image';
 import { 
   CheckCircle, 
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import SectionHeading from '@/components/SectionHeading';
+import WaveDivider from '@/components/WaveDivider';
 import { COURSES } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { db } from '@/lib/db';
@@ -108,7 +109,7 @@ function getCourseMeta(courseId: string, courseTitle: string) {
   };
 }
 
-export default function Courses() {
+const Courses = memo(function Courses() {
   const { openModal } = useDemoModal();
   const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,7 +150,7 @@ export default function Courses() {
   }, []);
 
   return (
-    <section id="courses" className="bg-[#062426] py-20 lg:py-28">
+    <section id="courses" className="relative bg-[#062426] pt-20 pb-0 lg:pt-28 lg:pb-0">
       <div className="container-x">
         <SectionHeading
           theme="dark"
@@ -355,7 +356,6 @@ export default function Courses() {
             })
           )}
         </div>
-
         {/* Bottom note */}
         <Reveal className="mt-10 text-center" delay={200}>
           <p className="text-sm text-primary-200">
@@ -370,6 +370,9 @@ export default function Courses() {
           </p>
         </Reveal>
       </div>
+      <WaveDivider position="bottom" fillColor="text-white" variant={2} className="mt-8 lg:mt-12" />
     </section>
   );
-}
+});
+
+export default Courses;

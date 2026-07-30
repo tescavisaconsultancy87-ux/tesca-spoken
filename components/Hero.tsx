@@ -40,7 +40,7 @@ const STATS_DATA = [
   },
 ];
 
-export default function Hero() {
+const Hero = memo(function Hero() {
   const { openModal } = useDemoModal();
   const { toast } = useToast();
   const { getLeadEnrichment, trackEvent } = useTracking();
@@ -90,14 +90,15 @@ export default function Hero() {
     <>
       <section
         id="home"
+        data-lcp-bg="true"
         className="relative min-h-[90vh] lg:min-h-[92vh] flex flex-col justify-center items-center hero-bg text-slate-800 overflow-hidden pt-24 pb-20 sm:pt-28 sm:pb-24 lg:pt-40 lg:pb-36"
       >
         {/* Dark overlay for mobile to ensure text readability */}
         <div className="absolute inset-0 bg-slate-950/75 z-0 lg:hidden" />
 
         {/* Background decorative glow blobs */}
-        <div className="absolute top-1/4 left-[-10%] w-72 h-72 bg-primary/5 rounded-full blur-3xl pointer-events-none lg:w-96 lg:h-96" />
-        <div className="absolute bottom-1/4 right-[-10%] w-80 h-80 bg-secondary/5 rounded-full blur-3xl pointer-events-none lg:w-[480px] lg:h-[480px]" />
+        <div className="hidden lg:block absolute top-1/4 left-[-10%] w-72 h-72 bg-primary/5 rounded-full blur-3xl pointer-events-none lg:w-96 lg:h-96" />
+        <div className="hidden lg:block absolute bottom-1/4 right-[-10%] w-80 h-80 bg-secondary/5 rounded-full blur-3xl pointer-events-none lg:w-[480px] lg:h-[480px]" />
 
         <div className="container-x relative z-10 w-full flex-1 flex flex-col justify-center">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center w-full">
@@ -113,7 +114,7 @@ export default function Hero() {
               </div>
 
               {/* Heading */}
-              <h1 className="font-heading text-3xl sm:text-4xl lg:text-[44px] xl:text-[52px] font-extrabold leading-[1.15] lg:leading-[1.2] tracking-tight text-white lg:text-slate-900">
+              <h1 data-lcp="true" className="font-heading text-3xl sm:text-4xl lg:text-[44px] xl:text-[52px] font-extrabold leading-[1.15] lg:leading-[1.2] tracking-tight text-white lg:text-slate-900">
                 Speak English Confidently <br className="hidden sm:inline" />
                 <span className="relative inline-block text-secondary lg:text-primary whitespace-nowrap">
                   Today.
@@ -208,7 +209,9 @@ export default function Hero() {
       <StatsBar stats={STATS_DATA} />
     </>
   );
-}
+});
+
+export default Hero;
 
 /* ─── CountUp number component ─── */
 function CountUp({ end, suffix, duration = 2000 }: { end: number; suffix: string; duration?: number }) {
