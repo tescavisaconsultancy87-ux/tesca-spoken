@@ -68,7 +68,7 @@ export default function BlogPage() {
         </section>
 
         {/* Blog List */}
-        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
+        <section className="relative bg-white py-20 lg:py-28">
           <div className="container-x">
             {loading ? (
               <div className="py-12 text-center text-ink-muted">
@@ -140,7 +140,6 @@ export default function BlogPage() {
               </div>
             )}
           </div>
-          <WaveDivider position="bottom" fillColor="text-primary-900" variant={2} className="mt-8 lg:mt-12" />
         </section>
       </main>
       <Footer />

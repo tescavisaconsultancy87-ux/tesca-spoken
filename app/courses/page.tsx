@@ -1356,7 +1356,7 @@ export default function CoursesPage() {
         </section>
 
         {/* ── CTA ── */}
-        <section className="relative bg-bg-soft pt-20 pb-0 lg:pt-28 lg:pb-0">
+        <section className="relative bg-bg-soft py-20 lg:py-28">
           <div className="container-x">
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-900 to-primary-700 px-8 py-16 text-center">
               <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
@@ -1378,7 +1378,6 @@ export default function CoursesPage() {
               </div>
             </div>
           </div>
-          <WaveDivider position="bottom" fillColor="text-primary-900" variant={2} className="mt-8 lg:mt-12" />
         </section>
       </main>
 

@@ -481,7 +481,7 @@ export default function ContactPage() {
         </section>
 
         {/* ── Location Section ── */}
-        <section className="relative bg-white pt-20 pb-0 lg:pt-28 lg:pb-0">
+        <section className="relative bg-white py-20 lg:py-28">
           <div className="container-x">
             <div className="text-center mb-10">
               <h2 className="font-heading text-3xl font-bold text-ink">Our Locations</h2>
@@ -529,7 +529,6 @@ export default function ContactPage() {
               ))}
             </div>
           </div>
-          <WaveDivider position="bottom" fillColor="text-primary-900" variant={3} className="mt-8 lg:mt-12" />
         </section>
       </main>
 

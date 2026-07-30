@@ -122,7 +122,7 @@ export default function BlogPostPage() {
             )}
 
             {/* Content */}
-            <section className="relative bg-white pt-16 pb-0 lg:pt-20 lg:pb-0">
+            <section className="relative bg-white py-16 lg:py-20">
               <div className="container-x max-w-3xl mx-auto">
                 {/<[a-z][\s\S]*>/i.test(post.content) ? (
                   <div 
@@ -159,7 +159,6 @@ export default function BlogPostPage() {
                   </Link>
                 </div>
               </div>
-              <WaveDivider position="bottom" fillColor="text-primary-900" variant={2} className="mt-8 lg:mt-12" />
             </section>
           </article>
       </main>
