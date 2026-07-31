@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface PopupSetting {
   id: number;
@@ -24,13 +24,32 @@ export default function PromoPopup() {
   const [visible, setVisible] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Disable popup on all dashboard user routes (/admin, /student, /tutor) and dashboard subdomains
+  const isDashboard = Boolean(
+    (pathname && (
+      pathname.startsWith('/admin') ||
+      pathname.startsWith('/student') ||
+      pathname.startsWith('/tutor')
+    )) ||
+    (typeof window !== 'undefined' && (() => {
+      const host = window.location.hostname.toLowerCase();
+      const parts = host.split('.');
+      return parts.length > 0 && ['admin', 'student', 'tutor'].includes(parts[0]);
+    })())
+  );
 
   useEffect(() => {
+    if (isDashboard) return;
+
     // Check if user has closed the popup in this session
     const isTestMode = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('test-popup') === 'true';
     const isClosed = sessionStorage.getItem('promo_popup_closed');
 
     if (isClosed === 'true' && !isTestMode) return;
+
+    let timer: NodeJS.Timeout;
 
     async function fetchPopups() {
       try {
@@ -66,18 +85,20 @@ export default function PromoPopup() {
 
         // Schedule showing the popup based on delay of first slide
         const delayMs = (isTestMode ? 1 : activePopups[0].delay_seconds || 5) * 1000;
-        const timer = setTimeout(() => {
+        timer = setTimeout(() => {
           setVisible(true);
         }, delayMs);
-
-        return () => clearTimeout(timer);
       } catch (err) {
         console.error('Failed to load promo popups:', err);
       }
     }
 
     fetchPopups();
-  }, []);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [isDashboard]);
 
   const handleClose = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -118,7 +139,7 @@ export default function PromoPopup() {
     }
   };
 
-  if (!visible || popups.length === 0) return null;
+  if (isDashboard || !visible || popups.length === 0) return null;
 
   const currentPopup = popups[currentIdx];
 
