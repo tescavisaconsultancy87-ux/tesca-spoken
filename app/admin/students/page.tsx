@@ -567,12 +567,21 @@ export default function AdminStudentsPage() {
 
               {/* Phone */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Phone Number (10 digits)</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-gray-500">Phone Number (10 digits)</label>
+                  <span className={`text-[10px] font-semibold transition-colors ${newForm.phone.length === 10 ? 'text-emerald-600 font-bold' : 'text-gray-400'}`}>
+                    {newForm.phone.length} / 10 digits
+                  </span>
+                </div>
                 <input
                   type="tel"
                   placeholder="e.g. 9876543210"
+                  maxLength={10}
                   value={newForm.phone}
-                  onChange={(e) => setNewForm({ ...newForm, phone: e.target.value })}
+                  onChange={(e) => {
+                    const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setNewForm({ ...newForm, phone: cleaned });
+                  }}
                   className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                   required
                 />
@@ -1102,11 +1111,21 @@ export default function AdminStudentsPage() {
 
                 {/* Phone */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-500">Phone Number (10 digits)</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-gray-500">Phone Number (10 digits)</label>
+                    <span className={`text-[10px] font-semibold transition-colors ${editingUser.phone.length === 10 ? 'text-emerald-600 font-bold' : 'text-gray-400'}`}>
+                      {editingUser.phone.length} / 10 digits
+                    </span>
+                  </div>
                   <input
                     type="tel"
+                    placeholder="e.g. 9876543210"
+                    maxLength={10}
                     value={editingUser.phone}
-                    onChange={(e) => setEditingUser({ ...editingUser, phone: e.target.value })}
+                    onChange={(e) => {
+                      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setEditingUser({ ...editingUser, phone: cleaned });
+                    }}
                     className="w-full bg-gray-55 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
                     required
                   />

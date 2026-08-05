@@ -295,6 +295,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         userId: authUserId,
+        password,
         emailSent: false,
         warning: `User created in database, but notification email failed. Details: ${emailErrorMsg}`
       });
@@ -303,6 +304,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       userId: authUserId,
+      password,
       emailSent: true,
     });
   } catch (error: any) {
