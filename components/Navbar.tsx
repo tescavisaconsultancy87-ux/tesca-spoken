@@ -111,13 +111,11 @@ const Navbar = memo(function Navbar() {
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
-          className={`inline-flex h-10 w-10 items-center justify-center rounded-xl transition-colors hover:bg-bg-soft lg:hidden ${
-            isDarkBg ? 'text-white' : 'text-ink'
-          }`}
+          className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/95 backdrop-blur-md border border-black/5 shadow-soft-sm text-ink transition-all duration-300 hover:bg-white hover:shadow-soft active:scale-95 lg:hidden"
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
         >
-          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {menuOpen ? <X className="h-5 w-5 text-ink" /> : <Menu className="h-5 w-5 text-ink" />}
         </button>
       </nav>
 
