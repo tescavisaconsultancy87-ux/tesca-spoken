@@ -190,19 +190,24 @@ export default function PromoPopup() {
           onClick={handleSlideClick}
           className="relative w-full aspect-square bg-slate-900 cursor-pointer overflow-hidden flex items-center justify-center select-none group"
         >
-          <Image
+          <img
             src={currentPopup.image_url}
             alt=""
-            fill
-            sizes="400px"
-            className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+            className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none select-none"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+            }}
           />
-          <Image
+          <img
             src={currentPopup.image_url}
             alt={currentPopup.title || 'Promotional Flyer'}
-            fill
-            sizes="400px"
-            className="absolute inset-0 m-auto max-w-full max-h-full object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02]"
+            className="relative z-10 max-w-full max-h-full w-auto h-auto object-contain p-4 transition-transform duration-500 group-hover:scale-[1.02] select-none"
+            onError={(e) => {
+              const target = e.currentTarget as HTMLImageElement;
+              if (target.src !== '/og-image.jpg') {
+                target.src = '/og-image.jpg';
+              }
+            }}
           />
         </div>
 

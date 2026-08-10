@@ -53,7 +53,7 @@ export default async function PromoLandingPage({ params }: PageProps) {
         {/* Left side: Flyer Image */}
         <div className="w-full md:w-1/2 relative bg-slate-900 overflow-hidden flex items-center justify-center min-h-[300px] md:min-h-auto">
           <img src={popup.image_url} alt="" className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none select-none" />
-          <img src={popup.image_url} alt={popup.title} className="absolute inset-0 m-auto max-w-full max-h-full object-contain p-4 md:p-8 pointer-events-none select-none" />
+          <img src={popup.image_url} alt={popup.title} className="relative z-10 max-w-full max-h-full w-auto h-auto object-contain p-4 md:p-8 pointer-events-none select-none" />
         </div>
 
         {/* Right side: Lead capture form */}
