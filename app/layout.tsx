@@ -98,9 +98,9 @@ export default function RootLayout({
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'EducationalOrganization',
+        '@type': ['EducationalOrganization', 'LocalBusiness'],
         '@id': 'https://tesca.co/#organization',
-        'name': 'TESCA Spoken English',
+        'name': 'TESCA Spoken English & Visa Consultancy',
         'url': 'https://tesca.co',
         'logo': {
           '@type': 'ImageObject',
@@ -109,10 +109,11 @@ export default function RootLayout({
           'height': 32,
           'caption': 'TESCA Spoken English Logo'
         },
-        'description': 'Master English Fluency from Basic to Advanced — Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
+        'description': 'Leading Spoken English Institute in Surat, Gujarat. Master English Fluency, IELTS & PTE preparation with Cambridge certified trainers since 2005.',
         'telephone': '+91 84888 05888',
         'email': 'tescavisaconsultancy87@gmail.com',
-        'areaServed': 'Surat, Gujarat, India',
+        'priceRange': '₹₹',
+        'areaServed': ['Surat', 'Gujarat', 'India'],
         'foundingDate': '2005',
         'address': {
           '@type': 'PostalAddress',
@@ -121,7 +122,16 @@ export default function RootLayout({
           'addressRegion': 'Gujarat',
           'postalCode': '395006',
           'addressCountry': 'IN'
-        }
+        },
+        'geo': {
+          '@type': 'GeoCoordinates',
+          'latitude': '21.2312',
+          'longitude': '72.8833'
+        },
+        'sameAs': [
+          'https://www.facebook.com/tescaspoken',
+          'https://www.instagram.com/tescaspoken'
+        ]
       },
       {
         '@type': 'WebSite',

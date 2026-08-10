@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/gmail';
 import { checkRateLimit, formatFriendlyError } from '@/lib/security';
 
+export const runtime = 'edge';
+
 export async function POST(request: NextRequest) {
   try {
     // 1. Rate Limiting check (Max 10 leads/min, using Cloudflare IP)
@@ -173,6 +175,12 @@ export async function POST(request: NextRequest) {
       notes = `Source: Popup - ${popupTitle || 'Special Offer'}\nRequested details via promotional popup flyer.`;
     }
 
+    // Append tracking info to notes if present
+    let fullNotes = notes;
+    if (utm_source || page_url || referrer) {
+      fullNotes += `\n\n[Tracking Metadata]\nPage: ${page_url || 'N/A'}\nReferrer: ${referrer || 'Direct'}\nSource: ${utm_source || 'N/A'}\nMedium: ${utm_medium || 'N/A'}\nCampaign: ${utm_campaign || 'N/A'}`;
+    }
+
     const dateAdded = new Date().toLocaleDateString('en-IN', {
       month: 'short',
       day: '2-digit',
@@ -188,16 +196,9 @@ export async function POST(request: NextRequest) {
         name,
         phone: phone || 'N/A',
         email: email || 'N/A',
-        notes,
+        notes: fullNotes,
         status: 'new',
         date_added: dateAdded,
-        utm_source: utm_source || null,
-        utm_medium: utm_medium || null,
-        utm_campaign: utm_campaign || null,
-        utm_term: utm_term || null,
-        utm_content: utm_content || null,
-        referrer: referrer || null,
-        page_url: page_url || null,
       });
 
       if (dbError) {

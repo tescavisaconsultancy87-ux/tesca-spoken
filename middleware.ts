@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, userAgent } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 const AI_CRAWLERS = [
   'GPTBot', 'ChatGPT-User', 'Claude-Web', 'ClaudeBot', 'anthropic-ai',
@@ -8,7 +8,7 @@ const AI_CRAWLERS = [
   'Webzio', 'ZoominfoBot', 'DataForSeoBot', 'Meltwater', 'Applebot-Extended',
   'Bytespider', 'cohere-ai', 'PerplexityBot', 'YouBot', 'Kangaroo Bot',
   'AwarioSmartBot', 'AwarioBot', 'Barkrowler', 'BrightBot', 'Daum',
-  'DotBot', 'GeckoBot', 'Google-Extended', 'IAScrawler', 'ichiro',
+  'DotBot', 'GeckoBot', 'IAScrawler', 'ichiro',
   'Israelsky', 'Laserlikebot', 'Netseercrawler', 'Pcore-HTTP',
   'researchscan', 'SeekrBot', 'seqbot', 'ShopBot', 'Sirdata',
   'Screaming Frog', 'ScreenerBot', 'SiteCheckerBot', 'TrafficBot',
@@ -17,7 +17,7 @@ const AI_CRAWLERS = [
   'aiohttp', 'httpx', 'curl', 'wget',
 ];
 
-const LEGITIMATE_BOTS = ['Googlebot', 'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot',
+const LEGITIMATE_BOTS = ['Googlebot', 'Google', 'Google-Extended', 'Google-InspectionTool', 'Storebot-Google', 'AdsBot-Google', 'Mediapartners-Google', 'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot',
   'Baiduspider', 'YandexBot', 'facebookexternalhit', 'Twitterbot',
   'LinkedInBot', 'WhatsApp', 'TelegramBot', 'Discordbot',
 ];
@@ -37,6 +37,12 @@ function isKnownBot(ua: string): 'ai' | 'legitimate' | null {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Skip middleware processing for all API endpoints
+  if (pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+
   const host = request.headers.get('host') || '';
   const hostName = host.split(':')[0].toLowerCase();
   const xProto = request.headers.get('x-forwarded-proto') || '';
@@ -64,13 +70,10 @@ export function middleware(request: NextRequest) {
   // ─── AI Crawler Detection & Labyrinth Trap ───
   const uaCheck = isKnownBot(ua);
   if (uaCheck === 'ai' && !pathname.startsWith(LABYRINTH_BASE)) {
-    const { isBot } = userAgent(request);
-    if (isBot) {
-      console.log(`[BOT-FIGHT] Trapped AI crawler: ${ua.substring(0,80)} -> ${pathname}`);
-      const labyrinthUrl = new URL(`${LABYRINTH_BASE}/entry`, request.url);
-      labyrinthUrl.searchParams.set('via', btoa(pathname));
-      return NextResponse.redirect(labyrinthUrl, 307);
-    }
+    console.log(`[BOT-FIGHT] Trapped AI crawler: ${ua.substring(0,80)} -> ${pathname}`);
+    const labyrinthUrl = new URL(`${LABYRINTH_BASE}/entry`, request.url);
+    labyrinthUrl.searchParams.set('via', btoa(pathname));
+    return NextResponse.redirect(labyrinthUrl, 307);
   }
 
   // Skip middleware for labyrinth pages (they handle themselves)
@@ -196,9 +199,8 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  runtime: 'experimental-edge',
   matcher: [
     // Match all routes except static files, api routes, and _next internals
-    '/((?!_next/static|_next/image|favicon\\.ico|api|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

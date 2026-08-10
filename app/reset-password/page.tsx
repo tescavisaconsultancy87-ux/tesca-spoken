@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabaseClient';
 
 function ResetPasswordForm() {
@@ -64,7 +65,7 @@ function ResetPasswordForm() {
     <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-gray-150 p-8 lg:p-12 animate-scale-up">
       {/* Logo */}
       <div className="flex justify-center mb-6">
-        <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-10 w-auto object-contain" />
+        <Image src="/Tesca_logo.png" alt="TESCA Logo" width={160} height={40} className="h-10 w-auto object-contain" />
       </div>
 
       <div className="text-center space-y-2 mb-8">

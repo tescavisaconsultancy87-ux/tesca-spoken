@@ -1,9 +1,7 @@
-import nodemailer from 'nodemailer';
-
 /**
  * Gmail REST API utility to send emails.
- * This is compatible with serverless environments (Cloudflare Workers, Vercel, etc.)
- * as it uses standard fetch requests rather than TCP-based SMTP (Nodemailer).
+ * This is 100% compatible with serverless/edge environments (Cloudflare Workers, Vercel, etc.)
+ * as it uses standard HTTP fetch requests rather than TCP-based SMTP (Nodemailer).
  */
 
 // Helper to get raw GMAIL API tokens from environment
@@ -78,30 +76,6 @@ export async function sendEmail(
 ): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const { clientId, clientSecret, refreshToken, emailUser } = getGmailCredentials();
-    const appPassword = process.env.APP_PASSWORD;
-
-    if (appPassword) {
-      console.log('[Gmail API] Sending email via Nodemailer SMTP for:', to);
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: emailUser,
-          pass: appPassword,
-        },
-      });
-
-      const info = await transporter.sendMail({
-        from: `"TESCA Spoken English" <${emailUser}>`,
-        to,
-        subject,
-        html: htmlBody,
-      });
-
-      return {
-        success: true,
-        messageId: info.messageId,
-      };
-    }
 
     if (!clientId || !clientSecret || !refreshToken) {
       throw new Error('Missing GMAIL_CLIENT_ID, GMAIL_CLIENT_SECRET, or GMAIL_REFRESH_TOKEN in environment variables.');

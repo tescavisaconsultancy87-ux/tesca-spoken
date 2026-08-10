@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowLeft, Send, CheckCircle, AlertCircle, Key, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import Image from 'next/image';
 
 type Step = 'email-request' | 'otp-verify' | 'password-reset' | 'success';
 

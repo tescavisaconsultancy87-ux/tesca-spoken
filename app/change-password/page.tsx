@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Lock, Eye, EyeOff, ShieldAlert, CheckCircle, ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { getRoleDashboardUrl } from '@/lib/authCookies';
@@ -111,7 +112,7 @@ export default function ChangePasswordPage() {
       <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-gray-150 p-8 lg:p-12 animate-scale-up">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <img src="/Tesca_logo.png" alt="TESCA Logo" className="h-10 w-auto object-contain" />
+          <Image src="/Tesca_logo.png" alt="TESCA Logo" width={160} height={40} className="h-10 w-auto object-contain" />
         </div>
 
         <div className="text-center space-y-2 mb-8">
