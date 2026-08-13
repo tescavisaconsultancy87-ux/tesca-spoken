@@ -119,3 +119,50 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const auth = await verifyAuthAndRole(request, ['student', 'admin', 'tutor']);
+    if (!auth.authorized || !auth.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: userId } = auth.user;
+    const body = await request.json();
+    const { notificationId, clearAll } = body;
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+    if (url && key) {
+      const adminSupabase = createClient(url, key, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+
+      try {
+        if (clearAll) {
+          await adminSupabase
+            .from('notifications')
+            .delete()
+            .eq('user_id', userId);
+        } else if (notificationId) {
+          await adminSupabase
+            .from('notifications')
+            .delete()
+            .eq('id', notificationId)
+            .eq('user_id', userId);
+        }
+      } catch (dbErr) {
+        console.warn('[Notifications DELETE API] Ignoring DB delete write.');
+      }
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error('[Notifications DELETE API] Error:', err);
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
+  }
+}

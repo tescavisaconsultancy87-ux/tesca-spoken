@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Search, Bell, Menu, Trash2, CheckCheck, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
+import toast from '@/lib/toast';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -66,7 +67,11 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
         }));
       }
 
-      setNotifications(loadedNotifications);
+      // Filter out notifications cleared locally by user
+      const deletedIds: string[] = JSON.parse(localStorage.getItem('deleted_notifications') || '[]');
+      const filteredNotifications = loadedNotifications.filter(n => !deletedIds.includes(n.id));
+
+      setNotifications(filteredNotifications);
     }
 
     fetchNotifications();
@@ -127,6 +132,70 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
     }
   };
 
+  const handleDeleteNotification = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const updated = notifications.filter((n) => n.id !== id);
+    setNotifications(updated);
+
+    const deletedIds: string[] = JSON.parse(localStorage.getItem('deleted_notifications') || '[]');
+    if (!deletedIds.includes(id)) {
+      deletedIds.push(id);
+      localStorage.setItem('deleted_notifications', JSON.stringify(deletedIds));
+    }
+
+    toast.info('Notification cleared', 'Cleared');
+
+    try {
+      await ensureSupabaseClient();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await fetch('/api/notifications', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ notificationId: id })
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to delete notification:', err);
+    }
+  };
+
+  const handleClearAll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const allIds = notifications.map((n) => n.id);
+    setNotifications([]);
+
+    const deletedIds: string[] = JSON.parse(localStorage.getItem('deleted_notifications') || '[]');
+    const merged = Array.from(new Set([...deletedIds, ...allIds]));
+    localStorage.setItem('deleted_notifications', JSON.stringify(merged));
+
+    toast.success('All notifications cleared', 'Notifications Cleared');
+
+    try {
+      await ensureSupabaseClient();
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          await fetch('/api/notifications', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ clearAll: true })
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to clear all notifications:', err);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-gray-100">
       <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-16">
@@ -170,48 +239,74 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
               </div>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end" className="w-80 bg-white border border-gray-100 rounded-2xl shadow-soft-xl py-2 z-50">
-              <div className="px-4 py-2 border-b border-gray-50 flex items-center justify-between">
-                <h4 className="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Notifications</h4>
+            <DropdownMenuContent align="end" className="w-80 sm:w-84 bg-white border border-gray-100 rounded-2xl shadow-soft-xl py-2 z-50">
+              <div className="px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-extrabold text-gray-800 uppercase tracking-wider">Notifications</h4>
+                  {unreadCount > 0 && (
+                    <span className="text-[10px] font-bold text-secondary bg-secondary-50 px-2 py-0.5 rounded-full">
+                      {unreadCount} New
+                    </span>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2">
                   {unreadCount > 0 && (
                     <button
                       type="button"
                       onClick={handleMarkAllRead}
-                      className="text-[10px] font-bold text-primary hover:text-primary-600 transition-colors cursor-pointer mr-1"
+                      className="text-[10px] font-bold text-primary hover:text-primary-600 transition-colors cursor-pointer"
+                      title="Mark all as read"
                     >
-                      Mark all read
+                      Mark read
                     </button>
                   )}
-                  {unreadCount > 0 && (
-                    <span className="text-[10px] font-bold text-secondary bg-secondary-50 px-2 py-0.5 rounded">
-                      {unreadCount} New
-                    </span>
+                  {notifications.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleClearAll}
+                      className="text-[10px] font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-1.5 py-0.5 rounded transition-colors cursor-pointer"
+                      title="Clear all notifications"
+                    >
+                      Clear all
+                    </button>
                   )}
                 </div>
               </div>
-              <div className="max-h-64 overflow-y-auto divide-y divide-gray-50">
+              <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
                 {notifications.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-xs text-gray-400">
+                  <div className="px-4 py-8 text-center text-xs text-gray-400 font-medium">
                     No notifications
                   </div>
                 ) : (
                   notifications.map((notif, index) => (
-                    <button
+                    <div
                       key={notif.id || index}
                       onClick={() => handleMarkSingleRead(notif.id)}
-                      className="w-full px-4 py-3 hover:bg-gray-50/50 transition-colors text-left block cursor-pointer focus:outline-none"
+                      className="w-full px-4 py-3 hover:bg-gray-50/70 transition-colors text-left flex items-start justify-between gap-2.5 group cursor-pointer focus:outline-none"
                     >
-                      <div className="flex justify-between items-start gap-2">
-                        <p className={`text-xs ${notif.unread ? 'font-bold text-gray-800' : 'text-gray-600'}`}>
-                          {notif.text}
-                        </p>
-                        {notif.unread && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-secondary shrink-0 mt-1" />
-                        )}
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          {notif.unread && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-secondary shrink-0" />
+                          )}
+                          <p className={`text-xs leading-snug ${notif.unread ? 'font-bold text-gray-800' : 'text-gray-600 font-medium'}`}>
+                            {notif.text}
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-medium block">{notif.time}</span>
                       </div>
-                      <span className="text-[10px] text-gray-400 font-medium mt-1 block">{notif.time}</span>
-                    </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteNotification(e, notif.id)}
+                        className="opacity-70 group-hover:opacity-100 p-1 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all cursor-pointer shrink-0 mt-0.5"
+                        title="Delete notification"
+                        aria-label="Delete notification"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   ))
                 )}
               </div>
