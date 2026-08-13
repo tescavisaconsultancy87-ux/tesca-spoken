@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { CheckCircle, Megaphone, Eye } from 'lucide-react';
 import { db } from '@/lib/db';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 
 function CountdownTimerPreview({ expiryType, fixedExpiry }: { expiryType: string; fixedExpiry: string }) {
   const getTimeLeft = () => {
@@ -135,6 +136,7 @@ export default function OfferBannerSettingsPage() {
       
       setSaveStatus('success');
       setSaveSuccess(true);
+      toast.success('Offer banner settings updated successfully', 'Banner Saved');
       setTimeout(() => {
         setSaveStatus('saved');
       }, 800);
@@ -142,7 +144,7 @@ export default function OfferBannerSettingsPage() {
         setSaveSuccess(false);
       }, 3000);
     } else {
-      alert('Failed to save banner configuration to the database.');
+      toast.error('Failed to save banner configuration to database.', 'Save Failed');
       setSaveStatus('idle');
     }
   };

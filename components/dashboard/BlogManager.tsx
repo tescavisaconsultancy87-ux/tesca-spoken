@@ -5,6 +5,7 @@ import { Search, Plus, Trash2, FileText, Eye, EyeOff, X, Calendar, User } from '
 import { db } from '@/lib/db';
 import RichTextEditor from '@/components/RichTextEditor';
 import { useAuth } from '@/context/AuthContext';
+import toast from '@/lib/toast';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -87,7 +88,9 @@ export default function BlogManager() {
 
     // Check size <= 500KB
     if (file.size > 500 * 1024) {
-      setImageError('Image size must be less than 500 KB.');
+      const msg = 'Image size must be less than 500 KB.';
+      setImageError(msg);
+      toast.error(msg, 'Image Validation');
       e.target.value = '';
       return;
     }
@@ -97,7 +100,9 @@ export default function BlogManager() {
     const isPng = file.type === 'image/png';
 
     if (!isJpg && !isPng) {
-      setImageError('Only JPG, JPEG, and PNG images are allowed.');
+      const msg = 'Only JPG, JPEG, and PNG images are allowed.';
+      setImageError(msg);
+      toast.error(msg, 'Image Validation');
       e.target.value = '';
       return;
     }
@@ -111,6 +116,7 @@ export default function BlogManager() {
     };
     reader.onerror = () => {
       setImageError('Failed to read image file.');
+      toast.error('Failed to read image file.', 'Image Error');
     };
     reader.readAsDataURL(file);
   };
@@ -136,39 +142,56 @@ export default function BlogManager() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = {
-      title: form.title,
-      slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-      excerpt: form.excerpt,
-      content: form.content,
-      author: form.author,
-      image_url: form.image_url,
-      published: form.published,
-      author_id: editingPost ? editingPost.author_id : user?.id,
-    };
+    try {
+      const payload = {
+        title: form.title,
+        slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        excerpt: form.excerpt,
+        content: form.content,
+        author: form.author,
+        image_url: form.image_url,
+        published: form.published,
+        author_id: editingPost ? editingPost.author_id : user?.id,
+      };
 
-    if (editingPost) {
-      await db.updateBlogPost(editingPost.id, payload);
-    } else {
-      await db.createBlogPost(payload);
+      if (editingPost) {
+        await db.updateBlogPost(editingPost.id, payload);
+        toast.success('Blog post updated successfully', 'Post Updated');
+      } else {
+        await db.createBlogPost(payload);
+        toast.success('New blog post created successfully', 'Post Created');
+      }
+
+      resetForm();
+      setIsAdding(false);
+      loadPosts();
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || 'Failed to save blog post', 'Error');
     }
-
-    resetForm();
-    setIsAdding(false);
-    loadPosts();
   };
 
   const handleDelete = async () => {
     if (deletePostId) {
-      await db.deleteBlogPost(deletePostId);
-      setDeletePostId(null);
-      loadPosts();
+      try {
+        await db.deleteBlogPost(deletePostId);
+        setDeletePostId(null);
+        toast.success('Blog post deleted successfully', 'Post Removed');
+        loadPosts();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to delete blog post', 'Delete Error');
+      }
     }
   };
 
   const handleTogglePublish = async (id: string, current: boolean) => {
-    await db.updateBlogPost(id, { published: !current });
-    loadPosts();
+    try {
+      await db.updateBlogPost(id, { published: !current });
+      toast.info(!current ? 'Blog post published' : 'Blog post reverted to draft', 'Post Status');
+      loadPosts();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update publish status', 'Error');
+    }
   };
 
   const canManage = (post: BlogPost) => {

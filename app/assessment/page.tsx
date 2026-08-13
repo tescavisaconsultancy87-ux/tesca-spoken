@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import toast from '@/lib/toast';
 import FloatingActions from '@/components/FloatingActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowRight, HelpCircle, Award, BookOpen, MessageCircle, RotateCcw, Loader2 } from 'lucide-react';
@@ -89,9 +90,12 @@ export default function AssessmentPage() {
 
       setShowLeadModal(false);
       setQuizFinished(true);
+      toast.success('Assessment submitted! View your calculated CEFR level below.', 'Assessment Complete');
     } catch (err: any) {
       console.error('Lead submit error:', err);
-      setLeadError(err.message || 'An error occurred. Please try again.');
+      const errMsg = err.message || 'An error occurred. Please try again.';
+      setLeadError(errMsg);
+      toast.error(errMsg, 'Submission Failed');
     } finally {
       setSubmittingLead(false);
     }

@@ -5,6 +5,7 @@ import { Search, UserPlus, Filter, ShieldAlert, Check, X, Trash2, UserCog, Loade
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 import { useAuth } from '@/context/AuthContext';
 import { CopyButton } from '@/components/animate-ui/components/buttons/copy';
 import {
@@ -314,6 +315,7 @@ export default function AdminStudentsPage() {
       }
 
       setCreateStatus('success');
+      toast.success(`${newForm.name} account created successfully`, 'User Created');
       setTimeout(() => {
         setCreateStatus('saved');
         
@@ -336,6 +338,7 @@ export default function AdminStudentsPage() {
       }, 1000);
     } catch (err: any) {
       setValidationError(err.message || 'An error occurred. Please try again.');
+      toast.error(err.message || 'Failed to create user account', 'Creation Error');
       setCreateStatus('idle');
     } finally {
       setSubmitting(false);
@@ -356,6 +359,7 @@ export default function AdminStudentsPage() {
     } else {
       setAdmins(admins.map(a => a.id === id ? { ...a, status } : a));
     }
+    toast.info(`User account status updated to ${status}`, 'Status Updated');
   };
 
   const openRoleChange = (id: string, name: string, email: string, currentRole: 'student' | 'tutor' | 'admin') => {
@@ -419,8 +423,10 @@ export default function AdminStudentsPage() {
       }
 
       setRoleChange(null);
+      toast.success(`User role updated to ${selectedNewRole}`, 'Role Updated');
     } catch (err: any) {
       setRoleChangeError(err.message || 'An error occurred. Please try again.');
+      toast.error(err.message || 'Failed to change user role', 'Role Change Failed');
     } finally {
       setChangingRole(false);
     }

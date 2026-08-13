@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Edit2, Users, Calendar, Clock, User, X, ChevronDown, UserPlus, Trash } from 'lucide-react';
 import { db } from '@/lib/db';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -112,9 +113,11 @@ export default function TutorBatchesPage() {
     try {
       if (editingBatch) {
         await db.updateBatch(editingBatch.id, payload);
+        toast.success('Batch details updated successfully', 'Batch Saved');
       } else {
         const newId = `batch-${Date.now()}`;
         await db.createBatch({ id: newId, ...payload });
+        toast.success('New batch created successfully', 'Batch Created');
       }
 
       setSaveStatus('success');
@@ -123,17 +126,23 @@ export default function TutorBatchesPage() {
         setIsModalOpen(false);
         loadData();
       }, 1000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err.message || 'Failed to save batch', 'Batch Error');
       setSaveStatus('idle');
     }
   };
 
   const handleDelete = async () => {
     if (deleteId) {
-      await db.deleteBatch(deleteId);
-      setDeleteId(null);
-      loadData();
+      try {
+        await db.deleteBatch(deleteId);
+        setDeleteId(null);
+        toast.success('Batch deleted successfully', 'Batch Removed');
+        loadData();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to delete batch', 'Delete Error');
+      }
     }
   };
 

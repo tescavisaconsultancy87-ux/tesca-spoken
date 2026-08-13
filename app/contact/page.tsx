@@ -8,6 +8,7 @@ import FloatingActions from '@/components/FloatingActions';
 import WaveDivider from '@/components/WaveDivider';
 import { useTracking } from '@/hooks/useTracking';
 import { WHATSAPP_URL } from '@/lib/data/content';
+import toast from '@/lib/toast';
 import {
   Mail,
   Phone,
@@ -121,10 +122,13 @@ export default function ContactPage() {
       }
 
       setSubmitted(true);
+      toast.success('Your message has been sent successfully!', 'Message Sent');
       trackEvent('lead_form_submit', { formType: 'contact', topic: form.type });
     } catch (err: any) {
       console.error('Contact submit error:', err);
-      setError(err.message || 'An unexpected error occurred. Please try again.');
+      const errMsg = err.message || 'An unexpected error occurred. Please try again.';
+      setError(errMsg);
+      toast.error(errMsg, 'Submission Error');
     } finally {
       setLoading(false);
     }

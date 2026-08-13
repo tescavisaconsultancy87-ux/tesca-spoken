@@ -14,6 +14,8 @@ import {
   AlertDialogFooter,
   AlertDialogClose,
 } from '@/components/animate-ui/primitives/base/alert-dialog';
+import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 
 interface Testimonial {
   id: string;
@@ -56,20 +58,25 @@ export default function AdminTestimonialsPage() {
 
   const handleAddTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
-    const created: Testimonial = {
-      id: `test-${Date.now()}`,
-      name: newTestimonial.name,
-      course: newTestimonial.course,
-      rating: newTestimonial.rating,
-      message: newTestimonial.message,
-      status: 'approved',
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-    };
+    try {
+      const created: Testimonial = {
+        id: `test-${Date.now()}`,
+        name: newTestimonial.name,
+        course: newTestimonial.course,
+        rating: newTestimonial.rating,
+        message: newTestimonial.message,
+        status: 'approved',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      };
 
-    await db.createTestimonial(created);
-    setNewTestimonial({ name: '', course: 'Spoken English Mastery', rating: 5, message: '' });
-    setIsAdding(false);
-    loadTestimonials();
+      await db.createTestimonial(created);
+      setNewTestimonial({ name: '', course: 'Spoken English Mastery', rating: 5, message: '' });
+      setIsAdding(false);
+      toast.success('Testimonial added successfully', 'Testimonial Added');
+      loadTestimonials();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to add testimonial', 'Error');
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -77,9 +84,14 @@ export default function AdminTestimonialsPage() {
   };
 
   const handleToggleStatus = async (id: string, currentStatus: 'approved' | 'hidden') => {
-    const nextStatus = currentStatus === 'approved' ? 'hidden' : 'approved';
-    await db.updateTestimonialStatus(id, nextStatus);
-    loadTestimonials();
+    try {
+      const nextStatus = currentStatus === 'approved' ? 'hidden' : 'approved';
+      await db.updateTestimonialStatus(id, nextStatus);
+      toast.info(`Testimonial status changed to ${nextStatus}`, 'Status Updated');
+      loadTestimonials();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update status', 'Error');
+    }
   };
 
   const filteredTestimonials = testimonials.filter((t) =>
@@ -297,6 +309,7 @@ export default function AdminTestimonialsPage() {
                     await db.deleteTestimonial(deleteTestimonialId);
                     loadTestimonials();
                     setDeleteTestimonialId(null);
+                    toast.success('Testimonial review deleted successfully', 'Review Removed');
                   }
                 }}
                 className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft"

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Save, CheckCircle, HelpCircle } from 'lucide-react';
 import { db } from '@/lib/db';
+import toast from '@/lib/toast';
 
 export default function AdminSettingsPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -42,11 +43,12 @@ export default function AdminSettingsPage() {
     if (success) {
       localStorage.setItem('tesca_school_settings', JSON.stringify(schoolSettings));
       setSaveSuccess(true);
+      toast.success('System settings saved successfully', 'Settings Saved');
       setTimeout(() => {
         setSaveSuccess(false);
       }, 3000);
     } else {
-      alert('Failed to save settings to the database.');
+      toast.error('Failed to save settings to database.', 'Save Failed');
     }
   };
 

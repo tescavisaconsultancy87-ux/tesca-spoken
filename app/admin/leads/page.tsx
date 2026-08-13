@@ -5,6 +5,7 @@ import { Search, Phone, MessageSquare, Check, X, PhoneCall, CheckCircle, Pencil,
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -184,12 +185,14 @@ export default function AdminLeadsPage() {
       setLeads(leads.map(l => l.id === editingLead.id ? { ...editingLead } : l));
       
       setSaveStatus('success');
+      toast.success('Lead details updated successfully', 'Lead Updated');
       setTimeout(() => {
         setSaveStatus('saved');
         setEditingLead(null);
       }, 1000);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
+      toast.error(err.message || 'Failed to update lead details', 'Update Failed');
       setSaveStatus('idle');
     } finally {
       setEditSubmitting(false);
@@ -225,8 +228,10 @@ export default function AdminLeadsPage() {
       // Update state locally
       setLeads(leads.filter(l => l.id !== deleteConfirmId));
       setDeleteConfirmId(null);
+      toast.success('Lead record deleted successfully', 'Lead Removed');
     } catch (err: any) {
       setDeleteError(err.message || 'An error occurred. Please try again.');
+      toast.error(err.message || 'Failed to delete lead', 'Delete Failed');
     } finally {
       setIsDeleting(false);
     }
@@ -265,6 +270,10 @@ export default function AdminLeadsPage() {
     if (!updated) {
       setLeads(previousLeads);
       setStatusError('Could not update the lead status. Please try again.');
+      toast.error('Could not update lead status', 'Update Failed');
+    } else {
+      const statusLabel = getLeadStatusMeta(status).label;
+      toast.info(`Lead status updated to "${statusLabel}"`, 'Status Updated');
     }
     setUpdatingStatusId(null);
   };

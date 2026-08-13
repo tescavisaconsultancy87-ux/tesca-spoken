@@ -36,10 +36,24 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const showToast = useCallback(
     ({ message, title, type = 'info', duration = 3000 }: { message: string; title?: string; type?: ToastType; duration?: number }) => {
       const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-      setToasts((prev) => [...prev.slice(-3), { id, message, title, type, duration }]);
+      setToasts((prev) => [...prev.slice(-4), { id, message, title, type, duration }]);
     },
     []
   );
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handleCustomToast = (e: Event) => {
+      const customEvt = e as CustomEvent<{ type?: ToastType; message: string; title?: string; duration?: number }>;
+      if (customEvt.detail && customEvt.detail.message) {
+        showToast(customEvt.detail);
+      }
+    };
+    window.addEventListener('tesca-toast', handleCustomToast);
+    return () => {
+      window.removeEventListener('tesca-toast', handleCustomToast);
+    };
+  }, [showToast]);
 
   const toastHelpers = React.useMemo(
     () => ({

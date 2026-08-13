@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import toast from '@/lib/toast';
 
 interface PromoFormProps {
   popupId: number;
@@ -46,8 +47,11 @@ export default function PromoForm({ popupId, popupTitle, requiredFields }: Promo
       }
 
       setSubmitted(true);
+      toast.success('Registration successful! Counselor will contact you shortly.', 'Offer Registered');
     } catch (err: any) {
-      setErrorMsg(err.message || 'An error occurred. Please try again.');
+      const msg = err.message || 'An error occurred. Please try again.';
+      setErrorMsg(msg);
+      toast.error(msg, 'Registration Error');
     } finally {
       setLoading(false);
     }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Mail, ArrowLeft, Send, CheckCircle, AlertCircle, Key, Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
+import toast from '@/lib/toast';
 
 type Step = 'email-request' | 'otp-verify' | 'password-reset' | 'success';
 
@@ -53,8 +54,11 @@ export default function ForgotPasswordPage() {
 
       setStep('otp-verify');
       setCountdown(120); // 120 seconds cooldown
+      toast.success('Verification OTP code sent to your email', 'OTP Sent');
     } catch (err: any) {
-      setError(err.message || 'An error occurred. Please check the email and try again.');
+      const msg = err.message || 'An error occurred. Please check the email and try again.';
+      setError(msg);
+      toast.error(msg, 'OTP Request Failed');
     } finally {
       setLoading(false);
     }
@@ -83,8 +87,11 @@ export default function ForgotPasswordPage() {
       }
 
       setStep('password-reset');
+      toast.success('OTP code verified successfully', 'Code Verified');
     } catch (err: any) {
-      setError(err.message || 'Verification failed. Please check the code.');
+      const msg = err.message || 'Verification failed. Please check the code.';
+      setError(msg);
+      toast.error(msg, 'Verification Failed');
     } finally {
       setLoading(false);
     }
@@ -110,8 +117,11 @@ export default function ForgotPasswordPage() {
 
       setCountdown(120); // reset timer
       setOtp(''); // clear previous OTP input
+      toast.info('A new OTP code has been sent to your email', 'OTP Resent');
     } catch (err: any) {
-      setError(err.message || 'An error occurred. Failed to resend.');
+      const msg = err.message || 'An error occurred. Failed to resend.';
+      setError(msg);
+      toast.error(msg, 'Resend Failed');
     } finally {
       setLoading(false);
     }
@@ -148,8 +158,11 @@ export default function ForgotPasswordPage() {
       }
 
       setStep('success');
+      toast.success('Password reset successfully! You can now log in.', 'Password Updated');
     } catch (err: any) {
-      setError(err.message || 'Could not update password. Please try again.');
+      const msg = err.message || 'Could not update password. Please try again.';
+      setError(msg);
+      toast.error(msg, 'Reset Failed');
     } finally {
       setLoading(false);
     }

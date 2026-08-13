@@ -5,6 +5,7 @@ import { User, Shield, CreditCard, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 
 export default function StudentProfilePage() {
   const { user } = useAuth();
@@ -80,7 +81,9 @@ export default function StudentProfilePage() {
     // Validate phone: must be exactly 10 digits
     const cleanedPhone = profileData.phone.replace(/\D/g, '');
     if (cleanedPhone.length !== 10) {
-      setValidationError('Phone number must be exactly 10 digits.');
+      const err = 'Phone number must be exactly 10 digits.';
+      setValidationError(err);
+      toast.error(err, 'Validation Error');
       return;
     }
     
@@ -95,6 +98,7 @@ export default function StudentProfilePage() {
 
       if (success) {
         setProfileSaveStatus('success');
+        toast.success('Profile details updated successfully', 'Profile Saved');
         setInitialProfileData({
           name: profileData.name,
           email: profileData.email,
@@ -112,12 +116,14 @@ export default function StudentProfilePage() {
         }, 3000);
       } else {
         setProfileSaveStatus('idle');
+        toast.error('Failed to update profile details', 'Save Failed');
       }
     } else if (activeTab === 'security') {
       setPasswordSaveStatus('loading');
       // Simulate API call for password update
       await new Promise((resolve) => setTimeout(resolve, 1000));
       setPasswordSaveStatus('success');
+      toast.success('Security settings and password updated successfully', 'Password Updated');
       setSaveSuccess(true);
       setTimeout(() => {
         setPasswordSaveStatus('saved');

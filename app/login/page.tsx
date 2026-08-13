@@ -8,6 +8,7 @@ import { Mail, Lock, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 import { getRoleDashboardUrl } from '@/lib/authCookies';
+import toast from '@/lib/toast';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -28,6 +29,7 @@ export default function LoginPage() {
     const result = await login(form.username, form.password);
     
     if (result.success) {
+      toast.success('Logged in successfully!', 'Welcome Back');
       if (result.role !== 'admin') {
         try {
           const settings = await db.getSystemSettings();
@@ -53,7 +55,9 @@ export default function LoginPage() {
       }
     } else {
       setLoading(false);
-      setError(result.error || 'Invalid credentials. Please try again.');
+      const errMsg = result.error || 'Invalid credentials. Please try again.';
+      setError(errMsg);
+      toast.error(errMsg, 'Login Failed');
     }
   };
 

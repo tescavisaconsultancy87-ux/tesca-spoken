@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Edit2, Video, Calendar, Clock, User, X, Link as LinkIcon, Key, Hash, ChevronDown, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -164,6 +165,7 @@ export default function TutorLiveClassesPage() {
     try {
       if (editingClass) {
         await db.updateLiveClass(editingClass.id, payload);
+        toast.success('Live class updated successfully', 'Class Updated');
         await triggerNotification('live-class-update', {
           topic: formData.topic,
           trainer: formData.trainer,
@@ -175,6 +177,7 @@ export default function TutorLiveClassesPage() {
       } else {
         const newId = `lc-${Date.now()}`;
         await db.createLiveClass({ id: newId, ...payload });
+        toast.success('New live class scheduled successfully', 'Class Scheduled');
         await triggerNotification('live-class-create', {
           topic: formData.topic,
           trainer: formData.trainer,
@@ -191,26 +194,32 @@ export default function TutorLiveClassesPage() {
         setIsModalOpen(false);
         loadData();
       }, 1000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err.message || 'Failed to save live class', 'Class Error');
       setSaveStatus('idle');
     }
   };
 
   const handleDelete = async () => {
     if (deleteId) {
-      const classToDelete = liveClasses.find(lc => lc.id === deleteId);
-      await db.deleteLiveClass(deleteId);
-      
-      if (classToDelete) {
-        await triggerNotification('live-class-delete', {
-          topic: classToDelete.topic,
-          trainer: classToDelete.trainer
-        });
+      try {
+        const classToDelete = liveClasses.find(lc => lc.id === deleteId);
+        await db.deleteLiveClass(deleteId);
+        
+        if (classToDelete) {
+          await triggerNotification('live-class-delete', {
+            topic: classToDelete.topic,
+            trainer: classToDelete.trainer
+          });
+        }
+        
+        setDeleteId(null);
+        toast.warning('Live class canceled and removed', 'Class Canceled');
+        loadData();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to delete live class', 'Delete Failed');
       }
-      
-      setDeleteId(null);
-      loadData();
     }
   };
 

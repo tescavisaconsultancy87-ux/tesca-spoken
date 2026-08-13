@@ -5,6 +5,7 @@ import { Search, Download, CreditCard, IndianRupee, ArrowUpRight, CheckCircle2, 
 import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -95,12 +96,14 @@ export default function AdminPaymentsPage() {
       setTransactions(transactions.map(t => t.id === editingPayment.id ? { ...editingPayment } : t));
       
       setSaveStatus('success');
+      toast.success('Payment record updated successfully', 'Payment Saved');
       setTimeout(() => {
         setSaveStatus('saved');
         setEditingPayment(null);
       }, 1000);
     } catch (err: any) {
       setEditValidationError(err.message || 'An error occurred. Please try again.');
+      toast.error(err.message || 'Failed to update payment record', 'Update Failed');
       setSaveStatus('idle');
     } finally {
       setEditSubmitting(false);
@@ -136,8 +139,10 @@ export default function AdminPaymentsPage() {
       // Update state locally
       setTransactions(transactions.filter(t => t.id !== deleteConfirmId));
       setDeleteConfirmId(null);
+      toast.success('Payment record deleted successfully', 'Payment Removed');
     } catch (err: any) {
       setDeleteError(err.message || 'An error occurred. Please try again.');
+      toast.error(err.message || 'Failed to delete payment record', 'Delete Failed');
     } finally {
       setIsDeleting(false);
     }

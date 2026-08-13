@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Edit2, FileText, Headphones, FileCheck, X } from 'lucide-react';
 import { db } from '@/lib/db';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -169,9 +170,11 @@ export default function TutorMaterialsPage() {
     try {
       if (editingMaterial) {
         await db.updateStudyMaterial(editingMaterial.id, payload);
+        toast.success('Study material updated successfully', 'Material Saved');
       } else {
         const newId = `mat-${Date.now()}`;
         await db.createStudyMaterial({ id: newId, ...payload });
+        toast.success('Study material uploaded successfully', 'Material Uploaded');
         await triggerNotification('material-create', {
           name: payload.name,
           category: payload.category,
@@ -187,17 +190,23 @@ export default function TutorMaterialsPage() {
         setIsModalOpen(false);
         loadData();
       }, 1000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err.message || 'Failed to save study material', 'Material Error');
       setSaveStatus('idle');
     }
   };
 
   const handleDelete = async () => {
     if (deleteId) {
-      await db.deleteStudyMaterial(deleteId);
-      setDeleteId(null);
-      loadData();
+      try {
+        await db.deleteStudyMaterial(deleteId);
+        setDeleteId(null);
+        toast.success('Study material deleted successfully', 'Material Removed');
+        loadData();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to delete material', 'Delete Failed');
+      }
     }
   };
 

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Sparkles, Trash2, Edit, CheckCircle, HelpCircle, Eye, Upload, X } from 'lucide-react';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 
 interface PopupSetting {
   id: number;
@@ -77,7 +78,7 @@ export default function PromoPopupAdminPage() {
     // 1. Size check (< 600 KB)
     const maxBytes = 600 * 1024;
     if (file.size > maxBytes) {
-      alert('Error: File size must be less than 600KB.');
+      toast.error('File size must be less than 600KB.', 'File Size Exceeded');
       e.target.value = '';
       return;
     }
@@ -87,7 +88,7 @@ export default function PromoPopupAdminPage() {
     img.src = URL.createObjectURL(file);
     img.onload = () => {
       if (img.width !== img.height) {
-        alert(`Error: Image must be a 1:1 square. Selected image is ${img.width}x${img.height}.`);
+        toast.error(`Image must be a 1:1 square. Selected image is ${img.width}x${img.height}.`, 'Aspect Ratio Error');
         e.target.value = '';
         URL.revokeObjectURL(img.src);
         return;
@@ -155,13 +156,14 @@ export default function PromoPopupAdminPage() {
       if (response.ok) {
         setPopups(popups.filter((p) => p.id !== id));
         if (editingId === id) resetForm();
+        toast.success('Promo popup configuration deleted successfully', 'Popup Removed');
       } else {
         const err = await response.json();
-        alert(`Failed to delete: ${err.error || 'Unknown error'}`);
+        toast.error(`Failed to delete popup: ${err.error || 'Unknown error'}`, 'Delete Failed');
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error('Delete error:', e);
-      alert('An error occurred during deletion.');
+      toast.error('An error occurred during deletion.', 'Delete Error');
     }
   };
 
@@ -253,19 +255,16 @@ export default function PromoPopupAdminPage() {
         setPopups([result.data, ...popups]);
       }
 
-      setSaveStatus('success');
       setSaveSuccess(true);
+      setSaveStatus('success');
+      toast.success(editingId ? 'Promo popup configuration updated' : 'New promo popup created successfully', 'Popup Saved');
       setTimeout(() => {
         setSaveStatus('saved');
         resetForm();
       }, 1000);
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-
     } catch (err: any) {
-      alert(err.message || 'An error occurred while saving.');
       setSaveStatus('idle');
+      toast.error(err.message || 'An error occurred while saving.', 'Save Error');
     }
   };
 

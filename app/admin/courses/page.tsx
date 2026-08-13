@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, Users, BookOpen, X } from 'lucide-react';
 import { db } from '@/lib/db';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
+import toast from '@/lib/toast';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -139,6 +140,7 @@ export default function AdminCoursesPage() {
               : c
           )
         );
+        toast.success('Course updated successfully', 'Course Saved');
       } else {
         // Create Mode
         const newId = `course-${Date.now()}`;
@@ -170,6 +172,7 @@ export default function AdminCoursesPage() {
             popular: createdObj.popular,
           },
         ]);
+        toast.success('New course created successfully', 'Course Created');
       }
 
       setSaveStatus('success');
@@ -177,8 +180,9 @@ export default function AdminCoursesPage() {
         setSaveStatus('saved');
         setIsModalOpen(false);
       }, 1000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+      toast.error(err.message || 'Failed to save course details', 'Save Error');
       setSaveStatus('idle');
     }
   };
@@ -485,6 +489,7 @@ export default function AdminCoursesPage() {
                     await db.deleteCourse(deleteCourseId);
                     setCourses(courses.filter((c) => c.id !== deleteCourseId));
                     setDeleteCourseId(null);
+                    toast.success('Course deleted successfully', 'Course Removed');
                   }
                 }}
                 className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft"
