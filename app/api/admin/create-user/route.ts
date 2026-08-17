@@ -179,65 +179,15 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-    } else if (supabase) {
-      console.log('[Create User] Falling back to standard Supabase Client (Anon Key)...');
-      // 1. Sign up the user (sends confirmation email if enabled, logs out admin)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            name,
-            role,
-            phone,
-          },
-        },
-      });
-
-      if (authError) {
-        return NextResponse.json({ error: authError.message }, { status: 400 });
-      }
-
-      if (authData?.user) {
-        authUserId = authData.user.id;
-
-        // 2. Insert profile
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: authUserId,
-          email,
-          role,
-          name,
-          phone,
-          level: role === 'student' ? 'Intermediate (B1)' : 'Expert',
-          needs_password_change: true,
-        });
-
-        if (profileError) {
-          console.error('[Create User] Profile insertion failed:', profileError.message);
-          return NextResponse.json({
-            error: `User was registered in auth, but saving profile failed: ${profileError.message}. To resolve this, configure SUPABASE_SERVICE_ROLE_KEY in .env, or add an INSERT policy to public.profiles in your Supabase dashboard.`
-          }, { status: 400 });
-        }
-
-        databaseSaved = true;
-
-        // 3. Enroll course
-        if (role === 'student' && course) {
-          const courseId = course.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-          const { error: enrollError } = await supabase.from('enrollments').insert({
-            student_id: authUserId,
-            course_id: courseId,
-            status: 'active',
-          });
-          if (enrollError) {
-            console.error('[Create User] Enrollment failed:', enrollError.message);
-          }
-        }
-      }
-    } else {
+    } else if (!supabaseUrl) {
       // Supabase is not configured (Mock / Dev Sandbox mode)
       console.log('Supabase not configured. Simulating mock user database write.');
       databaseSaved = true;
+    } else {
+      console.error('[Create User] SUPABASE_SERVICE_ROLE_KEY missing in server environment variables.');
+      return NextResponse.json({
+        error: 'Server configuration error: SUPABASE_SERVICE_ROLE_KEY is required to create users. Please configure SUPABASE_SERVICE_ROLE_KEY in your server environment variables or Cloudflare settings.'
+      }, { status: 500 });
     }
 
     // 4. Send welcome email (no plaintext passwords)

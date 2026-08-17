@@ -18,6 +18,8 @@
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka2lpZGhqdmF1b3hiZ29qbnhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTc5NjgsImV4cCI6MjA5NzY5Mzk2OH0.qMtx_m4gmjF-xwT9DQmVn2AEfZffqVXPfgA_8zZD6R0",
     "APP_NAME": "tesca-spoken",
     "EMAIL_USER": "tescavisaconsultancy87@gmail.com",
-    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "rzp_live_TIN5dDw5XIOHxp"
+    "NEXT_PUBLIC_RAZORPAY_KEY_ID": "rzp_live_TIN5dDw5XIOHxp",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNka2lpZGhqdmF1b3hiZ29qbnhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjExNzk2OCwiZXhwIjoyMDk3NjkzOTY4fQ.7EZ2VGgX7O2cRO_mfq2iQ_uIDuk9vODaU02ooTWEc9E",
+    "NEXT_PUBLIC_CLARITY_ID": "xsumd8lken"
   }
 }
