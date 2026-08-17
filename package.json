@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node --max-old-space-size=8192 ./node_modules/next/dist/bin/next dev",
-    "build": "next build && opennextjs-cloudflare build --skipNextBuild",
+    "build": "next build --webpack && opennextjs-cloudflare build --skipNextBuild",
     "start": "next start",
     "lint": "eslint",
     "deploy": "npm run build && npx wrangler deploy",
