@@ -12,6 +12,11 @@ export default function robots(): MetadataRoute.Robots {
     '/change-password',
     '/maintenance',
     '/bot-labyrinth/',
+    '/.env',
+    '/.git',
+    '/*.php',
+    '/wp-admin/',
+    '/wp-content/',
   ];
 
   return {

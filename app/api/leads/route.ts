@@ -3,8 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/gmail';
 import { checkRateLimit, formatFriendlyError } from '@/lib/security';
 
-export const runtime = 'edge';
-
 export async function POST(request: NextRequest) {
   try {
     // 1. Rate Limiting check (Max 10 leads/min, using Cloudflare IP)

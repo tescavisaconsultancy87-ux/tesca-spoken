@@ -14,13 +14,47 @@ const AI_CRAWLERS = [
   'Screaming Frog', 'ScreenerBot', 'SiteCheckerBot', 'TrafficBot',
   'Trendsmap', 'UptimeRobot', 'VelenCrawler', 'Wget', 'Wotbox',
   'XoviBot', 'ZumBot', 'Go-http-client', 'python-requests',
-  'aiohttp', 'httpx', 'curl', 'wget',
+  'aiohttp', 'httpx', 'curl', 'wget', 'AmazonBot', 'Amzn-SearchBot',
+  'Amazon-SearchBot', 'Perplexity', 'Claude',
 ];
 
 const LEGITIMATE_BOTS = ['Googlebot', 'Google', 'Google-Extended', 'Google-InspectionTool', 'Storebot-Google', 'AdsBot-Google', 'Mediapartners-Google', 'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot',
   'Baiduspider', 'YandexBot', 'facebookexternalhit', 'Twitterbot',
   'LinkedInBot', 'WhatsApp', 'TelegramBot', 'Discordbot',
 ];
+
+const SENSITIVE_PROBE_PATTERNS = [
+  '/.env',
+  '/.git',
+  '/.config',
+  '/.aws',
+  '/.ssh',
+  '/.ds_store',
+  'admin.php',
+  'wp-admin',
+  'wp-content',
+  'wp-includes',
+  'wp-login.php',
+  'xmlrpc.php',
+  'phpmyadmin',
+  'eval-stdin.php',
+  'composer.json',
+  'package.json',
+  'tsconfig.json',
+  'web.config',
+  '.htaccess',
+];
+
+function isSensitiveProbe(pathname: string): boolean {
+  const lower = pathname.toLowerCase();
+  for (const pattern of SENSITIVE_PROBE_PATTERNS) {
+    if (lower.includes(pattern)) return true;
+  }
+  if (/\.(php|asp|aspx|jsp|env|bak|sql|config|yml|yaml|ini|log)$/i.test(lower)) {
+    return true;
+  }
+  return false;
+}
 
 const LABYRINTH_BASE = '/bot-labyrinth';
 
@@ -49,6 +83,21 @@ export function middleware(request: NextRequest) {
   const protocol = xProto || request.nextUrl.protocol.replace(':', '');
   const ua = request.headers.get('user-agent') || '';
   const isLocalhost = hostName.includes('localhost') || hostName.includes('127.0.0.1') || hostName.includes('[::1]');
+
+  // ─── 0. Early Block for Empty User-Agents & Security Vulnerability Probes ───
+  if (!ua.trim()) {
+    return NextResponse.json(
+      { error: 'Access Denied', message: 'User-Agent header required.' },
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
+  if (isSensitiveProbe(pathname)) {
+    return NextResponse.json(
+      { error: 'Forbidden', message: 'Access to this resource is prohibited.' },
+      { status: 403, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
 
   // ─── UNKNOWN SUBDOMAIN → 404 ───
