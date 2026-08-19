@@ -161,58 +161,6 @@ export default function CoursePlayerPage() {
     loadCoursePlayer();
   }, [user, courseId]);
 
-  // Video playback simulation hook
-  useEffect(() => {
-    if (isPlaying) {
-      const simulatedTotalSeconds = (currentLesson?.duration || 10) * 60;
-      videoInterval.current = setInterval(() => {
-        setCurrentTime((prev) => {
-          const next = prev + 10; // Speed up video progress in dev to feel dynamic
-          if (next >= simulatedTotalSeconds) {
-            // Video finished
-            setIsPlaying(false);
-            if (videoInterval.current) clearInterval(videoInterval.current);
-            handleVideoEnd();
-            return simulatedTotalSeconds;
-          }
-          setVideoProgress((next / simulatedTotalSeconds) * 100);
-          return next;
-        });
-      }, 1000);
-    } else {
-      if (videoInterval.current) clearInterval(videoInterval.current);
-    }
-
-    return () => {
-      if (videoInterval.current) clearInterval(videoInterval.current);
-    };
-  }, [isPlaying, currentLesson]);
-
-  // Handle lesson change
-  const selectLesson = (lesson: Lesson) => {
-    setCurrentLesson(lesson);
-    setIsPlaying(false);
-    setCurrentTime(0);
-    setVideoProgress(0);
-    
-    // Automatically expand the module containing the lesson
-    setExpandedModules(prev => ({
-      ...prev,
-      [lesson.module_id]: true
-    }));
-  };
-
-  // Video finished - auto complete lesson
-  const handleVideoEnd = async () => {
-    if (!user || !course || !currentLesson) return;
-    
-    const isAlreadyCompleted = completedLessons.includes(currentLesson.id);
-    if (!isAlreadyCompleted) {
-      console.log(`Video ended. Automatically marking lesson as complete: ${currentLesson.title}`);
-      await toggleLessonCheck(currentLesson.id, true);
-    }
-  };
-
   // Toggle lesson complete check
   const toggleLessonCheck = async (lessonId: string, completed: boolean) => {
     if (!user || !course) return;
@@ -258,6 +206,58 @@ export default function CoursePlayerPage() {
     } catch (err) {
       console.error('Failed to toggle lesson progress:', err);
     }
+  };
+
+  // Video finished - auto complete lesson
+  const handleVideoEnd = async () => {
+    if (!user || !course || !currentLesson) return;
+    
+    const isAlreadyCompleted = completedLessons.includes(currentLesson.id);
+    if (!isAlreadyCompleted) {
+      console.log(`Video ended. Automatically marking lesson as complete: ${currentLesson.title}`);
+      await toggleLessonCheck(currentLesson.id, true);
+    }
+  };
+
+  // Video playback simulation hook
+  useEffect(() => {
+    if (isPlaying) {
+      const simulatedTotalSeconds = (currentLesson?.duration || 10) * 60;
+      videoInterval.current = setInterval(() => {
+        setCurrentTime((prev) => {
+          const next = prev + 10; // Speed up video progress in dev to feel dynamic
+          if (next >= simulatedTotalSeconds) {
+            // Video finished
+            setIsPlaying(false);
+            if (videoInterval.current) clearInterval(videoInterval.current);
+            handleVideoEnd();
+            return simulatedTotalSeconds;
+          }
+          setVideoProgress((next / simulatedTotalSeconds) * 100);
+          return next;
+        });
+      }, 1000);
+    } else {
+      if (videoInterval.current) clearInterval(videoInterval.current);
+    }
+
+    return () => {
+      if (videoInterval.current) clearInterval(videoInterval.current);
+    };
+  }, [isPlaying, currentLesson]);
+
+  // Handle lesson change
+  const selectLesson = (lesson: Lesson) => {
+    setCurrentLesson(lesson);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setVideoProgress(0);
+    
+    // Automatically expand the module containing the lesson
+    setExpandedModules(prev => ({
+      ...prev,
+      [lesson.module_id]: true
+    }));
   };
 
   // Toggle module accordion expand

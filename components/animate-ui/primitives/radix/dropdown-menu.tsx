@@ -217,7 +217,8 @@ export function DropdownMenuHighlightItem({
   if (!context) throw new Error('DropdownMenuHighlightItem must be used inside DropdownMenuHighlight');
 
   const { hoveredId, setHoveredId, layoutId } = context;
-  const itemId = id || useId();
+  const generatedId = useId();
+  const itemId = id || generatedId;
 
   return (
     <div
