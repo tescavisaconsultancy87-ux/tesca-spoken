@@ -60,12 +60,8 @@ jobs:
       - name: 🏗️ Build OpenNext Cloudflare Package
         run: npm run build
 
-      - name: ⚡ Deploy to Cloudflare Workers via Wrangler
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
+      - name: ⚡ Deploy to Cloudflare Workers via Wrangler v4
+        run: npx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
