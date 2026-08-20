@@ -147,7 +147,7 @@ export default function BlogManager() {
         title: form.title,
         slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
         excerpt: form.excerpt,
-        content: form.content,
+        content: form.content && form.content.trim().length > 0 ? form.content : form.excerpt,
         author: form.author,
         image_url: form.image_url,
         published: form.published,

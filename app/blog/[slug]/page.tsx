@@ -124,30 +124,38 @@ export default function BlogPostPage() {
             {/* Content */}
             <section className="relative bg-white py-16 lg:py-20">
               <div className="container-x max-w-3xl mx-auto">
-                {/<[a-z][\s\S]*>/i.test(post.content) ? (
-                  <div 
-                    className="prose prose-sm sm:prose-base max-w-none prose-headings:font-heading prose-headings:text-ink prose-p:text-ink-muted prose-a:text-primary prose-strong:text-ink prose-ul:list-disc prose-ol:list-decimal"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
-                  />
-                ) : (
-                  <div className="prose prose-sm sm:prose-base max-w-none prose-headings:font-heading prose-headings:text-ink prose-p:text-ink-muted prose-a:text-primary prose-strong:text-ink">
-                    {post.content.split('\n').map((line, i) => {
-                      if (line.startsWith('## ')) {
-                        return <h2 key={i} className="text-xl font-bold text-ink mt-8 mb-4">{line.replace('## ', '')}</h2>;
-                      }
-                      if (line.startsWith('### ')) {
-                        return <h3 key={i} className="text-lg font-bold text-ink mt-6 mb-3">{line.replace('### ', '')}</h3>;
-                      }
-                      if (line.startsWith('- ')) {
-                        return <li key={i} className="text-ink-muted ml-4">{line.replace('- ', '')}</li>;
-                      }
-                      if (line.trim() === '') {
-                        return <br key={i} />;
-                      }
-                      return <p key={i} className="text-ink-muted leading-relaxed mb-4">{line}</p>;
-                    })}
-                  </div>
-                )}
+                {(() => {
+                  const displayContent = (post.content && post.content.trim().length > 0) ? post.content : (post.excerpt || '');
+                  
+                  if (/<[a-z][\s\S]*>/i.test(displayContent)) {
+                    return (
+                      <div 
+                        className="prose prose-sm sm:prose-base max-w-none prose-headings:font-heading prose-headings:text-ink prose-p:text-ink-muted prose-a:text-primary prose-strong:text-ink prose-ul:list-disc prose-ol:list-decimal"
+                        dangerouslySetInnerHTML={{ __html: displayContent }}
+                      />
+                    );
+                  }
+                  
+                  return (
+                    <div className="prose prose-sm sm:prose-base max-w-none prose-headings:font-heading prose-headings:text-ink prose-p:text-ink-muted prose-a:text-primary prose-strong:text-ink">
+                      {displayContent.split('\n').map((line, i) => {
+                        if (line.startsWith('## ')) {
+                          return <h2 key={i} className="text-xl font-bold text-ink mt-8 mb-4">{line.replace('## ', '')}</h2>;
+                        }
+                        if (line.startsWith('### ')) {
+                          return <h3 key={i} className="text-lg font-bold text-ink mt-6 mb-3">{line.replace('### ', '')}</h3>;
+                        }
+                        if (line.startsWith('- ')) {
+                          return <li key={i} className="text-ink-muted ml-4">{line.replace('- ', '')}</li>;
+                        }
+                        if (line.trim() === '') {
+                          return <br key={i} />;
+                        }
+                        return <p key={i} className="text-ink-muted leading-relaxed mb-4">{line}</p>;
+                      })}
+                    </div>
+                  );
+                })()}
 
                 <div className="mt-12 pt-8 border-t border-slate-100">
                   <Link
