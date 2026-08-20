@@ -1,10 +1,10 @@
 export const NAV_LINKS = [
   { label: 'Home', href: '/' },
-  { label: 'About Us', href: '/about' },
+  { label: 'Assessment', href: '/assessment' },
   { label: 'Courses', href: '/courses' },
   { label: 'Study Abroad', href: 'https://tescavisa.com', external: true },
   { label: 'Blog', href: '/blog' },
-  { label: 'Assessment', href: '/assessment' },
+  { label: 'About Us', href: '/about' },
   { label: 'Contact', href: '/contact' },
 ];
 
