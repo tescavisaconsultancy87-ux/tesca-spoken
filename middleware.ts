@@ -186,8 +186,9 @@ export function middleware(request: NextRequest) {
   );
 
   if (isSubdomain && !isRewritten) {
-    // If they request '/login' or '/maintenance', let them access the shared pages
-    if (pathname === '/login' || pathname === '/maintenance') {
+    // If they request '/login', '/maintenance', '/forgot-password', '/reset-password', or '/change-password', let them access the shared pages
+    const PUBLIC_AUTH_PATHS = ['/login', '/maintenance', '/forgot-password', '/reset-password', '/change-password'];
+    if (PUBLIC_AUTH_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'))) {
       return NextResponse.next();
     }
 
