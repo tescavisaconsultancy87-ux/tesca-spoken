@@ -112,53 +112,59 @@ export async function POST(request: NextRequest) {
           );
         }
       }
-
-      // Deduplication check for popup leads (parameterized — no string interpolation)
-      if (adminSupabase && (phone || email)) {
-        const checkQuery = adminSupabase
-          .from('leads')
-          .select('id, status')
-          .neq('status', 'converted')
-          .neq('status', 'rejected');
-
-        if (email && phone) {
-          const { data: existingByEmail } = await checkQuery.eq('email', email);
-          if (existingByEmail && existingByEmail.length > 0) {
-            return NextResponse.json(
-              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
-              { status: 409 }
-            );
-          }
-          const { data: existingByPhone } = await checkQuery.eq('phone', phone);
-          if (existingByPhone && existingByPhone.length > 0) {
-            return NextResponse.json(
-              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
-              { status: 409 }
-            );
-          }
-        } else if (email) {
-          const { data: existingLeads } = await checkQuery.eq('email', email);
-          if (existingLeads && existingLeads.length > 0) {
-            return NextResponse.json(
-              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
-              { status: 409 }
-            );
-          }
-        } else if (phone) {
-          const { data: existingLeads } = await checkQuery.eq('phone', phone);
-          if (existingLeads && existingLeads.length > 0) {
-            return NextResponse.json(
-              { error: "Our team already has an active request for this contact. We will reach out to you shortly!" },
-              { status: 409 }
-            );
-          }
-        }
-      }
     } else {
       return NextResponse.json(
         { error: 'Invalid lead type. Must be "contact", "demo", "assessment", or "popup".' },
         { status: 400 }
       );
+    }
+
+    // 2.5 Global Deduplication Check (for all lead types: demo, contact, assessment, popup)
+    if (adminSupabase) {
+      const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
+      const cleanEmail = email ? String(email).trim().toLowerCase() : '';
+
+      const isRealEmail =
+        cleanEmail &&
+        cleanEmail !== 'n/a' &&
+        cleanEmail.includes('@') &&
+        !cleanEmail.endsWith('@phone.tesca.co') &&
+        !cleanEmail.endsWith('@lead.tesca.co') &&
+        !cleanEmail.endsWith('@dummy.com') &&
+        !cleanEmail.endsWith('@example.com');
+
+      // Check duplicate mobile number
+      if (cleanPhone && cleanPhone.length >= 10) {
+        const target10 = cleanPhone.slice(-10);
+        const { data: existingPhoneLeads } = await adminSupabase
+          .from('leads')
+          .select('id, phone, status')
+          .neq('status', 'rejected')
+          .or(`phone.eq.${phone},phone.ilike.%${target10}`);
+
+        if (existingPhoneLeads && existingPhoneLeads.length > 0) {
+          return NextResponse.json(
+            { error: 'An inquiry with this mobile number already exists. Our team will contact you shortly!' },
+            { status: 409 }
+          );
+        }
+      }
+
+      // Check duplicate email address
+      if (isRealEmail) {
+        const { data: existingEmailLeads } = await adminSupabase
+          .from('leads')
+          .select('id, email, status')
+          .neq('status', 'rejected')
+          .eq('email', cleanEmail);
+
+        if (existingEmailLeads && existingEmailLeads.length > 0) {
+          return NextResponse.json(
+            { error: 'An inquiry with this email address already exists. Our team will contact you shortly!' },
+            { status: 409 }
+          );
+        }
+      }
     }
 
     // 3. Format notes and insert lead

@@ -115,6 +115,11 @@ function parseLeadNotes(notes: string) {
     course = courseMatch[1].trim();
   }
 
+  // Remove tracking metadata section from admin display
+  if (cleanNotes.includes('[Tracking Metadata]')) {
+    cleanNotes = cleanNotes.split('[Tracking Metadata]')[0].trim();
+  }
+
   return { source, cleanNotes, course };
 }
 
