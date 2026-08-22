@@ -106,10 +106,24 @@ const Hero = memo(function Hero() {
             {/* Left Column: Typography & CTA */}
             <div className="lg:col-span-6 xl:col-span-5 max-w-md sm:max-w-lg lg:max-w-xl space-y-2 text-left order-1 lg:order-1 z-10">
               
+              {/* Social Proof Rating Badge */}
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1.5 backdrop-blur-md">
+                <div className="flex items-center text-amber-400 text-xs tracking-tight">
+                  {'★'.repeat(5)}
+                </div>
+                <span className="text-xs font-bold text-white lg:text-slate-800">
+                  4.9/5 Rating <span className="font-normal opacity-80">(520+ Reviews)</span>
+                </span>
+                <span className="hidden sm:inline-block h-3 w-px bg-slate-300/40" />
+                <span className="hidden sm:inline-block text-[11px] font-semibold text-emerald-600 lg:text-emerald-700">
+                  Cambridge Certified
+                </span>
+              </div>
+
               {/* Eyebrow Tag */}
-              <div className="inline-flex">
+              <div className="inline-flex pt-1">
                 <span className="inline-block text-xs sm:text-sm font-bold tracking-widest uppercase mb-1 bg-black/40 border border-white/15 px-3.5 py-1 rounded-full text-white/90 backdrop-blur-xs lg:bg-transparent lg:border-0 lg:p-0 lg:rounded-none lg:text-primary lg:backdrop-blur-none">
-                  Cambridge-Certified English Training
+                  Since 2005 — 20+ Years of Educational Excellence
                 </span>
               </div>
 
@@ -137,7 +151,7 @@ const Hero = memo(function Hero() {
 
               {/* Subheadline / Description */}
               <p className="max-w-xl text-base leading-relaxed text-slate-200 lg:text-slate-600 sm:text-lg">
-                Master fluent communication, ace international exams (IELTS/PTE), and accelerate your career. Learn 1-on-1 from expert trainers with interactive live practice.
+                Master fluent communication, ace international exams (IELTS/PTE), and accelerate your career. Learn 1-on-1 from Cambridge-certified trainers with interactive live practice.
               </p>
 
               {/* Quick 1-Field Call Back Form & CTA */}
@@ -152,6 +166,7 @@ const Hero = memo(function Hero() {
                       value={quickPhone}
                       onChange={(e) => setQuickPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                       placeholder="Enter 10-digit Mobile Number"
+                      aria-label="Mobile Number"
                       className="w-full rounded-xl border border-white/20 bg-white text-slate-800 placeholder:text-slate-400 pl-10 pr-4 py-3.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
                     />
                   </div>
@@ -165,17 +180,20 @@ const Hero = memo(function Hero() {
                   </button>
                 </form>
 
-                <p className="text-[11px] font-medium text-slate-300 lg:text-slate-500 flex items-center gap-1.5 pt-1">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                  <span>Our team will call you back in a while. Or</span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-slate-300 lg:text-slate-600 pt-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                    Instant callback within 15 mins.
+                  </span>
+                  <span>Or</span>
                   <button
                     type="button"
                     onClick={openModal}
-                    className="font-bold text-secondary lg:text-primary hover:underline cursor-pointer ml-0.5"
+                    className="font-bold text-secondary lg:text-primary hover:underline cursor-pointer flex items-center gap-1"
                   >
-                    Book Free Demo Class →
+                    Book Free Live Demo Class →
                   </button>
-                </p>
+                </div>
               </div>
 
             </div>

@@ -37,9 +37,9 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://tesca.co'),
-  title: 'TESCA Spoken English — Master English Fluency from Basic to Advanced',
+  title: 'TESCA Spoken English — Master English Fluency | IELTS & PTE Coaching',
   description:
-    'Join thousands of students and professionals who improved their communication skills through TESCA\'s expert-led programs. Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
+    'Join thousands of students and professionals who improved their communication skills through TESCA\'s Cambridge-certified trainers. Live online & offline classes, IELTS & PTE prep, Study Abroad visas. Trusted since 2005 in Surat, Gujarat.',
   keywords: [
     'spoken english',
     'english learning',
@@ -47,12 +47,21 @@ export const metadata: Metadata = {
     'PTE preparation',
     'english classes online',
     'english speaking course',
+    'spoken english institute in Surat',
+    'IELTS coaching Surat',
+    'PTE classes Gujarat',
+    'Study abroad visa consultancy',
     'TESCA',
   ],
   authors: [{ name: 'TESCA Spoken English', url: 'https://tesca.co' }],
   publisher: 'TESCA Spoken English',
   alternates: {
     canonical: 'https://tesca.co/',
+  },
+  other: {
+    'geo.region': 'IN-GJ',
+    'geo.position': '21.2312;72.8833',
+    'ICBM': '21.2312, 72.8833',
   },
   openGraph: {
     title: 'TESCA Spoken English — Master English Fluency',
@@ -113,7 +122,9 @@ export default function RootLayout({
         'telephone': '+91 84888 05888',
         'email': 'tescavisaconsultancy87@gmail.com',
         'priceRange': '₹₹',
-        'areaServed': ['Surat', 'Gujarat', 'India'],
+        'currenciesAccepted': 'INR',
+        'paymentAccepted': 'Cash, Credit Card, Debit Card, UPI, Net Banking',
+        'areaServed': ['Surat', 'Gujarat', 'India', 'Worldwide Online'],
         'foundingDate': '2005',
         'address': {
           '@type': 'PostalAddress',
@@ -127,6 +138,21 @@ export default function RootLayout({
           '@type': 'GeoCoordinates',
           'latitude': '21.2312',
           'longitude': '72.8833'
+        },
+        'openingHoursSpecification': [
+          {
+            '@type': 'OpeningHoursSpecification',
+            'dayOfWeek': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+            'opens': '07:00',
+            'closes': '20:00'
+          }
+        ],
+        'aggregateRating': {
+          '@type': 'AggregateRating',
+          'ratingValue': '4.9',
+          'reviewCount': '520',
+          'bestRating': '5',
+          'worstRating': '1'
         },
         'sameAs': [
           'https://www.facebook.com/tescaspoken',
@@ -145,10 +171,99 @@ export default function RootLayout({
           '@type': 'SearchAction',
           'target': {
             '@type': 'EntryPoint',
-            'urlTemplate': 'https://tesca.co/search?q={search_term_string}'
+            'urlTemplate': 'https://tesca.co/courses?q={search_term_string}'
           },
           'query-input': 'required name=search_term_string'
         }
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': 'https://tesca.co/#faq',
+        'mainEntity': [
+          {
+            '@type': 'Question',
+            'name': 'Do I need any prior English knowledge to join TESCA?',
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': 'Not at all. We have courses for complete beginners to advanced learners. Our free skill assessment will identify your current level and place you in the perfect batch.'
+            }
+          },
+          {
+            '@type': 'Question',
+            'name': 'How are TESCA classes conducted — online or offline?',
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': 'Both. You can choose 100% online live interactive classes, in-person sessions at our campus in Surat, or a hybrid model.'
+            }
+          },
+          {
+            '@type': 'Question',
+            'name': 'What is the duration of each course at TESCA?',
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': 'Spoken English Basic is 3 months, Advanced is 4 months, IELTS is 6 weeks, PTE is 5 weeks, and Interview Preparation is 4 weeks.'
+            }
+          },
+          {
+            '@type': 'Question',
+            'name': 'Is the free demo class really free?',
+            'acceptedAnswer': {
+              '@type': 'Answer',
+              'text': 'Yes, completely free with no obligations. The demo class is a full 45-minute live session where you experience our Cambridge-certified teaching methods.'
+            }
+          }
+        ]
+      },
+      {
+        '@type': 'ItemList',
+        '@id': 'https://tesca.co/#courses',
+        'name': 'Featured English Courses at TESCA',
+        'itemListElement': [
+          {
+            '@type': 'ListItem',
+            'position': 1,
+            'item': {
+              '@type': 'Course',
+              'name': 'Spoken English Basic',
+              'description': 'Grammar foundations, vocabulary building, basic conversation & pronunciation for beginners.',
+              'provider': { '@id': 'https://tesca.co/#organization' },
+              'offers': { '@type': 'Offer', 'price': '7999', 'priceCurrency': 'INR' }
+            }
+          },
+          {
+            '@type': 'ListItem',
+            'position': 2,
+            'item': {
+              '@type': 'Course',
+              'name': 'Spoken English Advanced',
+              'description': 'Advanced fluency, public speaking, business communication & neutral accent training.',
+              'provider': { '@id': 'https://tesca.co/#organization' },
+              'offers': { '@type': 'Offer', 'price': '12999', 'priceCurrency': 'INR' }
+            }
+          },
+          {
+            '@type': 'ListItem',
+            'position': 3,
+            'item': {
+              '@type': 'Course',
+              'name': 'IELTS Preparation',
+              'description': 'Comprehensive 4-module prep, 15+ mock tests, Band 7.5+ strategies & essay evaluations.',
+              'provider': { '@id': 'https://tesca.co/#organization' },
+              'offers': { '@type': 'Offer', 'price': '9999', 'priceCurrency': 'INR' }
+            }
+          },
+          {
+            '@type': 'ListItem',
+            'position': 4,
+            'item': {
+              '@type': 'Course',
+              'name': 'PTE Preparation',
+              'description': 'AI-scored mock tests, speaking & writing templates, speed reading, 65+ score target.',
+              'provider': { '@id': 'https://tesca.co/#organization' },
+              'offers': { '@type': 'Offer', 'price': '8999', 'priceCurrency': 'INR' }
+            }
+          }
+        ]
       }
     ]
   };

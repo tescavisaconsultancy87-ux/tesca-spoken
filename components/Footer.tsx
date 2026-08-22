@@ -44,13 +44,13 @@ const Linkedin = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const QUICK_LINKS = [
+const QUICK_LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: 'Home', href: '/' },
   { label: 'About Us', href: '/about' },
   { label: 'Courses', href: '/courses' },
   { label: 'Success Stories', href: '/#success' },
   { label: 'Free English Test', href: '/assessment' },
-  { label: 'Study Abroad (Visa)', href: 'https://tescavisa.com', external: true },
+  { label: 'Study Abroad (Visa)', href: '/contact' },
 ];
 
 const COURSE_LINKS = [
