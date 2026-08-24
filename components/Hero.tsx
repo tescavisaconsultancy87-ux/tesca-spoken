@@ -105,20 +105,6 @@ const Hero = memo(function Hero() {
             
             {/* Left Column: Typography & CTA */}
             <div className="lg:col-span-6 xl:col-span-5 max-w-md sm:max-w-lg lg:max-w-xl space-y-2 text-left order-1 lg:order-1 z-10">
-              
-              {/* Social Proof Rating Badge */}
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3.5 py-1.5 backdrop-blur-md">
-                <div className="flex items-center text-amber-400 text-xs tracking-tight">
-                  {'★'.repeat(5)}
-                </div>
-                <span className="text-xs font-bold text-white lg:text-slate-800">
-                  4.9/5 Rating <span className="font-normal opacity-80">(520+ Reviews)</span>
-                </span>
-                <span className="hidden sm:inline-block h-3 w-px bg-slate-300/40" />
-                <span className="hidden sm:inline-block text-[11px] font-semibold text-emerald-600 lg:text-emerald-700">
-                  Cambridge Certified
-                </span>
-              </div>
 
               {/* Eyebrow Tag */}
               <div className="inline-flex pt-1">

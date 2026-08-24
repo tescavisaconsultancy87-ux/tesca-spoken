@@ -35,6 +35,10 @@ import {
   RefreshCw,
   UserCheck,
   Search,
+  ShieldCheck,
+  Sparkles,
+  Lock,
+  Zap,
 } from 'lucide-react';
 
 const DISABLE_ONLINE_PURCHASE = false; // Enabled real online Razorpay payments
@@ -851,67 +855,160 @@ export default function CoursesPage() {
         </section>
 
         {/* ── How Enrollment Works Process Section ── */}
-        <section className="relative pt-16 pb-0 bg-gradient-to-b from-white to-primary-50/40 border-t border-black/5">
-          <div className="container-x">
-            <div className="text-center max-w-2xl mx-auto mb-12">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-50 border border-primary-100 px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
-                Simple 4-Step Process
+        <section className="relative pt-20 pb-16 lg:pt-28 lg:pb-24 bg-gradient-to-br from-[#062426] via-[#0b3336] to-[#082023] text-white overflow-hidden border-t border-white/10 shadow-2xl">
+          {/* Ambient Glows */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            <div className="absolute top-0 right-1/4 h-96 w-96 rounded-full bg-teal-500/10 blur-3xl" />
+            <div className="absolute bottom-0 left-1/4 h-96 w-96 rounded-full bg-secondary/15 blur-3xl" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+          </div>
+
+          <div className="container-x relative z-10">
+            {/* Header */}
+            <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-secondary backdrop-blur-md shadow-soft">
+                <Sparkles className="h-3.5 w-3.5" />
+                Seamless 1-Minute Onboarding
               </span>
-              <h2 className="font-heading mt-3 text-3xl font-extrabold text-ink sm:text-4xl">
+              <h2 className="font-heading text-3xl font-extrabold sm:text-4xl lg:text-5xl text-white tracking-tight leading-tight">
                 How Student Enrollment Works
               </h2>
-              <p className="mt-3 text-sm text-ink-muted leading-relaxed">
-                From choosing your course to accessing your student portal — here is what happens step by step.
+              <p className="text-sm sm:text-base text-primary-100/80 max-w-2xl mx-auto leading-relaxed">
+                Experience effortless enrollment in 4 simple steps — from choosing your course to gaining instant access to live classes and interactive study materials.
               </p>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 max-w-6xl mx-auto relative">
-              {/* Step 1 */}
-              <div className="relative z-10 bg-white border border-gray-150 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
-                <div className="h-12 w-12 rounded-2xl bg-primary text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
-                  01
+            {/* Steps Container */}
+            <div className="relative max-w-6xl mx-auto">
+              {/* Connecting Track Line (Desktop Only) */}
+              <div className="hidden lg:block absolute top-1/2 left-12 right-12 h-1 bg-gradient-to-r from-teal-500/30 via-secondary/40 to-emerald-500/30 -translate-y-8 rounded-full pointer-events-none" />
+
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 relative z-10">
+                {/* Step 1 */}
+                <div className="group relative bg-white/5 border border-white/10 hover:border-teal-400/40 rounded-3xl p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/10 hover:shadow-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-teal-500 to-teal-700 text-white flex items-center justify-center shadow-lg shadow-teal-900/30 group-hover:scale-110 transition-transform">
+                        <BookOpen className="h-6 w-6 stroke-[2.2]" />
+                      </div>
+                      <span className="font-heading text-2xl font-black text-white/30 group-hover:text-teal-300 transition-colors">
+                        01
+                      </span>
+                    </div>
+
+                    <h3 className="font-heading text-lg font-bold text-white mb-2 group-hover:text-teal-200 transition-colors">
+                      Choose Your Course
+                    </h3>
+                    <p className="text-xs text-primary-100/70 leading-relaxed mb-4">
+                      Select the curriculum that matches your fluency goal — General Spoken English, Corporate Communication, or IELTS / PTE Mastery.
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/5 flex items-center gap-2 text-[11px] font-semibold text-teal-300">
+                    <CheckCircle className="h-3.5 w-3.5 text-teal-400 shrink-0" />
+                    <span>Tailored skill assessment</span>
+                  </div>
                 </div>
-                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Choose Course</h3>
-                <p className="text-xs text-ink-muted leading-relaxed">
-                  Select the course plan that matches your learning goals (Spoken English, Corporate Prep, IELTS/PTE).
-                </p>
+
+                {/* Step 2 */}
+                <div className="group relative bg-white/5 border border-white/10 hover:border-secondary/40 rounded-3xl p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/10 hover:shadow-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-secondary to-orange-600 text-white flex items-center justify-center shadow-lg shadow-orange-950/30 group-hover:scale-110 transition-transform">
+                        <UserCheck className="h-6 w-6 stroke-[2.2]" />
+                      </div>
+                      <span className="font-heading text-2xl font-black text-white/30 group-hover:text-secondary transition-colors">
+                        02
+                      </span>
+                    </div>
+
+                    <h3 className="font-heading text-lg font-bold text-white mb-2 group-hover:text-amber-200 transition-colors">
+                      Fill Enrollment Form
+                    </h3>
+                    <p className="text-xs text-primary-100/70 leading-relaxed mb-4">
+                      Click <strong className="text-white">Enroll Now</strong> and enter your basic details — name, email, mobile number, and city. No tedious paperwork required!
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/5 flex items-center gap-2 text-[11px] font-semibold text-secondary">
+                    <Zap className="h-3.5 w-3.5 text-secondary shrink-0" />
+                    <span>Takes under 45 seconds</span>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="group relative bg-white/5 border border-white/10 hover:border-amber-400/40 rounded-3xl p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/10 hover:shadow-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-500 to-yellow-600 text-white flex items-center justify-center shadow-lg shadow-amber-950/30 group-hover:scale-110 transition-transform">
+                        <ShieldCheck className="h-6 w-6 stroke-[2.2]" />
+                      </div>
+                      <span className="font-heading text-2xl font-black text-white/30 group-hover:text-amber-300 transition-colors">
+                        03
+                      </span>
+                    </div>
+
+                    <h3 className="font-heading text-lg font-bold text-white mb-2 group-hover:text-yellow-200 transition-colors">
+                      Secure Instant Checkout
+                    </h3>
+                    <p className="text-xs text-primary-100/70 leading-relaxed mb-4">
+                      Complete your enrollment fee safely via 256-bit SSL encrypted Razorpay gateway using UPI (GPay, PhonePe, Paytm), Cards, or NetBanking.
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/5 flex items-center gap-2 text-[11px] font-semibold text-amber-300">
+                    <Lock className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                    <span>Razorpay SSL Secured</span>
+                  </div>
+                </div>
+
+                {/* Step 4 */}
+                <div className="group relative bg-white/5 border border-emerald-400/30 hover:border-emerald-400/60 rounded-3xl p-7 backdrop-blur-xl transition-all duration-300 hover:-translate-y-2 hover:bg-white/10 hover:shadow-2xl flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-lg shadow-emerald-950/30 group-hover:scale-110 transition-transform">
+                        <GraduationCap className="h-6 w-6 stroke-[2.2]" />
+                      </div>
+                      <span className="font-heading text-2xl font-black text-emerald-400/40 group-hover:text-emerald-300 transition-colors">
+                        04
+                      </span>
+                    </div>
+
+                    <h3 className="font-heading text-lg font-bold text-white mb-2 group-hover:text-emerald-200 transition-colors">
+                      Instant Portal Access
+                    </h3>
+                    <p className="text-xs text-primary-100/70 leading-relaxed mb-4">
+                      Your student account is activated immediately! Access live class links, recorded sessions, and study materials on your dashboard.
+                    </p>
+                  </div>
+
+                  <div className="pt-3 border-t border-white/5 flex items-center gap-2 text-[11px] font-semibold text-emerald-400">
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    <span>Instant Credentials via SMS/Email</span>
+                  </div>
+                </div>
               </div>
 
-              {/* Step 2 */}
-              <div className="relative z-10 bg-white border border-gray-150 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
-                <div className="h-12 w-12 rounded-2xl bg-primary text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
-                  02
-                </div>
-                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Fill Enroll Form</h3>
-                <p className="text-xs text-ink-muted leading-relaxed">
-                  Click <strong>Enroll Now</strong> and enter your name, email, 10-digit phone number, and city.
-                </p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="relative z-10 bg-white border border-gray-150 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
-                <div className="h-12 w-12 rounded-2xl bg-secondary text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
-                  03
-                </div>
-                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Pay via Razorpay</h3>
-                <p className="text-xs text-ink-muted leading-relaxed">
-                  Complete your secure payment using UPI (GPay, PhonePe, Paytm), Debit/Credit Card, or NetBanking.
-                </p>
-              </div>
-
-              {/* Step 4 */}
-              <div className="relative z-10 bg-white border border-emerald-200 rounded-2xl p-6 shadow-soft hover:shadow-soft-lg transition-all text-center flex flex-col items-center">
-                <div className="h-12 w-12 rounded-2xl bg-emerald-600 text-white font-heading text-lg font-extrabold flex items-center justify-center shadow-md mb-4 shrink-0">
-                  04
-                </div>
-                <h3 className="font-heading text-base font-bold text-ink mb-1.5">Instant Access</h3>
-                <p className="text-xs text-ink-muted leading-relaxed">
-                  Your student account is created instantly. Receive an email with your generated password and start learning!
-                </p>
+              {/* Bottom CTA Row */}
+              <div className="mt-14 text-center flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a
+                  href="#courses"
+                  className="rounded-full bg-secondary hover:bg-secondary-600 text-white font-bold text-xs px-8 py-4 shadow-soft-lg hover:shadow-secondary/20 transition-all duration-300 active:scale-95 flex items-center gap-2"
+                >
+                  <span>Explore All Courses & Enroll</span>
+                  <ArrowRight className="h-4 w-4" />
+                </a>
+                <button
+                  type="button"
+                  onClick={openModal}
+                  className="rounded-full bg-white/10 hover:bg-white/20 border border-white/15 text-white font-semibold text-xs px-7 py-4 transition-all duration-300 flex items-center gap-2 cursor-pointer"
+                >
+                  <span>Have questions? Book Free Demo</span>
+                </button>
               </div>
             </div>
           </div>
-          <WaveDivider position="bottom" fillColor="text-slate-50/30" variant={3} className="mt-8 lg:mt-12" />
+          <WaveDivider position="bottom" fillColor="text-slate-50/30" variant={3} className="mt-12" />
         </section>
 
         {/* ── Who is this program for ── */}
