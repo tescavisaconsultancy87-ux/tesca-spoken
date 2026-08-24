@@ -46,30 +46,16 @@ export default function DashboardTopBar({ role, onMenuToggle }: TopBarProps) {
         console.warn('Failed to fetch from notifications API:', err);
       }
 
-      // Fallback if API returned nothing or error
-      if (!loadedNotifications || loadedNotifications.length === 0) {
-        const readIds: string[] = JSON.parse(localStorage.getItem('read_notifications') || '[]');
-        const initialList = role === 'admin'
-            ? [
-                { id: 'n1', text: 'New student enrolled today.', time: '10 mins ago', unread: true },
-                { id: 'n2', text: 'Subscription payment of ₹2,499.00 received.', time: '45 mins ago', unread: true },
-                { id: 'n3', text: 'Vikram Singh registered as a new lead.', time: '2 hours ago', unread: false },
-              ]
-            : [
-                { id: 'n1', text: 'Live Class: "Fluency Practice" starts soon.', time: '15 mins', unread: true },
-                { id: 'n2', text: 'Lesson 5 study material has been unlocked.', time: '2 hours ago', unread: true },
-                { id: 'n3', text: 'Welcome to TESCA Spoken English!', time: '1 day ago', unread: false },
-              ];
-
-        loadedNotifications = initialList.map(n => ({
-          ...n,
-          unread: readIds.includes(n.id) ? false : n.unread
-        }));
-      }
-
-      // Filter out notifications cleared locally by user
+      // Filter out notifications cleared or read locally by user
+      const readIds: string[] = JSON.parse(localStorage.getItem('read_notifications') || '[]');
       const deletedIds: string[] = JSON.parse(localStorage.getItem('deleted_notifications') || '[]');
-      const filteredNotifications = loadedNotifications.filter(n => !deletedIds.includes(n.id));
+
+      const filteredNotifications = (loadedNotifications || [])
+        .filter((n: any) => !deletedIds.includes(n.id))
+        .map((n: any) => ({
+          ...n,
+          unread: readIds.includes(n.id) ? false : n.unread,
+        }));
 
       setNotifications(filteredNotifications);
     }

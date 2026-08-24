@@ -9,6 +9,7 @@ import {
   clearSessionActiveCookie,
   setMockSessionCookie,
   clearMockSessionCookie,
+  clearAllAuthStorage,
 } from '@/lib/authCookies';
 
 interface UserProfile {
@@ -56,19 +57,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 resolvedRole = (profile?.role as 'student' | 'admin' | 'tutor') || (session.user.user_metadata?.role as 'student' | 'admin' | 'tutor') || 'student';
               }
 
-              // No profile exists — user hasn't been set up by admin yet
-              if (!profile) {
+              // No profile exists — user hasn't been set up by admin yet (unless admin/tutor fallback)
+              if (!profile && !isAdminEmail(email) && !isTutorEmail(email)) {
                 console.warn(`[Auth] No profile found for ${email}. User must be created by an admin.`);
                 setLoading(false);
                 return;
               }
 
+              setSessionActiveCookie();
               setUser({
                 id: session.user.id,
                 email,
                 role: resolvedRole,
-                name: profile.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
-                needsPasswordChange: !!profile.needs_password_change,
+                name: profile?.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
+                needsPasswordChange: profile ? !!profile.needs_password_change : false,
               });
             }
             
@@ -94,8 +96,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   resolvedRole = (profile?.role as 'student' | 'admin' | 'tutor') || (session.user.user_metadata?.role as 'student' | 'admin' | 'tutor') || 'student';
                 }
 
-                // No profile exists — user hasn't been set up by admin yet
-                if (!profile) {
+                // No profile exists — user hasn't been set up by admin yet (unless admin/tutor fallback)
+                if (!profile && !isAdminEmail(email) && !isTutorEmail(email)) {
                   console.warn(`[Auth] No profile found for ${email} on auth-state-change. User must be created by an admin.`);
                   setUser(null);
                   return;
@@ -105,8 +107,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   id: session.user.id,
                   email,
                   role: resolvedRole,
-                  name: profile.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
-                  needsPasswordChange: !!profile.needs_password_change,
+                  name: profile?.name || session.user.user_metadata?.name || email.split('@')[0] || 'User',
+                  needsPasswordChange: profile ? !!profile.needs_password_change : false,
                 });
               } else {
                 // Clear session cookie for server middleware
@@ -129,6 +131,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.warn('[Auth] Supabase session fetch failed due to connection/network error. Checking local mock session.');
               devSessionLoaded = true;
             } else {
+              // If 400 invalid refresh token or auth error, clear stale tokens
+              clearAllAuthStorage();
               throw supabaseError;
             }
           }
@@ -193,8 +197,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await ensureSupabaseClient();
       if (supabase) {
         try {
+          const cleanEmail = email.trim();
           const { data, error } = await supabase.auth.signInWithPassword({
-            email,
+            email: cleanEmail,
             password,
           });
           
@@ -233,8 +238,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               resolvedRole = (profile?.role as 'student' | 'admin' | 'tutor') || (data.user.user_metadata?.role as 'student' | 'admin' | 'tutor') || 'student';
             }
 
-            // No profile exists — user hasn't been set up by admin yet
-            if (!profile) {
+            // No profile exists — user hasn't been set up by admin yet (unless admin/tutor fallback)
+            if (!profile && !isAdminEmail(email) && !isTutorEmail(email)) {
               console.warn(`[Auth] No profile found for ${email} on login. User must be created by an admin.`);
               return { success: false, error: 'Your account has not been set up yet. Please contact an administrator.' };
             }
@@ -260,8 +265,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               id: data.user.id,
               email,
               role: resolvedRole,
-              name: profile.name || data.user.user_metadata?.name || email.split('@')[0] || 'User',
-              needsPasswordChange: !!profile.needs_password_change,
+              name: profile?.name || data.user.user_metadata?.name || email.split('@')[0] || 'User',
+              needsPasswordChange: profile ? !!profile.needs_password_change : false,
             };
             setUser(profileData);
             return { success: true, role: profileData.role, needsPasswordChange: profileData.needsPasswordChange };
@@ -297,11 +302,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
       await supabase.auth.signOut();
-    } else {
-      sessionStorage.removeItem('tesca_dev_session');
     }
-    clearSessionActiveCookie();
-    clearMockSessionCookie();
+    clearAllAuthStorage();
     setUser(null);
     router.push('/login');
   };

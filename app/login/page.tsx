@@ -26,7 +26,8 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     
-    const result = await login(form.username, form.password);
+    const cleanEmail = form.username.trim();
+    const result = await login(cleanEmail, form.password);
     
     if (result.success) {
       toast.success('Logged in successfully!', 'Welcome Back');
@@ -44,10 +45,10 @@ export default function LoginPage() {
 
       setLoading(false);
       if (result.needsPasswordChange) {
-        router.push('/change-password');
+        window.location.href = '/change-password';
       } else {
         const targetUrl = getRoleDashboardUrl(result.role || 'student');
-        if (targetUrl.startsWith('http://') || targetUrl.startsWith('https://')) {
+        if (typeof window !== 'undefined') {
           window.location.href = targetUrl;
         } else {
           router.push(targetUrl);
