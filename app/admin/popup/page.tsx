@@ -5,6 +5,17 @@ import { Sparkles, Trash2, Edit, CheckCircle, HelpCircle, Eye, Upload, X } from 
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import toast from '@/lib/toast';
+import {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogBackdrop,
+  AlertDialogPopup,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogClose,
+} from '@/components/animate-ui/primitives/base/alert-dialog';
 
 interface PopupSetting {
   id: number;
@@ -26,6 +37,8 @@ export default function PromoPopupAdminPage() {
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<ButtonStatus>('idle');
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [deletePopupId, setDeletePopupId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Form states
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -135,8 +148,9 @@ export default function PromoPopupAdminPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this promotional popup?')) return;
+  const handleDelete = async () => {
+    if (!deletePopupId) return;
+    setIsDeleting(true);
 
     try {
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -150,13 +164,14 @@ export default function PromoPopupAdminPage() {
       const response = await fetch('/api/admin/popup', {
         method: 'DELETE',
         headers,
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: deletePopupId }),
       });
 
       if (response.ok) {
-        setPopups(popups.filter((p) => p.id !== id));
-        if (editingId === id) resetForm();
+        setPopups(popups.filter((p) => p.id !== deletePopupId));
+        if (editingId === deletePopupId) resetForm();
         toast.success('Promo popup configuration deleted successfully', 'Popup Removed');
+        setDeletePopupId(null);
       } else {
         const err = await response.json();
         toast.error(`Failed to delete popup: ${err.error || 'Unknown error'}`, 'Delete Failed');
@@ -164,6 +179,8 @@ export default function PromoPopupAdminPage() {
     } catch (e: any) {
       console.error('Delete error:', e);
       toast.error('An error occurred during deletion.', 'Delete Error');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -613,7 +630,7 @@ export default function PromoPopupAdminPage() {
                         <Edit className="h-3.5 w-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDelete(p.id)}
+                        onClick={() => setDeletePopupId(p.id)}
                         className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer border border-transparent"
                         title="Delete Popup"
                       >
@@ -653,6 +670,46 @@ export default function PromoPopupAdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Alert Dialog */}
+      <AlertDialog open={deletePopupId !== null} onOpenChange={(open) => { if (!open) setDeletePopupId(null); }}>
+        <AlertDialogPortal>
+          <AlertDialogBackdrop className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" />
+          <AlertDialogPopup
+            from="bottom"
+            className="sm:max-w-md border bg-white rounded-3xl p-6 shadow-2xl z-50"
+          >
+            <AlertDialogHeader>
+              <div className="mx-auto h-12 w-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mb-4 border border-rose-100 shadow-soft">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <AlertDialogTitle className="text-lg font-bold text-center text-gray-800">
+                Delete Promotional Popup?
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-sm text-center text-gray-500 mt-2">
+                Are you sure you want to delete this promotional popup? This action will permanently remove it from the system and cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter className="mt-6 flex justify-end gap-3 w-full">
+              <AlertDialogClose
+                disabled={isDeleting}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer border border-gray-200 disabled:opacity-50"
+              >
+                Cancel
+              </AlertDialogClose>
+              <button
+                type="button"
+                disabled={isDeleting}
+                onClick={handleDelete}
+                className="flex-1 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-soft disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Popup'}
+              </button>
+            </AlertDialogFooter>
+          </AlertDialogPopup>
+        </AlertDialogPortal>
+      </AlertDialog>
     </div>
   );
 }
