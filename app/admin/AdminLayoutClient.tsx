@@ -22,10 +22,36 @@ import type { NavGroup } from '@/components/dashboard/DashboardSidebar';
 import { useAuth } from '@/context/AuthContext';
 import { db } from '@/lib/db';
 
+const defaultAdminNavGroups: NavGroup[] = [
+  {
+    title: 'Management',
+    items: [
+      { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+      { label: 'Users & Directory', href: '/admin/students', icon: Users, badge: 0 },
+      { label: 'Courses', href: '/admin/courses', icon: BookOpen },
+      { label: 'Payments', href: '/admin/payments', icon: CreditCard },
+      { label: 'Leads & Inquiries', href: '/admin/leads', icon: PhoneCall, badge: 0 },
+    ],
+  },
+  {
+    title: 'Content & Settings',
+    items: [
+      { label: 'Manage Tutors', href: '/admin/tutors', icon: GraduationCap },
+      { label: 'Live Classes', href: '/admin/live-classes', icon: Video },
+      { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
+      { label: 'Blog Posts', href: '/admin/blog', icon: FileText },
+      { label: 'Offer Banner Settings', href: '/admin/banner', icon: Megaphone },
+      { label: 'Promotional Popups', href: '/admin/popup', icon: Sparkles },
+      { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
+      { label: 'Back to Home', href: '/', icon: Home },
+    ],
+  },
+];
+
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [navGroups, setNavGroups] = useState<NavGroup[]>([]);
+  const [navGroups, setNavGroups] = useState<NavGroup[]>(defaultAdminNavGroups);
 
   useEffect(() => {
     if (!loading) {
@@ -95,34 +121,8 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
     return null;
   }
 
-  const displayGroups = navGroups.length > 0 ? navGroups : [
-    {
-      title: 'Management',
-      items: [
-        { label: 'Overview', href: '/admin', icon: LayoutDashboard },
-        { label: 'Users & Directory', href: '/admin/students', icon: Users, badge: 0 },
-        { label: 'Courses', href: '/admin/courses', icon: BookOpen },
-        { label: 'Payments', href: '/admin/payments', icon: CreditCard },
-        { label: 'Leads & Inquiries', href: '/admin/leads', icon: PhoneCall, badge: 0 },
-      ],
-    },
-    {
-      title: 'Content & Settings',
-      items: [
-        { label: 'Manage Tutors', href: '/admin/tutors', icon: GraduationCap },
-        { label: 'Live Classes', href: '/admin/live-classes', icon: Video },
-        { label: 'Testimonials', href: '/admin/testimonials', icon: MessageSquare },
-        { label: 'Blog Posts', href: '/admin/blog', icon: FileText },
-        { label: 'Offer Banner Settings', href: '/admin/banner', icon: Megaphone },
-        { label: 'Promotional Popups', href: '/admin/popup', icon: Sparkles },
-        { label: 'Global Settings', href: '/admin/settings', icon: SettingsIcon },
-        { label: 'Back to Home', href: '/', icon: Home },
-      ],
-    },
-  ];
-
   return (
-    <DashboardLayout role="admin" navGroups={displayGroups}>
+    <DashboardLayout role="admin" navGroups={navGroups}>
       {children}
     </DashboardLayout>
   );

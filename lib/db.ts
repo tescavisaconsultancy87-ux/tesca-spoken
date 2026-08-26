@@ -1050,6 +1050,22 @@ export const db = {
     }
   },
 
+  getBlogPostBySlug: async (slug: string) => {
+    await ensureSupabaseClient();
+    if (!supabase) return null;
+    try {
+      const { data, error } = await supabase.from('blog_posts').select('*').eq('slug', slug).eq('published', true).maybeSingle();
+      if (error) {
+        logError('blog_posts', error);
+        return null;
+      }
+      return data;
+    } catch (err) {
+      console.error('getBlogPostBySlug failed:', err);
+      return null;
+    }
+  },
+
   createBlogPost: async (post: any) => {
     await ensureSupabaseClient();
     if (!supabase) return post;

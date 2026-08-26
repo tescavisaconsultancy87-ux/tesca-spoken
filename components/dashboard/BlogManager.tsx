@@ -140,15 +140,53 @@ export default function BlogManager() {
     setIsAdding(true);
   };
 
+  const getTextLength = (html: string) => {
+    if (!html) return 0;
+    const plainText = html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+    return plainText.length;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setImageError(null);
+
+    // 1. Title validation
+    if (!form.title.trim() || form.title.trim().length < 5) {
+      toast.error('Blog title must be at least 5 characters long.', 'Validation Error');
+      return;
+    }
+
+    // 2. Featured Image validation (MANDATORY)
+    if (!form.image_url || !form.image_url.trim()) {
+      const msg = 'Featured image is mandatory for all blog posts. Please upload an image.';
+      setImageError(msg);
+      toast.error(msg, 'Image Required');
+      return;
+    }
+
+    // 3. Excerpt / Summary validation
+    if (!form.excerpt.trim() || form.excerpt.trim().length < 15) {
+      toast.error('Please provide a meaningful summary/excerpt (at least 15 characters).', 'Validation Error');
+      return;
+    }
+
+    // 4. Article Content validation (At least 200 characters including spaces)
+    const contentLength = getTextLength(form.content);
+    if (contentLength < 200) {
+      toast.error(
+        `Article content must be at least 200 characters long including spaces. Current text length: ${contentLength} characters (${200 - contentLength} more needed).`,
+        'Article Too Short'
+      );
+      return;
+    }
+
     try {
       const payload = {
-        title: form.title,
-        slug: form.slug || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-        excerpt: form.excerpt,
-        content: form.content && form.content.trim().length > 0 ? form.content : form.excerpt,
-        author: form.author,
+        title: form.title.trim(),
+        slug: form.slug.trim() || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+        excerpt: form.excerpt.trim(),
+        content: form.content.trim(),
+        author: form.author.trim() || user?.name || 'TESCA Team',
         image_url: form.image_url,
         published: form.published,
         author_id: editingPost ? editingPost.author_id : user?.id,
@@ -273,7 +311,9 @@ export default function BlogManager() {
                 />
               </div>
               <div className="space-y-1.5 col-span-2 sm:col-span-1">
-                <label className="text-xs font-bold text-gray-500">Featured Image (Max 500 KB, JPG/PNG)</label>
+                <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
+                  Featured Image <span className="text-rose-500 font-bold">*</span> (Max 500 KB, JPG/PNG)
+                </label>
                 <div className="flex items-center gap-3">
                   {form.image_url ? (
                     <div className="relative h-[38px] w-[38px] rounded-xl overflow-hidden border border-gray-200 group">
@@ -289,10 +329,10 @@ export default function BlogManager() {
                   ) : (
                     <label
                       htmlFor="blog-image-upload"
-                      className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 border border-dashed border-gray-200 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100/50 cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100/50 cursor-pointer"
                     >
                       <Plus className="h-4 w-4 text-gray-400" />
-                      Choose Image
+                      Upload Featured Image *
                     </label>
                   )}
                   <input
@@ -303,13 +343,15 @@ export default function BlogManager() {
                     className="hidden"
                   />
                 </div>
-                {imageError && (
+                {imageError ? (
                   <p className="text-[10px] text-rose-500 font-semibold mt-1">{imageError}</p>
+                ) : !form.image_url && (
+                  <p className="text-[10px] text-amber-600 font-medium mt-1">⚠️ Featured image is required to save/publish.</p>
                 )}
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-gray-500">Excerpt / Summary *</label>
+              <label className="text-xs font-bold text-gray-500">Excerpt / Summary * (Min. 15 characters)</label>
               <textarea
                 placeholder="Brief description for the blog listing..."
                 value={form.excerpt}
@@ -319,12 +361,28 @@ export default function BlogManager() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#4F6C8D] uppercase tracking-wider">Article Content *</label>
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-bold text-[#4F6C8D] uppercase tracking-wider">
+                  Article Content <span className="text-rose-500">*</span>
+                </label>
+              </div>
               <RichTextEditor
                 value={form.content}
                 onChange={(val) => setForm({ ...form, content: val })}
-                placeholder="Write your blog post content here... Highlight text to apply bold, italic, headings, or lists."
+                placeholder="Write your professional blog post content here... Minimum 200 characters required."
               />
+              {(() => {
+                const currentLen = getTextLength(form.content);
+                const isValid = currentLen >= 200;
+                return (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] pt-1 gap-1">
+                    <span className="text-gray-400">Article text must be at least 200 characters including spaces.</span>
+                    <span className={`font-bold px-2.5 py-0.5 rounded-md text-[10px] w-fit ${isValid ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                      {isValid ? `✓ ${currentLen} characters (Meets 200 character minimum)` : `⚠️ ${currentLen} / 200 min characters (${200 - currentLen} more needed)`}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
             <div className="flex items-center gap-2">
               <input

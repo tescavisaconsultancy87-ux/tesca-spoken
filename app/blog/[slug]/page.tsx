@@ -30,11 +30,9 @@ export default function BlogPostPage() {
 
   useEffect(() => {
     async function load() {
+      if (!params.slug) return;
       try {
-        const data = await db.getBlogPosts();
-        const found = (data || []).find(
-          (p: BlogPost) => p.slug === params.slug && p.published
-        );
+        const found = await db.getBlogPostBySlug(params.slug as string);
         setPost(found || null);
       } catch (err) {
         console.error('Failed to load blog post', err);
