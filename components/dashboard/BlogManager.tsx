@@ -51,9 +51,23 @@ export default function BlogManager() {
     }
   };
 
-  useEffect(() => {
-    loadPosts();
-  }, []);
+  const getTodayLocalDateString = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const isoToLocalDateString = (isoString?: string) => {
+    if (!isoString) return getTodayLocalDateString();
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return getTodayLocalDateString();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const [form, setForm] = useState({
     title: '',
@@ -63,6 +77,7 @@ export default function BlogManager() {
     author: '',
     image_url: '',
     published: false,
+    date: getTodayLocalDateString(),
   });
 
   const [imageError, setImageError] = useState<string | null>(null);
@@ -76,6 +91,7 @@ export default function BlogManager() {
       author: user?.name || '',
       image_url: '',
       published: false,
+      date: getTodayLocalDateString(),
     });
     setEditingPost(null);
     setImageError(null);
@@ -135,6 +151,7 @@ export default function BlogManager() {
       author: post.author,
       image_url: post.image_url || '',
       published: post.published,
+      date: isoToLocalDateString(post.created_at),
     });
     setEditingPost(post);
     setIsAdding(true);
@@ -180,7 +197,20 @@ export default function BlogManager() {
       return;
     }
 
+    // 5. Date validation (Today or Past date only, no future dates)
+    const todayStr = getTodayLocalDateString();
+    if (!form.date) {
+      toast.error('Please select a valid publication date.', 'Validation Error');
+      return;
+    }
+    if (form.date > todayStr) {
+      toast.error('Publication date cannot be in the future.', 'Invalid Date');
+      return;
+    }
+
     try {
+      const selectedDateISO = new Date(`${form.date}T12:00:00`).toISOString();
+
       const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
@@ -189,6 +219,7 @@ export default function BlogManager() {
         author: form.author.trim() || user?.name || 'TESCA Team',
         image_url: form.image_url,
         published: form.published,
+        created_at: selectedDateISO,
         author_id: editingPost ? editingPost.author_id : user?.id,
       };
 
@@ -298,8 +329,8 @@ export default function BlogManager() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-500">Author *</label>
                 <input
                   type="text"
@@ -310,13 +341,24 @@ export default function BlogManager() {
                   required
                 />
               </div>
-              <div className="space-y-1.5 col-span-2 sm:col-span-1">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Publish Date * (Past or Today)</label>
+                <input
+                  type="date"
+                  max={getTodayLocalDateString()}
+                  value={form.date}
+                  onChange={(e) => setForm({ ...form, date: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                />
+              </div>
+              <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
-                  Featured Image <span className="text-rose-500 font-bold">*</span> (Max 500 KB, JPG/PNG)
+                  Featured Image <span className="text-rose-500 font-bold">*</span> (Max 500 KB)
                 </label>
                 <div className="flex items-center gap-3">
                   {form.image_url ? (
-                    <div className="relative h-[38px] w-[38px] rounded-xl overflow-hidden border border-gray-200 group">
+                    <div className="relative h-[38px] w-[38px] rounded-xl overflow-hidden border border-gray-200 group shrink-0">
                       <img src={form.image_url} alt="Preview" className="h-full w-full object-cover" />
                       <button
                         type="button"
@@ -329,10 +371,10 @@ export default function BlogManager() {
                   ) : (
                     <label
                       htmlFor="blog-image-upload"
-                      className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100/50 cursor-pointer"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100/50 cursor-pointer truncate"
                     >
-                      <Plus className="h-4 w-4 text-gray-400" />
-                      Upload Featured Image *
+                      <Plus className="h-4 w-4 text-gray-400 shrink-0" />
+                      <span className="truncate">Upload Image *</span>
                     </label>
                   )}
                   <input
@@ -346,7 +388,7 @@ export default function BlogManager() {
                 {imageError ? (
                   <p className="text-[10px] text-rose-500 font-semibold mt-1">{imageError}</p>
                 ) : !form.image_url && (
-                  <p className="text-[10px] text-amber-600 font-medium mt-1">⚠️ Featured image is required to save/publish.</p>
+                  <p className="text-[10px] text-amber-600 font-medium mt-1">⚠️ Required to save</p>
                 )}
               </div>
             </div>
