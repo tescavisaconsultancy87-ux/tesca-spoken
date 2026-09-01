@@ -13,6 +13,7 @@ CREATE TABLE blog_posts (
   excerpt TEXT NOT NULL,
   content TEXT NOT NULL,
   author TEXT NOT NULL,
+  category TEXT DEFAULT 'Spoken English',
   image_url TEXT,
   published BOOLEAN DEFAULT false NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
