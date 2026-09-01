@@ -233,7 +233,7 @@ export function middleware(request: NextRequest) {
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.supabase.co https://static.cloudflareinsights.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
-    img-src 'self' data: blob: https://images.pexels.com https://*.supabase.co https://*.supabase.in;
+    img-src 'self' data: blob: https://images.pexels.com https://images.unsplash.com https://*.unsplash.com https://*.supabase.co https://*.supabase.in;
     font-src 'self' https://fonts.gstatic.com;
     connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.razorpay.com https://api.indexnow.org https://cdn.jsdelivr.net https://*.cloudflareinsights.com;
     frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://www.youtube.com https://player.vimeo.com https://www.google.com;
