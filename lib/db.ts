@@ -1098,6 +1098,22 @@ export const db = {
     }
   },
 
+  bulkUpdateBlogCategory: async (ids: string[], category: string) => {
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    try {
+      const { error } = await supabase.from('blog_posts').update({ category }).in('id', ids);
+      if (error) {
+        logError('blog_posts', error);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('bulkUpdateBlogCategory failed:', err);
+      return false;
+    }
+  },
+
   deleteBlogPost: async (id: string) => {
     await ensureSupabaseClient();
     if (!supabase) return false;
