@@ -43,8 +43,6 @@ export default function BlogManager() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
-  const [selectedPostIds, setSelectedPostIds] = useState<string[]>([]);
-  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const loadPosts = async () => {
     try {
@@ -61,46 +59,8 @@ export default function BlogManager() {
     loadPosts();
   }, []);
 
-  const toggleSelectPost = (id: string) => {
-    setSelectedPostIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
   const canManage = (post: BlogPost) => {
     return user?.role === 'admin' || post.author_id === user?.id;
-  };
-
-  const toggleSelectAll = () => {
-    const manageableIds = filtered.filter(canManage).map((p) => p.id);
-    const allSelected = manageableIds.length > 0 && manageableIds.every((id) => selectedPostIds.includes(id));
-    if (allSelected) {
-      setSelectedPostIds([]);
-    } else {
-      setSelectedPostIds(manageableIds);
-    }
-  };
-
-  const handleBulkCategoryChange = async (targetCategory: string) => {
-    if (selectedPostIds.length === 0) return;
-    setIsBulkUpdating(true);
-    try {
-      const success = await db.bulkUpdateBlogCategory(selectedPostIds, targetCategory);
-      if (success) {
-        toast.success(
-          `Successfully updated ${selectedPostIds.length} blog post(s) to "${targetCategory}"`,
-          'Bulk Category Update'
-        );
-        setSelectedPostIds([]);
-        loadPosts();
-      } else {
-        toast.error('Failed to update blog posts category.', 'Bulk Update Error');
-      }
-    } catch (err: any) {
-      toast.error(err.message || 'Bulk edit failed.', 'Error');
-    } finally {
-      setIsBulkUpdating(false);
-    }
   };
 
   const [form, setForm] = useState({
@@ -109,7 +69,7 @@ export default function BlogManager() {
     excerpt: '',
     content: '',
     author: '',
-    category: 'Spoken English',
+    category: '',
     image_url: '',
     published: false,
   });
@@ -123,7 +83,7 @@ export default function BlogManager() {
       excerpt: '',
       content: '',
       author: user?.name || '',
-      category: 'Spoken English',
+      category: '',
       image_url: '',
       published: false,
     });
@@ -183,7 +143,7 @@ export default function BlogManager() {
       excerpt: post.excerpt,
       content: post.content,
       author: post.author,
-      category: post.category || 'Spoken English',
+      category: post.category || '',
       image_url: post.image_url || '',
       published: post.published,
     });
@@ -207,7 +167,13 @@ export default function BlogManager() {
       return;
     }
 
-    // 2. Featured Image validation (MANDATORY)
+    // 2. Category validation (MANDATORY)
+    if (!form.category || !form.category.trim()) {
+      toast.error('Please select a category for this blog post.', 'Category Required');
+      return;
+    }
+
+    // 3. Featured Image validation (MANDATORY)
     if (!form.image_url || !form.image_url.trim()) {
       const msg = 'Featured image is mandatory for all blog posts. Please upload an image.';
       setImageError(msg);
@@ -215,13 +181,13 @@ export default function BlogManager() {
       return;
     }
 
-    // 3. Excerpt / Summary validation
+    // 4. Excerpt / Summary validation
     if (!form.excerpt.trim() || form.excerpt.trim().length < 15) {
       toast.error('Please provide a meaningful summary/excerpt (at least 15 characters).', 'Validation Error');
       return;
     }
 
-    // 4. Article Content validation (At least 200 characters including spaces)
+    // 5. Article Content validation (At least 200 characters including spaces)
     const contentLength = getTextLength(form.content);
     if (contentLength < 200) {
       toast.error(
@@ -238,7 +204,7 @@ export default function BlogManager() {
         excerpt: form.excerpt.trim(),
         content: form.content.trim(),
         author: form.author.trim() || user?.name || 'TESCA Team',
-        category: form.category || 'Spoken English',
+        category: form.category.trim(),
         image_url: form.image_url,
         published: form.published,
         created_at: editingPost ? editingPost.created_at : new Date().toISOString(),
@@ -366,19 +332,31 @@ export default function BlogManager() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-gray-500">Category *</label>
+                <label className="text-xs font-bold text-gray-500">
+                  Category <span className="text-rose-500 font-bold">*</span>
+                </label>
                 <select
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  className={`w-full border rounded-xl px-4 py-2.5 text-xs outline-none transition-all ${
+                    !form.category
+                      ? 'bg-amber-50/40 border-amber-200 text-gray-500 focus:bg-white focus:border-primary'
+                      : 'bg-gray-50 border-gray-100 text-gray-800 focus:bg-white focus:border-primary'
+                  }`}
                   required
                 >
+                  <option value="" disabled>
+                    -- Select Category * --
+                  </option>
                   {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
+                    <option key={cat} value={cat} className="text-gray-800">
                       {cat}
                     </option>
                   ))}
                 </select>
+                {!form.category && (
+                  <p className="text-[10px] text-amber-600 font-medium mt-1">⚠️ Category selection is mandatory</p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-500">Author *</label>
@@ -525,60 +503,6 @@ export default function BlogManager() {
             </div>
           </div>
 
-          {!loading && filtered.length > 0 && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-gray-50 to-teal-50/30 border border-gray-200/80 rounded-2xl p-3 px-4 shadow-xs">
-              <div className="flex items-center gap-2.5">
-                <input
-                  type="checkbox"
-                  id="select-all-posts"
-                  checked={
-                    filtered.filter(canManage).length > 0 &&
-                    filtered.filter(canManage).every((p) => selectedPostIds.includes(p.id))
-                  }
-                  onChange={toggleSelectAll}
-                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                />
-                <label htmlFor="select-all-posts" className="text-xs font-bold text-gray-700 cursor-pointer select-none">
-                  Select All ({filtered.filter(canManage).length})
-                </label>
-                {selectedPostIds.length > 0 && (
-                  <span className="px-2.5 py-0.5 bg-primary/10 text-primary text-[11px] font-extrabold rounded-full border border-primary/20">
-                    {selectedPostIds.length} selected
-                  </span>
-                )}
-              </div>
-
-              {selectedPostIds.length > 0 ? (
-                <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200">
-                  <span className="text-[11px] font-bold text-gray-600 shrink-0">1-Click Category Change:</span>
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {CATEGORIES.map((cat) => (
-                      <button
-                        key={cat}
-                        disabled={isBulkUpdating}
-                        onClick={() => handleBulkCategoryChange(cat)}
-                        className="px-3 py-1.5 bg-white border border-gray-200 hover:border-primary hover:bg-primary-50 text-primary rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 flex items-center gap-1"
-                        title={`Move ${selectedPostIds.length} selected post(s) to ${cat}`}
-                      >
-                        → {cat}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => setSelectedPostIds([])}
-                    className="px-2 py-1 text-xs font-semibold text-gray-400 hover:text-gray-700 underline shrink-0 ml-1"
-                  >
-                    Clear
-                  </button>
-                </div>
-              ) : (
-                <span className="text-[11px] text-gray-400 font-medium hidden sm:inline">
-                  Check boxes to edit multiple blog categories in 1 click
-                </span>
-              )}
-            </div>
-          )}
-
           {loading ? (
             <div className="py-12 text-center text-gray-400">
               <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -594,48 +518,32 @@ export default function BlogManager() {
                 <div
                   key={post.id}
                   className={`bg-white border rounded-2xl p-5 shadow-soft hover:shadow-soft-lg transition-all duration-300 ${
-                    selectedPostIds.includes(post.id)
-                      ? 'border-primary ring-2 ring-primary/20 bg-primary/[0.01]'
-                      : !post.published
-                      ? 'opacity-60 bg-gray-50/55'
-                      : 'border-gray-100/80'
+                    !post.published ? 'opacity-60 bg-gray-50/55' : 'border-gray-100/80'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                      {canManage(post) && (
-                        <div className="pt-0.5 shrink-0">
-                          <input
-                            type="checkbox"
-                            checked={selectedPostIds.includes(post.id)}
-                            onChange={() => toggleSelectPost(post.id)}
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-bold text-gray-800 truncate">{post.title}</h3>
-                        <p className="text-xs text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>
-                        <div className="flex items-center gap-3 mt-2.5 text-[10px] text-gray-400 font-semibold flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(post.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            {post.author}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getCategoryStyle(post.category)}`}>
-                            {post.category || 'Spoken English'}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                            post.published
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-                              : 'bg-amber-50 text-amber-700 border border-amber-100'
-                          }`}>
-                            {post.published ? 'Published' : 'Draft'}
-                          </span>
-                        </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-bold text-gray-800 truncate">{post.title}</h3>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>
+                      <div className="flex items-center gap-3 mt-2.5 text-[10px] text-gray-400 font-semibold flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(post.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          {post.author}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getCategoryStyle(post.category)}`}>
+                          {post.category || 'Spoken English'}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                          post.published
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
+                            : 'bg-amber-50 text-amber-700 border border-amber-100'
+                        }`}>
+                          {post.published ? 'Published' : 'Draft'}
+                        </span>
                       </div>
                     </div>
                     {canManage(post) && (
