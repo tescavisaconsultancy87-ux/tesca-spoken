@@ -1,6 +1,9 @@
 -- ==========================================================
 -- TESCA Blog Posts Comprehensive Seed Script (18 In-Depth Posts)
--- Run this script in your Supabase SQL Editor to populate 18 high-quality, long-form articles with verified images.
+-- Authors:
+--   - IELTS: Parth Sherathiya
+--   - Spoken English: Meet Sir
+--   - PTE: Bhumika Dhameliya
 -- ==========================================================
 
 -- 1. Ensure category column exists
@@ -69,7 +72,7 @@ VALUES
 </ul>
 
 <blockquote><p><strong>Trainer Tip:</strong> True fluency does not come from memorising hundreds of rules; it comes from daily oral repetition until correct speech patterns become second nature.</p></blockquote>',
-  'TESCA Team',
+  'Meet Sir',
   'Spoken English',
   'https://images.pexels.com/photos/4145153/pexels-photo-4145153.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -113,7 +116,7 @@ VALUES
 <p>Pick a random object or topic in your room (e.g., your coffee mug, the weather, your career goals) and speak non-stop for 60 seconds without pausing or switching to your native language.</p>
 
 <blockquote><p><strong>Remember:</strong> Consistency beats intensity. 20 minutes of daily deliberate speaking practice will produce 10x better results than studying grammar 3 hours once a week.</p></blockquote>',
-  'TESCA Team',
+  'Meet Sir',
   'Spoken English',
   'https://images.pexels.com/photos/5905709/pexels-photo-5905709.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -158,7 +161,7 @@ VALUES
 <p>Examines cascading consequences of technological shifts (e.g., AI in the workforce) and concludes with future implications.</p>
 
 <blockquote><p><strong>Exam Strategy:</strong> When answering matching headings questions, read the first and last sentence of each paragraph first to identify the overarching structure before diving into detailed text.</p></blockquote>',
-  'Parth Shershiya',
+  'Parth Sherathiya',
   'IELTS',
   'https://images.pexels.com/photos/1438072/pexels-photo-1438072.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -284,7 +287,7 @@ VALUES
 </ol>
 
 <blockquote><p><strong>Expert Tip:</strong> Maintain a constant speaking volume throughout the exam. Fluctuating between loud and quiet speech confuses the acoustic calibration model.</p></blockquote>',
-  'TESCA Team',
+  'Bhumika Dhameliya',
   'PTE',
   'https://images.pexels.com/photos/5212343/pexels-photo-5212343.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -354,7 +357,7 @@ VALUES
 
 <h3>Use Sensory Details</h3>
 <p>Describe sights, sounds, emotions, and atmosphere. Instead of saying <em>"The restaurant was nice"</em>, say <em>"The ambient lighting and soothing jazz music created an exceptionally welcoming atmosphere."</em></p>',
-  'Dr. Anjali Desai',
+  'Parth Sherathiya',
   'IELTS',
   'https://images.pexels.com/photos/5212702/pexels-photo-5212702.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -384,7 +387,7 @@ VALUES
 
 <h3>3. Proofread Every Word Before Submitting</h3>
 <p>Review spelling of tricky academic words like <em>accommodation</em>, <em>environment</em>, <em>necessary</em>, and <em>occurrence</em>.</p>',
-  'Meera Krishnan',
+  'Bhumika Dhameliya',
   'PTE',
   'https://images.pexels.com/photos/3760067/pexels-photo-3760067.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -420,7 +423,7 @@ VALUES
   <li><em>"Let’s take this offline so we can dive into the granular data."</em></li>
   <li><em>"To ensure we’re on the same page, what are our immediate action items?"</em></li>
 </ul>',
-  'Rohan Mehta',
+  'Meet Sir',
   'Spoken English',
   'https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -459,7 +462,7 @@ VALUES
 
 <h3>Phase 5: 5 Minutes for Proofreading (Saves 0.5–1.0 Band)</h3>
 <p>Scan specifically for: verb tenses, subject-verb agreement, spelling, punctuation, and article usage (a/an/the).</p>',
-  'Parth Shershiya',
+  'Parth Sherathiya',
   'IELTS',
   'https://images.pexels.com/photos/210661/pexels-photo-210661.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -483,7 +486,7 @@ VALUES
 </ol>
 
 <blockquote><p><strong>Crucial Rule:</strong> Aim to speak for 28 to 32 seconds with zero hesitation, click the "Next" button immediately, and avoid awkward pauses before the 40-second timer runs out.</p></blockquote>',
-  'Meera Krishnan',
+  'Bhumika Dhameliya',
   'PTE',
   'https://images.pexels.com/photos/669615/pexels-photo-669615.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -514,7 +517,7 @@ VALUES
 
 <h3>3. Mastering the Schwa /ə/ Vowel</h3>
 <p>In English, unstressed syllables reduce to a relaxed, quick "uh" sound. For example, <em>"photography"</em> is pronounced /fə-TOG-rə-fee/, not /photo-gra-phy/.</p>',
-  'James Whitfield',
+  'Meet Sir',
   'Spoken English',
   'https://images.pexels.com/photos/7129713/pexels-photo-7129713.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -547,7 +550,7 @@ VALUES
 
 <h3>3. Beware of Distractors & Synonyms</h3>
 <p>The speaker will rarely use the exact word printed on your question sheet. They will use academic synonyms (e.g., printed text says <em>"decrease"</em>, speaker says <em>"marked decline"</em>).</p>',
-  'Dr. Anjali Desai',
+  'Parth Sherathiya',
   'IELTS',
   'https://images.pexels.com/photos/3771074/pexels-photo-3771074.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -575,7 +578,7 @@ VALUES
 
 <h3>Step 3: Track Full Names to Surnames & Acronyms</h3>
 <p>A scientist will first be introduced as <em>"Dr. Alexander Fleming"</em> in sentence 1, and subsequently referred to as <em>"Fleming"</em> or <em>"he"</em> in sentence 3.</p>',
-  'Meera Krishnan',
+  'Bhumika Dhameliya',
   'PTE',
   'https://images.pexels.com/photos/261909/pexels-photo-261909.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -609,7 +612,7 @@ VALUES
 </ul>
 
 <blockquote><p><strong>Pro Tip:</strong> Do not use complex vocabulary randomly just to sound smart. Always prioritize natural collocations and context over archaic words.</p></blockquote>',
-  'James Whitfield',
+  'Meet Sir',
   'Spoken English',
   'https://images.pexels.com/photos/256417/pexels-photo-256417.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -639,7 +642,7 @@ VALUES
   <li><strong>Plummeting:</strong> <em>"plummeted sharply to a record low of..."</em></li>
   <li><strong>Plateauing:</strong> <em>"plateaued at approximately 45,000 units for three consecutive years..."</em></li>
 </ul>',
-  'Parth Shershiya',
+  'Parth Sherathiya',
   'IELTS',
   'https://images.pexels.com/photos/590022/pexels-photo-590022.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
@@ -671,7 +674,7 @@ VALUES
   <li><strong>Spelling:</strong> 0 spelling errors allowed.</li>
   <li><strong>Grammar:</strong> Check all complex and compound sentence punctuation.</li>
 </ul>',
-  'Meera Krishnan',
+  'Bhumika Dhameliya',
   'PTE',
   'https://images.pexels.com/photos/3184306/pexels-photo-3184306.jpeg?auto=compress&cs=tinysrgb&w=800',
   true,
