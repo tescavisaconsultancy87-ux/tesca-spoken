@@ -51,6 +51,10 @@ export default function BlogManager() {
     }
   };
 
+  useEffect(() => {
+    loadPosts();
+  }, []);
+
   const getTodayLocalDateString = () => {
     const d = new Date();
     const year = d.getFullYear();
