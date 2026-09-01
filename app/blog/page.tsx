@@ -17,13 +17,17 @@ interface BlogPost {
   excerpt: string;
   content: string;
   author: string;
+  category?: string;
   image_url: string;
   published: boolean;
   created_at: string;
 }
 
+const CATEGORIES = ['Spoken English', 'IELTS', 'PTE'] as const;
+
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -39,6 +43,24 @@ export default function BlogPage() {
     }
     load();
   }, []);
+
+  const getCategoryStyle = (cat?: string) => {
+    switch (cat) {
+      case 'IELTS':
+        return 'bg-indigo-50/95 text-indigo-700 border-indigo-200/80';
+      case 'PTE':
+        return 'bg-purple-50/95 text-purple-700 border-purple-200/80';
+      case 'Spoken English':
+      default:
+        return 'bg-teal-50/95 text-teal-700 border-teal-200/80';
+    }
+  };
+
+  const filteredPosts = posts.filter((post) => {
+    if (selectedCategory === 'All') return true;
+    const postCat = post.category || 'Spoken English';
+    return postCat === selectedCategory;
+  });
 
   return (
     <div className="min-h-screen bg-white">
@@ -68,26 +90,48 @@ export default function BlogPage() {
         </section>
 
         {/* Blog List */}
-        <section className="relative bg-white py-20 lg:py-28">
+        <section className="relative bg-white py-16 lg:py-24">
           <div className="container-x">
+            {/* Category Filter Tabs */}
+            <div className="flex items-center justify-center gap-2 mb-12 flex-wrap">
+              {['All', ...CATEGORIES].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-5 py-2.5 rounded-full text-xs font-bold transition-all duration-200 border ${
+                    selectedCategory === cat
+                      ? 'bg-primary text-white border-primary shadow-soft scale-105'
+                      : 'bg-white text-ink-muted border-[#E8EDF3] hover:border-primary/30 hover:text-primary'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
             {loading ? (
               <div className="py-12 text-center text-ink-muted">
                 <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 <p className="mt-2 text-xs font-semibold">Loading posts...</p>
               </div>
-            ) : posts.length === 0 ? (
+            ) : filteredPosts.length === 0 ? (
               <div className="py-20 text-center">
-                <p className="text-ink-muted text-sm font-semibold">No blog posts published yet. Check back soon!</p>
+                <p className="text-ink-muted text-sm font-semibold">No blog posts found in this category.</p>
               </div>
             ) : (
               <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
-                {posts.map((post, idx) => (
+                {filteredPosts.map((post) => (
                   <Link
                     key={post.id}
                     href={`/blog/${post.slug}`}
                     className="group relative flex flex-col overflow-hidden rounded-[24px] border border-[#E8EDF3] bg-white shadow-soft hover:shadow-[0_20px_40px_rgba(15,118,110,0.12)] transition-all duration-300 ease-out hover:-translate-y-2"
                   >
                     <div className="relative aspect-square w-full overflow-hidden bg-slate-50 border-b border-[#E8EDF3]/50">
+                      <div className="absolute top-3 left-3 z-10">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold shadow-sm backdrop-blur-md border ${getCategoryStyle(post.category)}`}>
+                          {post.category || 'Spoken English'}
+                        </span>
+                      </div>
                       {post.image_url ? (
                         <Image
                           src={post.image_url}

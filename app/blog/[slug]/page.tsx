@@ -18,6 +18,7 @@ interface BlogPost {
   excerpt: string;
   content: string;
   author: string;
+  category?: string;
   image_url: string;
   published: boolean;
   created_at: string;
@@ -42,6 +43,18 @@ export default function BlogPostPage() {
     }
     load();
   }, [params.slug]);
+
+  const getCategoryStyle = (cat?: string) => {
+    switch (cat) {
+      case 'IELTS':
+        return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+      case 'PTE':
+        return 'bg-purple-50 text-purple-700 border-purple-100';
+      case 'Spoken English':
+      default:
+        return 'bg-teal-50 text-teal-700 border-teal-100';
+    }
+  };
 
   if (loading) {
     return (
@@ -80,6 +93,10 @@ export default function BlogPostPage() {
                 </Link>
 
                 <div className="space-y-4">
+                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getCategoryStyle(post.category)}`}>
+                    {post.category || 'Spoken English'}
+                  </span>
+
                   <h1 className="font-heading text-3xl font-bold leading-tight text-ink sm:text-4xl lg:text-5xl">
                     {post.title}
                   </h1>

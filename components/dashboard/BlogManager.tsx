@@ -25,15 +25,19 @@ interface BlogPost {
   excerpt: string;
   content: string;
   author: string;
+  category?: string;
   image_url: string;
   published: boolean;
   created_at: string;
   author_id?: string;
 }
 
+const CATEGORIES = ['Spoken English', 'IELTS', 'PTE'] as const;
+
 export default function BlogManager() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [isAdding, setIsAdding] = useState(false);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -79,6 +83,7 @@ export default function BlogManager() {
     excerpt: '',
     content: '',
     author: '',
+    category: 'Spoken English',
     image_url: '',
     published: false,
     date: getTodayLocalDateString(),
@@ -93,6 +98,7 @@ export default function BlogManager() {
       excerpt: '',
       content: '',
       author: user?.name || '',
+      category: 'Spoken English',
       image_url: '',
       published: false,
       date: getTodayLocalDateString(),
@@ -153,6 +159,7 @@ export default function BlogManager() {
       excerpt: post.excerpt,
       content: post.content,
       author: post.author,
+      category: post.category || 'Spoken English',
       image_url: post.image_url || '',
       published: post.published,
       date: isoToLocalDateString(post.created_at),
@@ -221,6 +228,7 @@ export default function BlogManager() {
         excerpt: form.excerpt.trim(),
         content: form.content.trim(),
         author: form.author.trim() || user?.name || 'TESCA Team',
+        category: form.category || 'Spoken English',
         image_url: form.image_url,
         published: form.published,
         created_at: selectedDateISO,
@@ -271,10 +279,27 @@ export default function BlogManager() {
     return user?.role === 'admin' || post.author_id === user?.id;
   };
 
+  const getCategoryStyle = (cat?: string) => {
+    switch (cat) {
+      case 'IELTS':
+        return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+      case 'PTE':
+        return 'bg-purple-50 text-purple-700 border-purple-100';
+      case 'Spoken English':
+      default:
+        return 'bg-teal-50 text-teal-700 border-teal-100';
+    }
+  };
+
   const filtered = posts
     .filter((post) => {
       if (user?.role === 'admin') return true;
       return post.published || post.author_id === user?.id;
+    })
+    .filter((post) => {
+      if (selectedCategory === 'All') return true;
+      const postCat = post.category || 'Spoken English';
+      return postCat === selectedCategory;
     })
     .filter((p) =>
       p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -333,7 +358,22 @@ export default function BlogManager() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-gray-500">Category *</label>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                  required
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-500">Author *</label>
                 <input
@@ -461,8 +501,8 @@ export default function BlogManager() {
         </div>
       ) : (
         <>
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 w-full md:w-[280px] shadow-soft">
+          <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+            <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2.5 w-full sm:w-[260px] shadow-soft">
               <Search className="h-4 w-4 text-gray-400" />
               <input
                 type="text"
@@ -471,6 +511,22 @@ export default function BlogManager() {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 bg-transparent text-xs text-gray-700 outline-none placeholder:text-gray-400"
               />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              {['All', ...CATEGORIES].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+                    selectedCategory === cat
+                      ? 'bg-primary text-white border-primary shadow-soft'
+                      : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -481,7 +537,7 @@ export default function BlogManager() {
           ) : filtered.length === 0 ? (
             <div className="py-12 text-center text-gray-400">
               <FileText className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p className="text-xs font-semibold">No blog posts yet</p>
+              <p className="text-xs font-semibold">No blog posts found</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -496,7 +552,7 @@ export default function BlogManager() {
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-bold text-gray-800 truncate">{post.title}</h3>
                       <p className="text-xs text-gray-500 mt-1 line-clamp-2">{post.excerpt}</p>
-                      <div className="flex items-center gap-4 mt-2.5 text-[10px] text-gray-400 font-semibold">
+                      <div className="flex items-center gap-3 mt-2.5 text-[10px] text-gray-400 font-semibold flex-wrap">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
                           {new Date(post.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -504,6 +560,9 @@ export default function BlogManager() {
                         <span className="flex items-center gap-1">
                           <User className="h-3 w-3" />
                           {post.author}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold border ${getCategoryStyle(post.category)}`}>
+                          {post.category || 'Spoken English'}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
                           post.published
