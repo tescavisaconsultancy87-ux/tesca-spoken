@@ -16,6 +16,10 @@ const AI_CRAWLERS = [
   'XoviBot', 'ZumBot', 'Go-http-client', 'python-requests',
   'aiohttp', 'httpx', 'curl', 'wget', 'AmazonBot', 'Amzn-SearchBot',
   'Amazon-SearchBot', 'Perplexity', 'Claude',
+  // Headless scrapers, security scanners & aggressive automated bots
+  'jscrawler', 'zgrab', 'censys', 'shodan', 'nmap', 'nikto', 'sqlmap',
+  'ahrefsbot', 'petalbot', 'mj12bot', 'blexbot', 'headlesschrome',
+  'phantomjs', 'selenium', 'puppeteer',
 ];
 
 const LEGITIMATE_BOTS = ['Googlebot', 'Google', 'Google-Extended', 'Google-InspectionTool', 'Storebot-Google', 'AdsBot-Google', 'Mediapartners-Google', 'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot',
@@ -29,7 +33,10 @@ const SENSITIVE_PROBE_PATTERNS = [
   '/.config',
   '/.aws',
   '/.ssh',
+  '/.vscode',
   '/.ds_store',
+  '/console',
+  '/actuator',
   'admin.php',
   'wp-admin',
   'wp-content',
@@ -77,6 +84,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Allow standard SEO & system discovery files to bypass all checks directly
+  const PUBLIC_SYSTEM_FILES = ['/robots.txt', '/sitemap.xml', '/llms.txt', '/favicon.ico', '/favicon.png', '/manifest.json'];
+  if (PUBLIC_SYSTEM_FILES.includes(pathname)) {
+    return NextResponse.next();
+  }
+
   const host = request.headers.get('host') || '';
   const hostName = host.split(':')[0].toLowerCase();
   const xProto = request.headers.get('x-forwarded-proto') || '';
@@ -99,6 +112,10 @@ export function middleware(request: NextRequest) {
     );
   }
 
+  // ─── 301 Permanent Canonical Domain Redirect: tescavisa.com -> tesca.co ───
+  if (!isLocalhost && (hostName === 'tescavisa.com' || hostName === 'www.tescavisa.com')) {
+    return NextResponse.redirect(`https://tesca.co${pathname}${request.nextUrl.search}`, 301);
+  }
 
   // ─── UNKNOWN SUBDOMAIN → 404 ───
   // Return 404 for any subdomain not in our valid list (admin, tutor, student, www)

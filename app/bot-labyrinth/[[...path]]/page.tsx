@@ -97,7 +97,8 @@ export default async function LabyrinthPage({ params }: { params: Promise<{ path
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{title}</title>
         <meta name="description" content={`${p1.slice(0, 155)}...`} />
-        <meta name="robots" content="index, follow" />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta name="googlebot" content="noindex, nofollow" />
         <link rel="canonical" href={`https://tesca.co/bot-labyrinth/${currentPath}`} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={p1.slice(0, 155)} />

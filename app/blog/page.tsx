@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import WaveDivider from '@/components/WaveDivider';
 import { db } from '@/lib/db';
-import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
+import { Calendar, User, ArrowRight, Clock, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -20,6 +20,7 @@ import {
 const CATEGORIES = ['Spoken English', 'IELTS', 'PTE'] as const;
 
 export default function BlogPage() {
+  const [openingSlug, setOpeningSlug] = useState<string | null>(null);
   const [posts, setPosts] = useState<BlogPostItem[]>(() => {
     if (typeof window !== 'undefined') {
       const cached = getCachedBlogPosts();
@@ -159,7 +160,12 @@ export default function BlogPage() {
                   <Link
                     key={post.id}
                     href={`/blog/${post.slug}`}
-                    className="group relative flex flex-col overflow-hidden rounded-[24px] border border-[#E8EDF3] bg-white shadow-soft hover:shadow-[0_20px_40px_rgba(15,118,110,0.12)] transition-all duration-300 ease-out hover:-translate-y-2"
+                    onClick={() => setOpeningSlug(post.slug)}
+                    className={`group relative flex flex-col overflow-hidden rounded-[24px] border bg-white shadow-soft transition-all duration-300 ease-out hover:-translate-y-2 ${
+                      openingSlug === post.slug
+                        ? 'border-primary ring-2 ring-primary/40 shadow-[0_20px_40px_rgba(6,119,121,0.2)] scale-[1.01]'
+                        : 'border-[#E8EDF3] hover:shadow-[0_20px_40px_rgba(15,118,110,0.12)]'
+                    }`}
                   >
                     <div className="relative aspect-square w-full overflow-hidden bg-slate-50 border-b border-[#E8EDF3]/50">
                       <div className="absolute top-3 left-3 z-10">
@@ -183,6 +189,14 @@ export default function BlogPage() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+
+                      {/* Instant click confirmation overlay */}
+                      {openingSlug === post.slug && (
+                        <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center text-white animate-in fade-in duration-200">
+                          <Loader2 className="h-8 w-8 animate-spin text-white mb-2" />
+                          <span className="text-xs font-bold tracking-wide">Opening article...</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex-1 p-6 flex flex-col justify-between">
@@ -208,10 +222,17 @@ export default function BlogPage() {
                       </div>
 
                       <div className="mt-5 pt-4 border-t border-slate-100">
-                        <span className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:gap-1.5 transition-all">
-                          Read More
-                          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-                        </span>
+                        {openingSlug === post.slug ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-primary animate-pulse">
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                            Opening article...
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:gap-1.5 transition-all">
+                            Read More
+                            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+                          </span>
+                        )}
                       </div>
                     </div>
                   </Link>

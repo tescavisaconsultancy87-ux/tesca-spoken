@@ -16,6 +16,8 @@ import FloatingActions from '@/components/FloatingActions';
 import StudyAbroadPromo from '@/components/StudyAbroadPromo';
 import { db } from '@/lib/db';
 
+export const revalidate = 3600;
+
 export async function generateMetadata(): Promise<Metadata> {
   let title = 'TESCA Spoken English — Master English Fluency from Basic to Advanced';
   let description = 'Join thousands of students and professionals who improved their communication skills through TESCA\'s expert-led programs. Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.';

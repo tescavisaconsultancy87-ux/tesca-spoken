@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from 'next';
 import { Poppins, Inter } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
+import { Suspense } from 'react';
 import OfferBanner from '@/components/OfferBanner';
 import AlertOverlay from '@/components/AlertOverlay';
 import PromoPopup from '@/components/PromoPopup';
+import NavigationProgressBar from '@/components/NavigationProgressBar';
 import { DemoModalProvider } from '@/context/DemoModalContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
@@ -315,6 +317,9 @@ export default function RootLayout({
             __html: JSON.stringify(globalSchema)
           }}
         />
+        <Suspense fallback={null}>
+          <NavigationProgressBar />
+        </Suspense>
         <ScrollToTop />
         <ToastProvider>
           <AuthProvider>

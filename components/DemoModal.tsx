@@ -15,6 +15,7 @@ import {
   Laptop,
   ChevronDown,
   BookOpen,
+  Loader2,
 } from 'lucide-react';
 import { COURSES } from '@/lib/data/content';
 import {
@@ -432,10 +433,19 @@ export default function DemoModal({ onClose }: DemoModalProps) {
               <button
                 type="submit"
                 disabled={loading}
-                className="btn-warm mt-4 w-full justify-center py-3.5 cursor-pointer disabled:opacity-75"
+                className="btn-warm mt-4 w-full justify-center py-3.5 cursor-pointer disabled:opacity-75 flex items-center gap-2"
               >
-                {loading ? 'Scheduling...' : 'Schedule My Free Demo'}
-                <Send className="h-4 w-4" />
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Scheduling Demo...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Schedule My Free Demo</span>
+                    <Send className="h-4 w-4" />
+                  </>
+                )}
               </button>
             </form>
           )}

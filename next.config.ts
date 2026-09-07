@@ -38,12 +38,12 @@ const nextConfig: NextConfig = {
       },
       {
         source: '/study-abroad',
-        destination: 'https://tescavisa.com',
+        destination: '/contact',
         permanent: true,
       },
       {
         source: '/visa',
-        destination: 'https://tescavisa.com',
+        destination: '/contact',
         permanent: true,
       },
       {
@@ -82,7 +82,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/static/(.*)',
+        source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
@@ -91,11 +91,11 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/images/(.*)',
+        source: '/(.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|txt|xml))',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400, stale-while-revalidate=604800',
+            value: 'public, max-age=2592000, stale-while-revalidate=86400',
           },
         ],
       },

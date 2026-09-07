@@ -5,8 +5,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
 
   try {
-    const posts = await db.getBlogPosts();
-    const post = (posts || []).find((p: any) => p.slug === slug && p.published);
+    const post = await db.getBlogPostBySlug(slug);
 
     if (post) {
       return {
