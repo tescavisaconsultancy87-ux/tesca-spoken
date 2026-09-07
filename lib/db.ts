@@ -1035,6 +1035,26 @@ export const db = {
 
   // ─── Blog Posts ───
   getBlogPosts: async () => {
+    if (typeof window !== 'undefined') {
+      try {
+        await ensureSupabaseClient();
+        const headers: Record<string, string> = {};
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+        }
+        const res = await fetch('/api/blogs', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) return data;
+        }
+      } catch (err) {
+        console.warn('API getBlogPosts failed, falling back to direct DB:', err);
+      }
+    }
+
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
@@ -1067,38 +1087,101 @@ export const db = {
   },
 
   createBlogPost: async (post: any) => {
-    await ensureSupabaseClient();
-    if (!supabase) return post;
-    try {
-      const { data, error } = await supabase.from('blog_posts').insert(post).select().single();
-      if (error) {
-        logError('blog_posts', error);
-        return post;
+    if (typeof window !== 'undefined') {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
       }
-      return data;
-    } catch (err) {
-      console.error('createBlogPost failed:', err);
-      return post;
+
+      const res = await fetch('/api/blogs', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(post),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to create blog post');
+      }
+      return json.post || json;
     }
+
+    // Server-side fallback (direct Supabase query)
+    await ensureSupabaseClient();
+    if (!supabase) throw new Error('Database client unavailable');
+    
+    // Clean payload to prevent schema cache errors
+    const safePayload = { ...post };
+    delete safePayload.id;
+
+    let { data, error } = await supabase.from('blog_posts').insert(safePayload).select().single();
+    if (error && (error.code === 'PGRST204' || error.message?.includes('author_id'))) {
+      delete safePayload.author_id;
+      const retry = await supabase.from('blog_posts').insert(safePayload).select().single();
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if (error) {
+      logError('blog_posts', error);
+      throw new Error(error.message || 'Failed to insert blog post');
+    }
+    return data;
   },
 
   updateBlogPost: async (id: string, updates: any) => {
-    await ensureSupabaseClient();
-    if (!supabase) return false;
-    try {
-      const { error } = await supabase.from('blog_posts').update(updates).eq('id', id);
-      if (error) {
-        logError('blog_posts', error);
-        return false;
+    if (typeof window !== 'undefined') {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const res = await fetch('/api/blogs', {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ id, ...updates }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to update blog post');
       }
       return true;
-    } catch (err) {
-      console.error('updateBlogPost failed:', err);
-      return false;
     }
+
+    // Server-side fallback
+    await ensureSupabaseClient();
+    if (!supabase) return false;
+    const safeUpdates = { ...updates };
+    let { error } = await supabase.from('blog_posts').update(safeUpdates).eq('id', id);
+    if (error && (error.code === 'PGRST204' || error.message?.includes('author_id'))) {
+      delete safeUpdates.author_id;
+      const retry = await supabase.from('blog_posts').update(safeUpdates).eq('id', id);
+      error = retry.error;
+    }
+    if (error) {
+      logError('blog_posts', error);
+      throw new Error(error.message || 'Failed to update blog post');
+    }
+    return true;
   },
 
   bulkUpdateBlogCategory: async (ids: string[], category: string) => {
+    if (typeof window !== 'undefined') {
+      for (const id of ids) {
+        await db.updateBlogPost(id, { category });
+      }
+      return true;
+    }
+
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
@@ -1115,18 +1198,42 @@ export const db = {
   },
 
   deleteBlogPost: async (id: string) => {
+    if (typeof window !== 'undefined') {
+      await ensureSupabaseClient();
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (supabase) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          headers['Authorization'] = `Bearer ${session.access_token}`;
+        }
+      }
+
+      const res = await fetch('/api/blogs', {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ id }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Failed to delete blog post');
+      }
+      return true;
+    }
+
+    // Server-side fallback
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
       const { error } = await supabase.from('blog_posts').delete().eq('id', id);
       if (error) {
         logError('blog_posts', error);
-        return false;
+        throw new Error(error.message || 'Failed to delete blog post');
       }
       return true;
     } catch (err) {
       console.error('deleteBlogPost failed:', err);
-      return false;
+      throw err;
     }
   },
 

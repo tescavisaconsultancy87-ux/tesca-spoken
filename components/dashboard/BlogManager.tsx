@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Trash2, FileText, Eye, EyeOff, X, Calendar, User } from 'lucide-react';
 import { db } from '@/lib/db';
+import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import RichTextEditor from '@/components/RichTextEditor';
 import { useAuth } from '@/context/AuthContext';
 import toast from '@/lib/toast';
@@ -42,6 +43,8 @@ export default function BlogManager() {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [deletePostId, setDeletePostId] = useState<string | null>(null);
 
   const loadPosts = async () => {
@@ -60,7 +63,11 @@ export default function BlogManager() {
   }, []);
 
   const canManage = (post: BlogPost) => {
-    return user?.role === 'admin' || post.author_id === user?.id;
+    if (user?.role === 'admin') return true;
+    if (post.author_id && user?.id && post.author_id === user.id) return true;
+    if (post.author && user?.name && post.author.toLowerCase() === user.name.toLowerCase()) return true;
+    if (post.author && user?.email && post.author.toLowerCase() === user.email.toLowerCase()) return true;
+    return false;
   };
 
   const [form, setForm] = useState({
@@ -91,42 +98,76 @@ export default function BlogManager() {
     setImageError(null);
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setImageError(null);
     if (!file) return;
 
-    // Check size <= 500KB
-    if (file.size > 500 * 1024) {
-      const msg = 'Image size must be less than 500 KB.';
+    // Check size <= 2MB
+    if (file.size > 2 * 1024 * 1024) {
+      const msg = 'Image size must be less than 2 MB.';
       setImageError(msg);
       toast.error(msg, 'Image Validation');
       e.target.value = '';
       return;
     }
 
-    // Check type is JPG or PNG
+    // Check type is JPG, PNG, or WebP
     const isJpg = file.type === 'image/jpeg' || file.type === 'image/jpg';
     const isPng = file.type === 'image/png';
+    const isWebp = file.type === 'image/webp';
 
-    if (!isJpg && !isPng) {
-      const msg = 'Only JPG, JPEG, and PNG images are allowed.';
+    if (!isJpg && !isPng && !isWebp) {
+      const msg = 'Only JPG, JPEG, PNG, and WebP images are allowed.';
       setImageError(msg);
       toast.error(msg, 'Image Validation');
       e.target.value = '';
       return;
     }
 
+    setUploadingImage(true);
+
+    // Try direct upload to Supabase storage 'tesca-assets'
+    try {
+      await ensureSupabaseClient();
+      if (supabase) {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const key = `blog-covers/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage.from('tesca-assets').upload(key, file, {
+          contentType: file.type,
+          cacheControl: '31536000',
+          upsert: false,
+        });
+
+        if (!uploadError) {
+          const { data: publicUrlData } = supabase.storage.from('tesca-assets').getPublicUrl(key);
+          if (publicUrlData?.publicUrl) {
+            setForm((prev) => ({
+              ...prev,
+              image_url: publicUrlData.publicUrl,
+            }));
+            setUploadingImage(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Storage direct upload failed, using fallback base64 reader:', err);
+    }
+
+    // Fallback to base64 data URL (the backend API will upload to storage)
     const reader = new FileReader();
     reader.onloadend = () => {
       setForm((prev) => ({
         ...prev,
         image_url: reader.result as string,
       }));
+      setUploadingImage(false);
     };
     reader.onerror = () => {
       setImageError('Failed to read image file.');
       toast.error('Failed to read image file.', 'Image Error');
+      setUploadingImage(false);
     };
     reader.readAsDataURL(file);
   };
@@ -197,13 +238,14 @@ export default function BlogManager() {
       return;
     }
 
+    setSaving(true);
     try {
       const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
         excerpt: form.excerpt.trim(),
         content: form.content.trim(),
-        author: form.author.trim() || user?.name || 'TESCA Team',
+        author: form.author.trim() || user?.name || (user?.role === 'admin' ? 'TESCA Team' : 'TESCA Tutor'),
         category: form.category.trim(),
         image_url: form.image_url,
         published: form.published,
@@ -221,10 +263,12 @@ export default function BlogManager() {
 
       resetForm();
       setIsAdding(false);
-      loadPosts();
+      await loadPosts();
     } catch (err: any) {
-      console.error(err);
+      console.error('Failed to save blog post:', err);
       toast.error(err.message || 'Failed to save blog post', 'Error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -234,7 +278,7 @@ export default function BlogManager() {
         await db.deleteBlogPost(deletePostId);
         setDeletePostId(null);
         toast.success('Blog post deleted successfully', 'Post Removed');
-        loadPosts();
+        await loadPosts();
       } catch (err: any) {
         toast.error(err.message || 'Failed to delete blog post', 'Delete Error');
       }
@@ -245,7 +289,7 @@ export default function BlogManager() {
     try {
       await db.updateBlogPost(id, { published: !current });
       toast.info(!current ? 'Blog post published' : 'Blog post reverted to draft', 'Post Status');
-      loadPosts();
+      await loadPosts();
     } catch (err: any) {
       toast.error(err.message || 'Failed to update publish status', 'Error');
     }
@@ -266,7 +310,7 @@ export default function BlogManager() {
   const filtered = posts
     .filter((post) => {
       if (user?.role === 'admin') return true;
-      return post.published || post.author_id === user?.id;
+      return post.published || canManage(post);
     })
     .filter((post) => {
       if (selectedCategory === 'All') return true;
@@ -371,7 +415,7 @@ export default function BlogManager() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-gray-500 flex items-center gap-1">
-                  Featured Image <span className="text-rose-500 font-bold">*</span> (Max 500 KB)
+                  Featured Image <span className="text-rose-500 font-bold">*</span> (Max 2 MB)
                 </label>
                 <div className="flex items-center gap-3">
                   {form.image_url ? (
@@ -388,17 +432,22 @@ export default function BlogManager() {
                   ) : (
                     <label
                       htmlFor="blog-image-upload"
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100/50 cursor-pointer truncate"
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-gray-50 border border-dashed border-gray-300 rounded-xl text-xs font-bold text-gray-500 hover:bg-gray-100/50 cursor-pointer truncate ${uploadingImage ? 'opacity-60 cursor-wait' : ''}`}
                     >
-                      <Plus className="h-4 w-4 text-gray-400 shrink-0" />
-                      <span className="truncate">Upload Image *</span>
+                      {uploadingImage ? (
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+                      ) : (
+                        <Plus className="h-4 w-4 text-gray-400 shrink-0" />
+                      )}
+                      <span className="truncate">{uploadingImage ? 'Uploading Image...' : 'Upload Image *'}</span>
                     </label>
                   )}
                   <input
                     type="file"
                     id="blog-image-upload"
-                    accept="image/png, image/jpeg, image/jpg"
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
                     onChange={handleImageChange}
+                    disabled={uploadingImage}
                     className="hidden"
                   />
                 </div>
@@ -459,15 +508,18 @@ export default function BlogManager() {
               <button
                 type="button"
                 onClick={() => { setIsAdding(false); resetForm(); }}
-                className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-50"
+                disabled={saving}
+                className="px-4 py-2.5 rounded-xl border border-gray-150 text-gray-500 text-xs font-bold hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 shadow-soft"
+                disabled={saving || uploadingImage}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-600 disabled:opacity-50 shadow-soft"
               >
-                {editingPost ? 'Update Post' : 'Create Post'}
+                {saving && <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+                {saving ? 'Saving...' : editingPost ? 'Update Post' : 'Create Post'}
               </button>
             </div>
           </form>

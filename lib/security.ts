@@ -176,7 +176,7 @@ export async function verifyAuthAndRole(
   allowedRoles: ('student' | 'admin' | 'tutor')[]
 ): Promise<{ 
   authorized: boolean; 
-  user?: { id: string; email: string; role: 'student' | 'admin' | 'tutor' }; 
+  user?: { id: string; email: string; role: 'student' | 'admin' | 'tutor'; name?: string }; 
   error?: string; 
   status?: number 
 }> {
@@ -227,29 +227,40 @@ export async function verifyAuthAndRole(
 
     const email = user.email || '';
     
-    // Resolve user role
+    // Resolve user role and name
     let role: 'student' | 'admin' | 'tutor' = 'student';
+    let profileName = '';
+
+    const dbClient = process.env.SUPABASE_SERVICE_ROLE_KEY
+      ? createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false, autoRefreshToken: false } })
+      : client;
+
+    const { data: profile } = await dbClient
+      .from('profiles')
+      .select('role, name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profile?.name) {
+      profileName = profile.name;
+    }
+
     if (isAdminEmail(email)) {
       role = 'admin';
     } else if (isTutorEmail(email)) {
       role = 'tutor';
-    } else {
-      // Query database for role
-      const { data: profile } = await client
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      if (profile?.role) {
-        role = profile.role as 'student' | 'admin' | 'tutor';
-      }
+    } else if (profile?.role) {
+      role = profile.role as 'student' | 'admin' | 'tutor';
+    } else if (user.user_metadata?.role) {
+      role = user.user_metadata.role as 'student' | 'admin' | 'tutor';
     }
 
     if (!allowedRoles.includes(role)) {
       return { authorized: false, error: `Access denied. Forbidden.`, status: 403 };
     }
 
-    return { authorized: true, user: { id: user.id, email, role } };
+    const userName = profileName || (user.user_metadata?.name as string) || email.split('@')[0] || 'User';
+    return { authorized: true, user: { id: user.id, email, role, name: userName } };
   } catch (err: any) {
     return { authorized: false, error: err.message || 'Authentication error', status: 500 };
   }
