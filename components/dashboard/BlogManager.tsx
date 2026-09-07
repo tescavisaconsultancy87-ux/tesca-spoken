@@ -78,7 +78,7 @@ export default function BlogManager() {
     author: '',
     category: '',
     image_url: '',
-    published: false,
+    published: true,
   });
 
   const [imageError, setImageError] = useState<string | null>(null);
@@ -92,7 +92,7 @@ export default function BlogManager() {
       author: user?.name || '',
       category: '',
       image_url: '',
-      published: false,
+      published: true,
     });
     setEditingPost(null);
     setImageError(null);

@@ -1,4 +1,5 @@
 import { supabase, ensureSupabaseClient } from './supabaseClient';
+import { invalidateBlogCache } from './blogCache';
 
 // Helper to determine if a Supabase error is a 'relation does not exist' error (Postgres code 42P01)
 const isTableMissingError = (error: any) => {
@@ -1107,6 +1108,7 @@ export const db = {
       if (!res.ok) {
         throw new Error(json.error || 'Failed to create blog post');
       }
+      invalidateBlogCache();
       return json.post || json;
     }
 
@@ -1130,6 +1132,7 @@ export const db = {
       logError('blog_posts', error);
       throw new Error(error.message || 'Failed to insert blog post');
     }
+    invalidateBlogCache();
     return data;
   },
 
@@ -1154,6 +1157,7 @@ export const db = {
       if (!res.ok) {
         throw new Error(json.error || 'Failed to update blog post');
       }
+      invalidateBlogCache();
       return true;
     }
 
@@ -1171,6 +1175,7 @@ export const db = {
       logError('blog_posts', error);
       throw new Error(error.message || 'Failed to update blog post');
     }
+    invalidateBlogCache();
     return true;
   },
 
@@ -1218,6 +1223,7 @@ export const db = {
       if (!res.ok) {
         throw new Error(json.error || 'Failed to delete blog post');
       }
+      invalidateBlogCache();
       return true;
     }
 
@@ -1230,6 +1236,7 @@ export const db = {
         logError('blog_posts', error);
         throw new Error(error.message || 'Failed to delete blog post');
       }
+      invalidateBlogCache();
       return true;
     } catch (err) {
       console.error('deleteBlogPost failed:', err);

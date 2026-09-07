@@ -10,38 +10,73 @@ import { Calendar, User, ArrowRight, Clock } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  category?: string;
-  image_url: string;
-  published: boolean;
-  created_at: string;
-}
+import {
+  getCachedBlogPosts,
+  setCachedBlogPosts,
+  isBlogCacheFresh,
+  type BlogPostItem,
+} from '@/lib/blogCache';
 
 const CATEGORIES = ['Spoken English', 'IELTS', 'PTE'] as const;
 
 export default function BlogPage() {
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const data = await db.getBlogPosts();
-        setPosts((data || []).filter((p: BlogPost) => p.published));
-      } catch (err) {
-        console.error('Failed to load blog posts', err);
-      } finally {
-        setLoading(false);
+  const [posts, setPosts] = useState<BlogPostItem[]>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedBlogPosts();
+      if (cached && cached.length > 0) {
+        return cached.filter((p) => p.published);
       }
     }
-    load();
+    return [];
+  });
+
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = getCachedBlogPosts();
+      return !cached || cached.length === 0;
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadWithSWR() {
+      // 1. Instantly display cached posts if available
+      const cached = getCachedBlogPosts();
+      if (cached && cached.length > 0) {
+        setPosts(cached.filter((p) => p.published));
+        setLoading(false);
+
+        // If cache was refreshed within the fresh threshold, avoid hitting the DB
+        if (isBlogCacheFresh()) {
+          return;
+        }
+      }
+
+      // 2. Background revalidation: check for newly posted or updated blogs
+      try {
+        const data = await db.getBlogPosts();
+        if (!isMounted) return;
+
+        const published = (data || []).filter((p: BlogPostItem) => p.published);
+        setCachedBlogPosts(published);
+        setPosts(published);
+      } catch (err) {
+        console.error('Failed to background revalidate blog posts', err);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadWithSWR();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const getCategoryStyle = (cat?: string) => {

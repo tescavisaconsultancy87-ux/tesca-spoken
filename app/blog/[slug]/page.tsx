@@ -11,38 +11,60 @@ import { db } from '@/lib/db';
 import { Calendar, User, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 
-interface BlogPost {
-  id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  category?: string;
-  image_url: string;
-  published: boolean;
-  created_at: string;
-}
+import { getCachedBlogPostBySlug, type BlogPostItem } from '@/lib/blogCache';
 
 export default function BlogPostPage() {
   const params = useParams();
-  const [post, setPost] = useState<BlogPost | null>(null);
-  const [loading, setLoading] = useState(true);
+  const slug = typeof params?.slug === 'string' ? params.slug : Array.isArray(params?.slug) ? params.slug[0] : '';
+
+  const [post, setPost] = useState<BlogPostItem | null>(() => {
+    if (typeof window !== 'undefined' && slug) {
+      return getCachedBlogPostBySlug(slug);
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && slug) {
+      return !getCachedBlogPostBySlug(slug);
+    }
+    return true;
+  });
 
   useEffect(() => {
-    async function load() {
-      if (!params.slug) return;
+    if (!slug) return;
+    let isMounted = true;
+
+    async function loadWithSWR() {
+      // If we already have the post cached, ensure it's rendered
+      const cached = getCachedBlogPostBySlug(slug);
+      if (cached) {
+        setPost(cached);
+        setLoading(false);
+      }
+
+      // Background revalidation or fetch
       try {
-        const found = await db.getBlogPostBySlug(params.slug as string);
-        setPost(found || null);
+        const found = await db.getBlogPostBySlug(slug);
+        if (!isMounted) return;
+        if (found) {
+          setPost(found);
+        }
       } catch (err) {
         console.error('Failed to load blog post', err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     }
-    load();
-  }, [params.slug]);
+
+    loadWithSWR();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [slug]);
 
   const getCategoryStyle = (cat?: string) => {
     switch (cat) {
