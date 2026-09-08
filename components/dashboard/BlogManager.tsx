@@ -205,10 +205,9 @@ export default function BlogManager() {
     e.preventDefault();
     setImageError(null);
 
-    // Validate past date
-    const selectedDate = new Date(form.postedAt + 'T23:59:59');
-    const now = new Date();
-    if (selectedDate > now) {
+    // Validate past date (compare date strings only, ignore time)
+    const today = new Date().toLocaleDateString('en-CA');
+    if (form.postedAt > today) {
       toast.error('Blog post date cannot be in the future. Please select today or a past date.', 'Invalid Date');
       return;
     }
