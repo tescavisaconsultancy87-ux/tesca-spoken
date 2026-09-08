@@ -79,6 +79,7 @@ export default function BlogManager() {
     category: '',
     image_url: '',
     published: true,
+    postedAt: new Date().toLocaleDateString('en-CA'),
   });
 
   const [imageError, setImageError] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export default function BlogManager() {
       category: '',
       image_url: '',
       published: true,
+      postedAt: new Date().toLocaleDateString('en-CA'),
     });
     setEditingPost(null);
     setImageError(null);
@@ -187,6 +189,7 @@ export default function BlogManager() {
       category: post.category || '',
       image_url: post.image_url || '',
       published: post.published,
+      postedAt: new Date(post.created_at).toLocaleDateString('en-CA'),
     });
     setEditingPost(post);
     setIsAdding(true);
@@ -201,6 +204,14 @@ export default function BlogManager() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setImageError(null);
+
+    // Validate past date
+    const selectedDate = new Date(form.postedAt + 'T23:59:59');
+    const now = new Date();
+    if (selectedDate > now) {
+      toast.error('Blog post date cannot be in the future. Please select today or a past date.', 'Invalid Date');
+      return;
+    }
 
     // 1. Title validation
     if (!form.title.trim() || form.title.trim().length < 5) {
@@ -240,6 +251,11 @@ export default function BlogManager() {
 
     setSaving(true);
     try {
+      const selectedDate = new Date(form.postedAt + 'T12:00:00.000Z');
+      const isoDate = isNaN(selectedDate.getTime())
+        ? (editingPost ? editingPost.created_at : new Date().toISOString())
+        : selectedDate.toISOString();
+
       const payload = {
         title: form.title.trim(),
         slug: form.slug.trim() || form.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
@@ -249,9 +265,10 @@ export default function BlogManager() {
         category: form.category.trim(),
         image_url: form.image_url,
         published: form.published,
-        created_at: editingPost ? editingPost.created_at : new Date().toISOString(),
+        created_at: isoDate,
         author_id: editingPost ? editingPost.author_id : user?.id,
       };
+
 
       if (editingPost) {
         await db.updateBlogPost(editingPost.id, payload);
@@ -457,6 +474,18 @@ export default function BlogManager() {
                   <p className="text-[10px] text-amber-600 font-medium mt-1">⚠️ Required to save</p>
                 )}
               </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-gray-500">Post Date *</label>
+              <input
+                type="date"
+                value={form.postedAt}
+                max={new Date().toLocaleDateString('en-CA')}
+                onChange={(e) => setForm({ ...form, postedAt: e.target.value })}
+                className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-xs text-gray-800 focus:bg-white focus:border-primary outline-none"
+                required
+              />
+              <p className="text-[10px] text-gray-400">Select today or a past date</p>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-gray-500">Excerpt / Summary * (Min. 15 characters)</label>
