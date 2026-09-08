@@ -176,7 +176,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, slug, excerpt, content, author, category, image_url, published } = body;
+    const { title, slug, excerpt, content, author, category, image_url, published, created_at } = body;
 
     // Validation
     if (!title || title.trim().length < 5) {
@@ -213,6 +213,23 @@ export async function POST(request: NextRequest) {
 
     const authorName = (author || auth.user.name || (auth.user.role === 'admin' ? 'TESCA Team' : 'TESCA Tutor')).trim();
 
+    // Validate past date
+    let postDate = new Date().toISOString();
+    if (created_at) {
+      const selectedDate = new Date(created_at);
+      const now = new Date();
+      if (isNaN(selectedDate.getTime())) {
+        return NextResponse.json({ error: 'Invalid date format.' }, { status: 400 });
+      }
+      // Allow up to end of today
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+      if (selectedDate > endOfToday) {
+        return NextResponse.json({ error: 'Post date cannot be in the future. Please select today or a past date.' }, { status: 400 });
+      }
+      postDate = selectedDate.toISOString();
+    }
+
     const insertPayload: Record<string, any> = {
       title: title.trim(),
       slug: uniqueSlug,
@@ -222,7 +239,7 @@ export async function POST(request: NextRequest) {
       category: category.trim(),
       image_url: finalImageUrl,
       published: !!published,
-      created_at: new Date().toISOString(),
+      created_at: postDate,
       author_id: auth.user.id,
     };
 
@@ -255,7 +272,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, title, slug, excerpt, content, author, category, image_url, published } = body;
+    const { id, title, slug, excerpt, content, author, category, image_url, published, created_at } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Blog post ID is required.' }, { status: 400 });
@@ -335,6 +352,19 @@ export async function PATCH(request: NextRequest) {
     if (image_url !== undefined && image_url.trim()) {
       const finalImg = await handleImageUpload(adminClient, image_url.trim());
       updates.image_url = finalImg;
+    }
+
+    if (created_at !== undefined && created_at) {
+      const selectedDate = new Date(created_at);
+      if (isNaN(selectedDate.getTime())) {
+        return NextResponse.json({ error: 'Invalid date format.' }, { status: 400 });
+      }
+      const endOfToday = new Date();
+      endOfToday.setHours(23, 59, 59, 999);
+      if (selectedDate > endOfToday) {
+        return NextResponse.json({ error: 'Post date cannot be in the future. Please select today or a past date.' }, { status: 400 });
+      }
+      updates.created_at = selectedDate.toISOString();
     }
 
     const { data: updated, error: updateErr } = await resilientUpdate(adminClient, id, updates);
