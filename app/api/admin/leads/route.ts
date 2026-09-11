@@ -27,7 +27,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, name, email, phone, notes, status } = body;
+    const { id, name, email, phone, notes, status, next_followup_date, follow_ups, status_reason } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Lead id is required.' }, { status: 400 });
@@ -48,13 +48,48 @@ export async function PATCH(request: NextRequest) {
     if (phone !== undefined) updates.phone = phone;
     if (notes !== undefined) updates.notes = notes;
     if (status !== undefined) updates.status = status;
+    if (next_followup_date !== undefined) updates.next_followup_date = next_followup_date;
+    if (follow_ups !== undefined) updates.follow_ups = follow_ups;
+    if (status_reason !== undefined) updates.status_reason = status_reason;
 
-    const { data, error } = await adminClient
+    let { data, error } = await adminClient
       .from('leads')
       .update(updates)
       .eq('id', id)
       .select()
       .single();
+
+    // Resilient fallback: If database columns don't exist yet, embed into notes
+    if (error && (error.message?.includes('column') || error.code === '42703')) {
+      console.warn('[Edit Lead] Missing columns detected. Falling back to embedded notes metadata:', error.message);
+      const fallbackUpdates: any = { ...updates };
+      delete fallbackUpdates.next_followup_date;
+      delete fallbackUpdates.follow_ups;
+      delete fallbackUpdates.status_reason;
+
+      // Encode metadata inside notes
+      const metadataPayload = {
+        next_followup_date: next_followup_date ?? null,
+        follow_ups: follow_ups ?? [],
+        status_reason: status_reason ?? null,
+      };
+
+      let baseNotes = (notes !== undefined ? notes : '');
+      if (baseNotes.includes('<!-- LEAD_FOLLOWUP_DATA:')) {
+        baseNotes = baseNotes.split('<!-- LEAD_FOLLOWUP_DATA:')[0].trim();
+      }
+      fallbackUpdates.notes = `${baseNotes}\n\n<!-- LEAD_FOLLOWUP_DATA:${JSON.stringify(metadataPayload)} -->`;
+
+      const fallbackResult = await adminClient
+        .from('leads')
+        .update(fallbackUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      data = fallbackResult.data;
+      error = fallbackResult.error;
+    }
 
     if (error) {
       console.error('[Edit Lead] DB update failed:', error.message);

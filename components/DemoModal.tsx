@@ -94,10 +94,14 @@ export default function DemoModal({ onClose }: DemoModalProps) {
     e.preventDefault();
     setError('');
 
-    // Phone validation: must be exactly 10 digits
-    const cleanedPhone = form.phone.replace(/\D/g, '');
-    if (cleanedPhone.length !== 10) {
-      const errMsg = 'Phone number must be exactly 10 digits.';
+    // Flexible phone validation: handles +91, leading 0, and international formats
+    const digits = form.phone.replace(/\D/g, '');
+    let targetPhone = digits;
+    if (digits.length === 12 && digits.startsWith('91')) targetPhone = digits.slice(2);
+    else if (digits.length === 11 && digits.startsWith('0')) targetPhone = digits.slice(1);
+
+    if (targetPhone.length < 7 || targetPhone.length > 15) {
+      const errMsg = 'Please enter a valid phone or WhatsApp number (e.g. +91 98765 43210).';
       setError(errMsg);
       toast.error(errMsg, 'Validation Error');
       return;
@@ -123,7 +127,7 @@ export default function DemoModal({ onClose }: DemoModalProps) {
           type: 'demo',
           name: nameValue,
           email: emailValue,
-          phone: cleanedPhone,
+          phone: targetPhone,
           course: courseValue,
           timeSlot: timeValue,
           learningMode: modeValue,

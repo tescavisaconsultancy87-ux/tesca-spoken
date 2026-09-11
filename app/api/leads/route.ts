@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/gmail';
-import { checkRateLimit, formatFriendlyError } from '@/lib/security';
+import { checkRateLimit, formatFriendlyError, normalizePhoneNumber } from '@/lib/security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle, course, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, page_url } = body;
+    const { type, name, email, phone, topic, message, timeSlot, learningMode, notes: assessmentNotes, popupId, popupTitle, course, branch, utm_source, utm_medium, utm_campaign, utm_term, utm_content, referrer, page_url } = body;
 
     // 1. Basic validation
     if (!type || !name) {
@@ -41,6 +41,8 @@ export async function POST(request: NextRequest) {
         })
       : null;
 
+    let finalPhone = phone ? String(phone).trim() : '';
+
     if (type === 'demo') {
       if (!phone || !timeSlot || !learningMode || !course) {
         return NextResponse.json(
@@ -48,19 +50,30 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const cleanedPhone = phone.replace(/\D/g, '');
-      if (cleanedPhone.length !== 10) {
+      const phoneCheck = normalizePhoneNumber(phone);
+      if (!phoneCheck.valid) {
         return NextResponse.json(
-          { error: 'Phone number must be exactly 10 digits.' },
+          { error: phoneCheck.error || 'Please enter a valid phone number.' },
           { status: 400 }
         );
       }
+      finalPhone = phoneCheck.phone;
     } else if (type === 'contact') {
-      if (!message) {
+      if (!message && !topic && !course) {
         return NextResponse.json(
-          { error: 'Message is required for contact submissions.' },
+          { error: 'Message or inquiry details are required for contact submissions.' },
           { status: 400 }
         );
+      }
+      if (phone) {
+        const phoneCheck = normalizePhoneNumber(phone);
+        if (!phoneCheck.valid) {
+          return NextResponse.json(
+            { error: phoneCheck.error || 'Please enter a valid phone number.' },
+            { status: 400 }
+          );
+        }
+        finalPhone = phoneCheck.phone;
       }
     } else if (type === 'assessment') {
       if (!phone) {
@@ -69,13 +82,14 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const cleanedPhone = phone.replace(/\D/g, '');
-      if (cleanedPhone.length !== 10) {
+      const phoneCheck = normalizePhoneNumber(phone);
+      if (!phoneCheck.valid) {
         return NextResponse.json(
-          { error: 'Mobile number must be exactly 10 digits.' },
+          { error: phoneCheck.error || 'Please enter a valid phone number.' },
           { status: 400 }
         );
       }
+      finalPhone = phoneCheck.phone;
     } else if (type === 'popup') {
       let requiredFields = ["name", "phone"];
       if (popupId && adminSupabase) {
@@ -104,13 +118,14 @@ export async function POST(request: NextRequest) {
       }
 
       if (phone) {
-        const cleanedPhone = phone.replace(/\D/g, '');
-        if (cleanedPhone.length !== 10) {
+        const phoneCheck = normalizePhoneNumber(phone);
+        if (!phoneCheck.valid) {
           return NextResponse.json(
-            { error: 'Phone number must be exactly 10 digits.' },
+            { error: phoneCheck.error || 'Please enter a valid phone number.' },
             { status: 400 }
           );
         }
+        finalPhone = phoneCheck.phone;
       }
     } else {
       return NextResponse.json(
@@ -170,7 +185,7 @@ export async function POST(request: NextRequest) {
     // 3. Format notes and insert lead
     let notes = '';
     if (type === 'contact') {
-      notes = `Source: Contact Us\nTopic: ${topic || 'General Feedback'}\nMessage: ${message}`;
+      notes = `Source: Contact Us Inquiry\nCourse: ${course || 'General'}\nPreferred Branch: ${branch || 'Any / Online'}\nTopic: ${topic || 'Admission Inquiry'}\nMessage: ${message || 'Interested in details'}`;
     } else if (type === 'demo') {
       notes = `Source: Book Free Demo\nRequested Free Demo Class.\nSelected Course: ${course}\nPreferred Time: ${timeSlot}\nLearning Mode: ${learningMode}`;
     } else if (type === 'assessment') {
@@ -198,7 +213,7 @@ export async function POST(request: NextRequest) {
       const { error: dbError } = await adminSupabase.from('leads').insert({
         id: leadId,
         name,
-        phone: phone || 'N/A',
+        phone: finalPhone || phone || 'N/A',
         email: email || 'N/A',
         notes: fullNotes,
         status: 'new',

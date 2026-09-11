@@ -159,6 +159,88 @@ export default function RootLayout({
         'sameAs': [
           'https://www.facebook.com/tescaspoken',
           'https://www.instagram.com/tescaspoken'
+        ],
+        'department': [
+          {
+            '@type': ['EducationalOrganization', 'LocalBusiness'],
+            '@id': 'https://tesca.co/#sarthana-branch',
+            'name': 'TESCA Spoken English & Visa Consultancy — Sarthana Branch',
+            'telephone': '+91 84888 05888',
+            'url': 'https://tesca.co',
+            'address': {
+              '@type': 'PostalAddress',
+              'streetAddress': '110,111,112 Royal Arcade, Opp. Deep Kamal Mall, Sarthana Jakatnaka',
+              'addressLocality': 'Surat',
+              'addressRegion': 'Gujarat',
+              'postalCode': '395006',
+              'addressCountry': 'IN'
+            },
+            'geo': {
+              '@type': 'GeoCoordinates',
+              'latitude': '21.21728',
+              'longitude': '72.88586'
+            }
+          },
+          {
+            '@type': ['EducationalOrganization', 'LocalBusiness'],
+            '@id': 'https://tesca.co/#mota-varachha-branch',
+            'name': 'TESCA Spoken English & Visa Consultancy — Mota Varachha Branch',
+            'telephone': '+91 84888 05888',
+            'url': 'https://tesca.co',
+            'address': {
+              '@type': 'PostalAddress',
+              'streetAddress': '106-107, Ambika Pinnacle, Lajamani Chowk, Mota Varachha',
+              'addressLocality': 'Surat',
+              'addressRegion': 'Gujarat',
+              'postalCode': '395006',
+              'addressCountry': 'IN'
+            },
+            'geo': {
+              '@type': 'GeoCoordinates',
+              'latitude': '21.238247',
+              'longitude': '72.885543'
+            }
+          },
+          {
+            '@type': ['EducationalOrganization', 'LocalBusiness'],
+            '@id': 'https://tesca.co/#hirabaug-branch',
+            'name': 'TESCA Spoken English & Visa Consultancy — Hirabaug Branch',
+            'telephone': '+91 84888 05888',
+            'url': 'https://tesca.co',
+            'address': {
+              '@type': 'PostalAddress',
+              'streetAddress': '39, Ambika Vijay Soc., 2nd Floor, Near Surat Super Store, Hirabaug',
+              'addressLocality': 'Surat',
+              'addressRegion': 'Gujarat',
+              'postalCode': '395006',
+              'addressCountry': 'IN'
+            },
+            'geo': {
+              '@type': 'GeoCoordinates',
+              'latitude': '21.2148449',
+              'longitude': '72.8581873'
+            }
+          },
+          {
+            '@type': ['EducationalOrganization', 'LocalBusiness'],
+            '@id': 'https://tesca.co/#yogichowk-branch',
+            'name': 'TESCA Spoken English & Visa Consultancy — Yogichowk Branch',
+            'telephone': '+91 84888 05888',
+            'url': 'https://tesca.co',
+            'address': {
+              '@type': 'PostalAddress',
+              'streetAddress': '2nd Floor, Bhavna Park Soc., Opp. Paladium Mall, Above Prasang Fashion, Yogichowk',
+              'addressLocality': 'Surat',
+              'addressRegion': 'Gujarat',
+              'postalCode': '395006',
+              'addressCountry': 'IN'
+            },
+            'geo': {
+              '@type': 'GeoCoordinates',
+              'latitude': '21.2135179',
+              'longitude': '72.8815115'
+            }
+          }
         ]
       },
       {
@@ -273,6 +355,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${inter.variable}`}>
       <head>
+        {/* LLM & AI Engine Discovery (AEO / GEO) */}
+        <link rel="alternate" type="text/markdown" href="/llms.txt" title="LLM Summary" />
+        <link rel="alternate" type="text/markdown" href="/llms-full.txt" title="LLM Complete Knowledge Base" />
+
         {/* Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{
@@ -329,15 +415,6 @@ export default function RootLayout({
               <AlertOverlay />
               <PromoPopup />
               {children}
-              {/* ─── Bot Honeypot: invisible to users, traps AI crawlers ─── */}
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- intentional: crawlers follow raw <a>, not <Link> */}
-              <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }} aria-hidden="true">
-                <a href="/bot-labyrinth/honeypot/admin-panel">Admin</a>
-                <a href="/bot-labyrinth/honeypot/wp-admin">Dashboard</a>
-                <a href="/bot-labyrinth/honeypot/sitemap-private">Sitemap</a>
-                <a href="/bot-labyrinth/honeypot/.env">Config</a>
-                <a href="/bot-labyrinth/honeypot/backup.sql">Backup</a>
-              </div>
             </DemoModalProvider>
           </AuthProvider>
         </ToastProvider>

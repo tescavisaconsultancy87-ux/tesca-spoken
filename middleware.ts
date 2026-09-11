@@ -1,30 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AI_CRAWLERS = [
+// Legitimate search engines and AI engines that drive organic and generative discovery (AEO / GEO)
+const LEGITIMATE_BOTS = [
+  'Googlebot', 'Google', 'Google-Extended', 'Google-InspectionTool', 'Storebot-Google', 'AdsBot-Google', 'Mediapartners-Google',
+  'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot', 'Baiduspider', 'YandexBot',
+  // AI Search Engines & Conversational Assistants (Crucial for AEO / citations)
   'GPTBot', 'ChatGPT-User', 'Claude-Web', 'ClaudeBot', 'anthropic-ai',
-  'CCBot', 'FacebookBot', 'diffbot', 'ImagesiftBot', 'magpie-crawler',
-  'omgili', 'Omgilibot', 'peer39_crawler', 'peer39', 'scrapy',
-  'SemrushBot', 'Seznambot', 'Timpibot', 'VelenPublicWebCrawler',
-  'Webzio', 'ZoominfoBot', 'DataForSeoBot', 'Meltwater', 'Applebot-Extended',
-  'Bytespider', 'cohere-ai', 'PerplexityBot', 'YouBot', 'Kangaroo Bot',
-  'AwarioSmartBot', 'AwarioBot', 'Barkrowler', 'BrightBot', 'Daum',
-  'DotBot', 'GeckoBot', 'IAScrawler', 'ichiro',
-  'Israelsky', 'Laserlikebot', 'Netseercrawler', 'Pcore-HTTP',
-  'researchscan', 'SeekrBot', 'seqbot', 'ShopBot', 'Sirdata',
-  'Screaming Frog', 'ScreenerBot', 'SiteCheckerBot', 'TrafficBot',
-  'Trendsmap', 'UptimeRobot', 'VelenCrawler', 'Wget', 'Wotbox',
-  'XoviBot', 'ZumBot', 'Go-http-client', 'python-requests',
-  'aiohttp', 'httpx', 'curl', 'wget', 'AmazonBot', 'Amzn-SearchBot',
-  'Amazon-SearchBot', 'Perplexity', 'Claude',
-  // Headless scrapers, security scanners & aggressive automated bots
-  'jscrawler', 'zgrab', 'censys', 'shodan', 'nmap', 'nikto', 'sqlmap',
-  'ahrefsbot', 'petalbot', 'mj12bot', 'blexbot', 'headlesschrome',
-  'phantomjs', 'selenium', 'puppeteer',
+  'PerplexityBot', 'Perplexity', 'Applebot', 'Applebot-Extended',
+  'AmazonBot', 'Amazon-SearchBot', 'Amzn-SearchBot', 'cohere-ai', 'YouBot',
+  // Social media unfurlers & messaging previews
+  'facebookexternalhit', 'Twitterbot', 'LinkedInBot', 'WhatsApp', 'TelegramBot', 'Discordbot',
 ];
 
-const LEGITIMATE_BOTS = ['Googlebot', 'Google', 'Google-Extended', 'Google-InspectionTool', 'Storebot-Google', 'AdsBot-Google', 'Mediapartners-Google', 'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot',
-  'Baiduspider', 'YandexBot', 'facebookexternalhit', 'Twitterbot',
-  'LinkedInBot', 'WhatsApp', 'TelegramBot', 'Discordbot',
+// Vulnerability scanners, headless scrapers, and aggressive automated bots
+const MALICIOUS_AND_SCRAPER_BOTS = [
+  'jscrawler', 'zgrab', 'censys', 'shodan', 'nmap', 'nikto', 'sqlmap',
+  'ahrefsbot', 'petalbot', 'mj12bot', 'blexbot', 'headlesschrome',
+  'phantomjs', 'selenium', 'puppeteer', 'scrapy', 'Go-http-client',
+  'python-requests', 'aiohttp', 'httpx', 'curl', 'wget',
+  'CCBot', 'diffbot', 'ImagesiftBot', 'magpie-crawler', 'omgili', 'Omgilibot',
+  'peer39_crawler', 'peer39', 'SemrushBot', 'Seznambot', 'Timpibot',
+  'VelenPublicWebCrawler', 'Webzio', 'ZoominfoBot', 'DataForSeoBot', 'Meltwater',
+  'Bytespider', 'Kangaroo Bot', 'AwarioSmartBot', 'AwarioBot', 'Barkrowler',
+  'BrightBot', 'Daum', 'DotBot', 'GeckoBot', 'IAScrawler', 'ichiro',
+  'Israelsky', 'Laserlikebot', 'Netseercrawler', 'Pcore-HTTP', 'researchscan',
+  'SeekrBot', 'seqbot', 'ShopBot', 'Sirdata', 'Screaming Frog', 'ScreenerBot',
+  'SiteCheckerBot', 'TrafficBot', 'Trendsmap', 'UptimeRobot', 'VelenCrawler',
+  'Wotbox', 'XoviBot', 'ZumBot',
 ];
 
 const SENSITIVE_PROBE_PATTERNS = [
@@ -65,13 +67,13 @@ function isSensitiveProbe(pathname: string): boolean {
 
 const LABYRINTH_BASE = '/bot-labyrinth';
 
-function isKnownBot(ua: string): 'ai' | 'legitimate' | null {
+function isKnownBot(ua: string): 'scraper' | 'legitimate' | null {
   const lower = ua.toLowerCase();
   for (const bot of LEGITIMATE_BOTS) {
     if (lower.includes(bot.toLowerCase())) return 'legitimate';
   }
-  for (const bot of AI_CRAWLERS) {
-    if (lower.includes(bot.toLowerCase())) return 'ai';
+  for (const bot of MALICIOUS_AND_SCRAPER_BOTS) {
+    if (lower.includes(bot.toLowerCase())) return 'scraper';
   }
   return null;
 }
@@ -85,7 +87,7 @@ export function middleware(request: NextRequest) {
   }
 
   // Allow standard SEO & system discovery files to bypass all checks directly
-  const PUBLIC_SYSTEM_FILES = ['/robots.txt', '/sitemap.xml', '/llms.txt', '/favicon.ico', '/favicon.png', '/manifest.json'];
+  const PUBLIC_SYSTEM_FILES = ['/robots.txt', '/sitemap.xml', '/llms.txt', '/llms-full.txt', '/favicon.ico', '/favicon.png', '/manifest.json'];
   if (PUBLIC_SYSTEM_FILES.includes(pathname)) {
     return NextResponse.next();
   }
@@ -133,10 +135,10 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // ─── AI Crawler Detection & Labyrinth Trap ───
+  // ─── Automated Scraper & Scanner Labyrinth Trap ───
   const uaCheck = isKnownBot(ua);
-  if (uaCheck === 'ai' && !pathname.startsWith(LABYRINTH_BASE)) {
-    console.log(`[BOT-FIGHT] Trapped AI crawler: ${ua.substring(0,80)} -> ${pathname}`);
+  if (uaCheck === 'scraper' && !pathname.startsWith(LABYRINTH_BASE)) {
+    console.log(`[BOT-FIGHT] Trapped scraper: ${ua.substring(0,80)} -> ${pathname}`);
     const labyrinthUrl = new URL(`${LABYRINTH_BASE}/entry`, request.url);
     labyrinthUrl.searchParams.set('via', btoa(pathname));
     return NextResponse.redirect(labyrinthUrl, 307);

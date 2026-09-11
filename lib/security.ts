@@ -265,3 +265,57 @@ export async function verifyAuthAndRole(
     return { authorized: false, error: err.message || 'Authentication error', status: 500 };
   }
 }
+
+/**
+ * Normalizes and validates phone numbers for both Indian and International formats.
+ * - Handles +91 or 91 prefix (strips to 10-digit Indian standard)
+ * - Handles 0 prefix (strips to 10-digit Indian standard)
+ * - Accepts 10-digit Indian numbers starting with 6-9
+ * - Accepts international numbers (7 to 15 digits)
+ */
+export function normalizePhoneNumber(rawPhone: string | undefined | null): {
+  valid: boolean;
+  phone: string;
+  isIndian: boolean;
+  error?: string;
+} {
+  if (!rawPhone || !rawPhone.trim()) {
+    return { valid: false, phone: '', isIndian: false, error: 'Phone number is required.' };
+  }
+
+  const digits = rawPhone.replace(/\D/g, '');
+
+  if (digits.length < 7 || digits.length > 15) {
+    return {
+      valid: false,
+      phone: digits,
+      isIndian: false,
+      error: 'Please enter a valid phone number (7 to 15 digits).',
+    };
+  }
+
+  // Check 12-digit Indian number with 91 country code
+  if (digits.length === 12 && digits.startsWith('91')) {
+    const indian10 = digits.slice(2);
+    if (/^[6-9]\d{9}$/.test(indian10)) {
+      return { valid: true, phone: indian10, isIndian: true };
+    }
+  }
+
+  // Check 11-digit Indian number with leading 0
+  if (digits.length === 11 && digits.startsWith('0')) {
+    const indian10 = digits.slice(1);
+    if (/^[6-9]\d{9}$/.test(indian10)) {
+      return { valid: true, phone: indian10, isIndian: true };
+    }
+  }
+
+  // 10-digit standard
+  if (digits.length === 10) {
+    return { valid: true, phone: digits, isIndian: /^[6-9]\d{9}$/.test(digits) };
+  }
+
+  // International standard (7 to 15 digits)
+  return { valid: true, phone: digits, isIndian: false };
+}
+

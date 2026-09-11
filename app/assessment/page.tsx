@@ -57,10 +57,14 @@ export default function AssessmentPage() {
     e.preventDefault();
     setLeadError('');
 
-    // Phone validation
-    const cleanedPhone = leadForm.phone.replace(/\D/g, '');
-    if (cleanedPhone.length !== 10) {
-      setLeadError('Mobile number must be exactly 10 digits.');
+    // Phone validation: handles +91, 0 prefix, and international numbers
+    const digits = leadForm.phone.replace(/\D/g, '');
+    let targetPhone = digits;
+    if (digits.length === 12 && digits.startsWith('91')) targetPhone = digits.slice(2);
+    else if (digits.length === 11 && digits.startsWith('0')) targetPhone = digits.slice(1);
+
+    if (targetPhone.length < 7 || targetPhone.length > 15) {
+      setLeadError('Please enter a valid mobile number (e.g. +91 98765 43210).');
       return;
     }
 
@@ -77,7 +81,7 @@ export default function AssessmentPage() {
         body: JSON.stringify({
           type: 'assessment',
           name: leadForm.name,
-          phone: leadForm.phone,
+          phone: targetPhone,
           email: leadForm.email || undefined,
           notes: notesPayload
         })

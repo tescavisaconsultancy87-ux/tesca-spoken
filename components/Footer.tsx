@@ -54,11 +54,11 @@ const QUICK_LINKS: { label: string; href: string; external?: boolean }[] = [
 ];
 
 const COURSE_LINKS = [
-  { label: 'Spoken English Basic', href: '/courses' },
-  { label: 'Spoken English Advanced', href: '/courses' },
-  { label: 'IELTS Preparation', href: '/courses' },
-  { label: 'PTE Preparation', href: '/courses' },
-  { label: 'Interview Preparation', href: '/courses' },
+  { label: 'Spoken English Basic', href: '/courses/spoken-english-basic' },
+  { label: 'Spoken English Advanced', href: '/courses/spoken-english-advanced' },
+  { label: 'IELTS Preparation', href: '/courses/ielts-preparation' },
+  { label: 'PTE Preparation', href: '/courses/pte-preparation' },
+  { label: 'Interview Preparation', href: '/courses/interview-preparation' },
 ];
 
 const SOCIAL_LINKS = [

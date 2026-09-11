@@ -344,18 +344,79 @@ export const db = {
         logError('leads', error);
         return [];
       }
-      return data || [];
+      return (data || []).map((lead: any) => {
+        let embeddedMeta: any = null;
+        if (lead.notes && lead.notes.includes('<!-- LEAD_FOLLOWUP_DATA:')) {
+          try {
+            const metaPart = lead.notes.split('<!-- LEAD_FOLLOWUP_DATA:')[1].split('-->')[0];
+            embeddedMeta = JSON.parse(metaPart);
+          } catch (_e) {
+            // ignore malformed metadata
+          }
+        }
+        return {
+          ...lead,
+          follow_ups: lead.follow_ups || embeddedMeta?.follow_ups || [],
+          next_followup_date: lead.next_followup_date || embeddedMeta?.next_followup_date || null,
+          status_reason: lead.status_reason || embeddedMeta?.status_reason || null,
+        };
+      });
     } catch (err) {
       console.error('getLeads failed:', err);
       return [];
     }
   },
 
-  updateLeadStatus: async (id: string, status: string) => {
+  updateLeadStatus: async (
+    id: string,
+    status: string,
+    extras?: {
+      next_followup_date?: string | null;
+      follow_ups?: any[];
+      status_reason?: string | null;
+      notes?: string;
+    }
+  ) => {
+    if (typeof window !== 'undefined') {
+      try {
+        await ensureSupabaseClient();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+        }
+        const res = await fetch('/api/admin/leads', {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify({ id, status, ...extras }),
+        });
+        const json = await res.json();
+        if (res.ok && json.success) return true;
+      } catch (e) {
+        console.error('updateLeadStatus via API failed, attempting direct DB:', e);
+      }
+    }
+
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('leads').update({ status }).eq('id', id);
+      const updates: any = { status };
+      if (extras?.next_followup_date !== undefined) updates.next_followup_date = extras.next_followup_date;
+      if (extras?.follow_ups !== undefined) updates.follow_ups = extras.follow_ups;
+      if (extras?.status_reason !== undefined) updates.status_reason = extras.status_reason;
+      if (extras?.notes !== undefined) updates.notes = extras.notes;
+
+      const { error } = await supabase.from('leads').update(updates).eq('id', id);
+      if (error && (error.message?.includes('column') || error.code === '42703')) {
+        const { error: fallbackErr } = await supabase.from('leads').update({ status }).eq('id', id);
+        if (fallbackErr) {
+          logError('leads', fallbackErr);
+          return false;
+        }
+        return true;
+      }
       if (error) {
         logError('leads', error);
         return false;

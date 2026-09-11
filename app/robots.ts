@@ -36,6 +36,31 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: disallowedPaths,
       },
+      {
+        userAgent: 'GPTBot',
+        allow: '/',
+        disallow: disallowedPaths,
+      },
+      {
+        userAgent: 'ChatGPT-User',
+        allow: '/',
+        disallow: disallowedPaths,
+      },
+      {
+        userAgent: 'PerplexityBot',
+        allow: '/',
+        disallow: disallowedPaths,
+      },
+      {
+        userAgent: 'ClaudeBot',
+        allow: '/',
+        disallow: disallowedPaths,
+      },
+      {
+        userAgent: 'Applebot-Extended',
+        allow: '/',
+        disallow: disallowedPaths,
+      },
     ],
     sitemap: 'https://tesca.co/sitemap.xml',
   };

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { GraduationCap, Globe, ShieldCheck, ArrowUpRight } from 'lucide-react';
 import Reveal from '@/components/Reveal';
 import WaveDivider from '@/components/WaveDivider';
@@ -50,15 +51,13 @@ export default function StudyAbroadPromo() {
 
               {/* Action buttons */}
               <div className="pt-4 flex flex-col sm:flex-row items-center gap-4">
-                <a
-                  href="https://tescavisa.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <Link
+                  href="/contact?topic=Study+Abroad"
                   className="btn-primary w-full sm:w-auto flex items-center justify-center gap-1.5 group cursor-pointer"
                 >
-                  Visit tescavisa.com
+                  Book Free Visa Counseling
                   <ArrowUpRight className="h-4 w-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                </a>
+                </Link>
                 <span className="text-xs font-medium text-primary-400">
                   97% Visa Success Rate • Free Profile Evaluation
                 </span>

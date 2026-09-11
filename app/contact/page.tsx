@@ -22,6 +22,10 @@ import {
   ThumbsUp,
   HelpCircle,
   ChevronDown,
+  Award,
+  BookOpen,
+  GraduationCap,
+  CalendarCheck,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -32,21 +36,38 @@ import {
   DropdownMenuItem,
 } from '@/components/animate-ui/primitives/radix/dropdown-menu';
 
-const FEEDBACK_TYPES = [
-  'Suggestion',
-  'General Feedback',
-  'Bug Report / Website Issue',
-  'Business Inquiry',
-  'Other',
+const INQUIRY_COURSES = [
+  'Spoken English Basic (Beginner to Intermediate)',
+  'Spoken English Advanced (Corporate & Public Speaking)',
+  'IELTS Preparation (Academic / General)',
+  'PTE Preparation (Score 65+ / 79+)',
+  'Interview Preparation & Personality Development',
+  'Study Abroad & Student Visa Consultation',
+  'General Inquiry & Free Demo Class',
+];
+
+const BRANCH_OPTIONS = [
+  'Branch 1 — Sarthana Jakatnaka, Surat',
+  'Branch 2 — Mota Varachha (Lajamani Chowk), Surat',
+  'Branch 3 — Hirabaug (Varachha), Surat',
+  'Branch 4 — Yogichowk, Surat',
+  'Online Live Interactive Batch (Worldwide)',
 ];
 
 const CONTACT_ITEMS = [
   {
     icon: Phone,
-    title: 'Call Us',
+    title: 'Call Us Directly',
     lines: ['+91 84888 05888', '+91 99250 60609'],
-    hint: 'Mon – Sat, 9am – 7pm',
+    hint: 'Mon – Sat, 7am – 8pm',
     action: 'tel:+918488805888',
+  },
+  {
+    icon: MessageCircle,
+    title: 'WhatsApp Us',
+    lines: ['+91 84888 05888'],
+    hint: 'Instant support & demo booking',
+    action: WHATSAPP_URL,
   },
   {
     icon: Mail,
@@ -84,8 +105,10 @@ export default function ContactPage() {
   const [mapsLoaded, setMapsLoaded] = useState<Record<string, boolean>>({});
   const [form, setForm] = useState({
     name: '',
+    phone: '',
     email: '',
-    type: 'Suggestion',
+    course: INQUIRY_COURSES[0],
+    branch: BRANCH_OPTIONS[0],
     message: '',
   });
   const { getLeadEnrichment, trackEvent } = useTracking();
@@ -98,6 +121,20 @@ export default function ContactPage() {
     setLoading(true);
     setError('');
 
+    // Normalize phone number (allow +91, 0 prefix, international numbers)
+    const digits = form.phone.replace(/\D/g, '');
+    let targetPhone = digits;
+    if (digits.length === 12 && digits.startsWith('91')) targetPhone = digits.slice(2);
+    else if (digits.length === 11 && digits.startsWith('0')) targetPhone = digits.slice(1);
+
+    if (targetPhone.length < 7 || targetPhone.length > 15) {
+      const errMsg = 'Please enter a valid phone or WhatsApp number (e.g. +91 98765 43210).';
+      setError(errMsg);
+      toast.error(errMsg, 'Validation Error');
+      setLoading(false);
+      return;
+    }
+
     const enrichment = getLeadEnrichment();
     try {
       const response = await fetch('/api/leads', {
@@ -107,10 +144,13 @@ export default function ContactPage() {
         },
         body: JSON.stringify({
           type: 'contact',
-          name: form.name,
-          email: form.email,
-          topic: form.type,
-          message: form.message,
+          name: form.name.trim(),
+          phone: targetPhone,
+          email: form.email.trim() || undefined,
+          course: form.course,
+          branch: form.branch,
+          topic: form.course,
+          message: form.message.trim() || `Course inquiry for ${form.course} (${form.branch})`,
           ...enrichment,
         }),
       });
@@ -118,12 +158,12 @@ export default function ContactPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to submit feedback.');
+        throw new Error(result.error || 'Failed to submit inquiry.');
       }
 
       setSubmitted(true);
-      toast.success('Your message has been sent successfully!', 'Message Sent');
-      trackEvent('lead_form_submit', { formType: 'contact', topic: form.type });
+      toast.success('Your inquiry has been submitted! Our counseling team will call you shortly.', 'Inquiry Received');
+      trackEvent('lead_form_submit', { formType: 'contact', course: form.course, branch: form.branch });
     } catch (err: any) {
       console.error('Contact submit error:', err);
       const errMsg = err.message || 'An unexpected error occurred. Please try again.';
@@ -200,23 +240,22 @@ export default function ContactPage() {
               {/* Left Column: Text Content */}
               <div className="text-center lg:text-left lg:col-span-7 space-y-6">
                 <span className="inline-flex items-center gap-2 rounded-full bg-primary-50 border border-primary-100 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary">
-                  Share Your Thoughts
+                  Connect With Us • Free Counseling
                 </span>
                 <h1 className="font-heading text-4xl font-bold leading-tight text-ink sm:text-5xl lg:text-6xl">
-                  Feedback &{' '}
-                  <span className="gradient-text">Suggestions</span>
+                  Get in Touch &{' '}
+                  <span className="gradient-text">Start Learning</span>
                 </h1>
                 <p className="max-w-xl text-lg leading-relaxed text-ink-muted">
-                  Help us make TESCA better. Whether you have an idea, a suggestion, or general
-                  feedback, we are listening.
+                  Have questions about our Spoken English, IELTS, or PTE courses? Speak with our senior counselors for batch timings, fee structures, and book your 100% free live demo class.
                 </p>
 
                 {/* Quick Metrics */}
                 <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3.5 pt-2">
                   {[
-                    { icon: ThumbsUp, text: 'Valued Opinions' },
-                    { icon: MessageSquare, text: 'Direct to Founder' },
-                    { icon: Clock, text: 'Review in < 24hrs' },
+                    { icon: Award, text: 'Free Demo Class' },
+                    { icon: MessageCircle, text: 'Instant WhatsApp Reply' },
+                    { icon: Clock, text: 'Callback in < 15 Mins' },
                   ].map((item) => (
                     <div
                       key={item.text}
@@ -345,30 +384,37 @@ export default function ContactPage() {
                         <Check className="h-8 w-8 text-secondary" />
                       </div>
                       <h3 className="font-heading text-2xl font-bold">
-                        Thank you for your feedback!
+                        Thank You! Inquiry Received 🎉
                       </h3>
                       <p className="mt-3 text-primary-100 max-w-sm text-sm leading-relaxed">
-                        We appreciate your input. Our team reads every submission and continuously works to improve the TESCA experience.
+                        Our senior counselor will review your inquiry and call/WhatsApp you within 15 minutes to share batch schedules and confirm your free demo class.
                       </p>
                       <button
                         onClick={() => {
                           setSubmitted(false);
-                          setForm({ name: '', email: '', type: 'Suggestion', message: '' });
+                          setForm({
+                            name: '',
+                            phone: '',
+                            email: '',
+                            course: INQUIRY_COURSES[0],
+                            branch: BRANCH_OPTIONS[0],
+                            message: '',
+                          });
                           setError('');
                         }}
                         className="btn-warm mt-8"
                       >
-                        Send Another Message
+                        Submit Another Inquiry
                       </button>
                     </div>
                   ) : (
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                       <div>
                         <h2 className="font-heading text-2xl font-bold">
-                          Send Feedback
+                          Course Inquiry & Free Counseling
                         </h2>
                         <p className="mt-1 text-sm text-primary-100">
-                          We review every suggestion to improve your learning experience.
+                          Get batch timings, fee structures, and reserve your 100% free demo class.
                         </p>
                       </div>
 
@@ -378,10 +424,10 @@ export default function ContactPage() {
                         </div>
                       )}
 
-                      <div className="space-y-4">
+                      <div className="space-y-3.5">
                         {/* Name */}
                         <div>
-                          <label htmlFor="name" className="block text-xs font-semibold text-primary-100 mb-1.5">
+                          <label htmlFor="name" className="block text-xs font-semibold text-primary-100 mb-1">
                             Full Name <span className="text-secondary">*</span>
                           </label>
                           <input
@@ -390,48 +436,63 @@ export default function ContactPage() {
                             required
                             value={form.name}
                             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                            placeholder="Your name"
-                            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+                            placeholder="e.g. Rahul Patel"
+                            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+                          />
+                        </div>
+
+                        {/* Phone / WhatsApp */}
+                        <div>
+                          <label htmlFor="phone" className="block text-xs font-semibold text-primary-100 mb-1">
+                            Phone / WhatsApp Number <span className="text-secondary">*</span>
+                          </label>
+                          <input
+                            id="phone"
+                            type="tel"
+                            required
+                            value={form.phone}
+                            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                            placeholder="+91 98765 43210"
+                            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
                           />
                         </div>
 
                         {/* Email */}
                         <div>
-                          <label htmlFor="email" className="block text-xs font-semibold text-primary-100 mb-1.5">
-                            Email Address <span className="text-secondary">*</span>
+                          <label htmlFor="email" className="block text-xs font-semibold text-primary-100 mb-1">
+                            Email Address <span className="text-white/50 text-[10px] font-normal">(Optional)</span>
                           </label>
                           <input
                             id="email"
                             type="email"
-                            required
                             value={form.email}
                             onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
                             placeholder="your@email.com"
-                            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
+                            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/10 transition-all"
                           />
                         </div>
 
-                        {/* Feedback Type */}
+                        {/* Program / Course of Interest */}
                         <div>
-                          <span className="block text-xs font-semibold text-primary-100 mb-1.5">
-                            Topic
+                          <span className="block text-xs font-semibold text-primary-100 mb-1">
+                            Course Interested In
                           </span>
                           <DropdownMenu>
                             <DropdownMenuTrigger>
-                              <div className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white cursor-pointer hover:bg-white/15 transition-colors">
-                                <div className="flex items-center gap-2.5">
-                                  <HelpCircle className="h-4 w-4 text-white/50 shrink-0" />
-                                  <span className="font-medium">{form.type}</span>
+                              <div className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-white/15 transition-colors">
+                                <div className="flex items-center gap-2.5 truncate">
+                                  <BookOpen className="h-4 w-4 text-white/50 shrink-0" />
+                                  <span className="font-medium truncate">{form.course}</span>
                                 </div>
-                                <ChevronDown className="h-4 w-4 text-white/50" />
+                                <ChevronDown className="h-4 w-4 text-white/50 shrink-0 ml-2" />
                               </div>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto z-50">
                               <DropdownMenuHighlight>
-                                {FEEDBACK_TYPES.map((t) => (
-                                  <DropdownMenuHighlightItem key={t}>
-                                    <DropdownMenuItem onClick={() => setForm((f) => ({ ...f, type: t }))}>
-                                      {t}
+                                {INQUIRY_COURSES.map((c) => (
+                                  <DropdownMenuHighlightItem key={c}>
+                                    <DropdownMenuItem onClick={() => setForm((f) => ({ ...f, course: c }))}>
+                                      {c}
                                     </DropdownMenuItem>
                                   </DropdownMenuHighlightItem>
                                 ))}
@@ -440,19 +501,47 @@ export default function ContactPage() {
                           </DropdownMenu>
                         </div>
 
-                        {/* Message */}
+                        {/* Preferred Branch */}
                         <div>
-                          <label htmlFor="message" className="block text-xs font-semibold text-primary-100 mb-1.5">
-                            Your Message <span className="text-secondary">*</span>
+                          <span className="block text-xs font-semibold text-primary-100 mb-1">
+                            Preferred Campus / Learning Mode
+                          </span>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger>
+                              <div className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-white cursor-pointer hover:bg-white/15 transition-colors">
+                                <div className="flex items-center gap-2.5 truncate">
+                                  <MapPin className="h-4 w-4 text-white/50 shrink-0" />
+                                  <span className="font-medium truncate">{form.branch}</span>
+                                </div>
+                                <ChevronDown className="h-4 w-4 text-white/50 shrink-0 ml-2" />
+                              </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-60 overflow-y-auto z-50">
+                              <DropdownMenuHighlight>
+                                {BRANCH_OPTIONS.map((b) => (
+                                  <DropdownMenuHighlightItem key={b}>
+                                    <DropdownMenuItem onClick={() => setForm((f) => ({ ...f, branch: b }))}>
+                                      {b}
+                                    </DropdownMenuItem>
+                                  </DropdownMenuHighlightItem>
+                                ))}
+                              </DropdownMenuHighlight>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+
+                        {/* Questions / Notes */}
+                        <div>
+                          <label htmlFor="message" className="block text-xs font-semibold text-primary-100 mb-1">
+                            Questions / Preferred Timings <span className="text-white/50 text-[10px] font-normal">(Optional)</span>
                           </label>
                           <textarea
                             id="message"
-                            required
-                            rows={4}
+                            rows={2}
                             value={form.message}
                             onChange={(e) => setForm((f) => ({ ...f, message: e.target.value }))}
-                            placeholder="Tell us what's on your mind..."
-                            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/10 transition-all resize-none"
+                            placeholder="e.g. Morning or evening batch preferred, fee details"
+                            className="w-full rounded-xl border border-white/10 bg-white/10 px-4 py-2.5 text-sm text-white placeholder:text-white/40 focus:border-white/30 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white/10 transition-all resize-none"
                           />
                         </div>
                       </div>
@@ -460,20 +549,31 @@ export default function ContactPage() {
                       <button
                         type="submit"
                         disabled={loading}
-                        className="btn-warm mt-2 w-full justify-center py-3.5 cursor-pointer disabled:opacity-75"
+                        className="btn-warm mt-3 w-full justify-center py-3.5 cursor-pointer disabled:opacity-75 font-semibold text-sm shadow-soft-lg flex items-center gap-2"
                       >
                         {loading ? (
                           <>
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                            Sending...
+                            Submitting...
                           </>
                         ) : (
                           <>
-                            <Send className="h-4 w-4" />
-                            Submit Feedback
+                            <CalendarCheck className="h-4 w-4" />
+                            Submit Inquiry & Request Call Back
                           </>
                         )}
                       </button>
+
+                      {/* Direct WhatsApp Action Link */}
+                      <a
+                        href={WHATSAPP_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 px-4 py-2.5 text-xs font-semibold text-emerald-300 transition-all mt-2"
+                      >
+                        <MessageCircle className="h-4 w-4 text-[#25D366]" />
+                        Chat Directly on WhatsApp (+91 84888 05888)
+                      </a>
                     </form>
                   )}
                 </div>
