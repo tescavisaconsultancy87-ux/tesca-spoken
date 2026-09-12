@@ -13,13 +13,21 @@ export function isAdminEmail(email: string | undefined): boolean {
     if (adminList.includes(cleanEmail)) return true;
   }
 
-  return cleanEmail === 'tescavisaconsultancy87@gmail.com' || cleanEmail === 'admin@tesca.com';
+  return false;
 }
 
 export function isTutorEmail(email: string | undefined): boolean {
   if (!email) return false;
   const cleanEmail = email.toLowerCase().trim();
-  return cleanEmail === 'tutor@gmail.com' || cleanEmail === 'tutor@tesca.com';
+  
+  // Check from environment variable list
+  const envTutorEmails = process.env.TUTOR_EMAILS || '';
+  if (envTutorEmails) {
+    const tutorList = envTutorEmails.split(',').map(e => e.trim().toLowerCase());
+    if (tutorList.includes(cleanEmail)) return true;
+  }
+
+  return false;
 }
 
 // Format raw error objects into user-friendly strings without leaking details
@@ -191,10 +199,6 @@ export async function verifyAuthAndRole(
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      if (process.env.ALLOW_DEV_AUTH_BYPASS === 'true' && process.env.NODE_ENV === 'development') {
-        console.warn('[Security] Supabase config missing. Dev Sandbox authentication bypass (ALLOW_DEV_AUTH_BYPASS enabled).');
-        return { authorized: true, user: { id: 'dev-admin-id', email: 'admin@tesca.com', role: 'admin' } };
-      }
       return { authorized: false, error: 'Database configuration missing.', status: 500 };
     }
 
