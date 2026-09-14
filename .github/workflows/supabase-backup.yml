@@ -56,7 +56,8 @@ jobs:
           RAW_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           RAW_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq rclone
+          echo "Installing latest stable rclone..."
+          sudo -v ; curl -s https://rclone.org/install.sh | sudo bash
 
           R2_ACCESS_KEY=$(echo "$RAW_ACCESS_KEY" | tr -d '[:space:]')
           R2_SECRET_KEY=$(echo "$RAW_SECRET_KEY" | tr -d '[:space:]')
@@ -69,10 +70,19 @@ jobs:
           fi
 
           mkdir -p ~/.config/rclone
-          printf "[r2]\ntype = s3\nprovider = Cloudflare\naccess_key_id = %s\nsecret_access_key = %s\nendpoint = https://%s.r2.cloudflarestorage.com\nno_check_bucket = true\nforce_path_style = true\n" "$R2_ACCESS_KEY" "$R2_SECRET_KEY" "$R2_ACCOUNT_ID" > ~/.config/rclone/rclone.conf
+          cat <<EOF > ~/.config/rclone/rclone.conf
+[r2]
+type = s3
+provider = Cloudflare
+access_key_id = ${R2_ACCESS_KEY}
+secret_access_key = ${R2_SECRET_KEY}
+region = auto
+endpoint = https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com
+no_check_bucket = true
+EOF
 
           echo "Uploading $BACKUP_FILE to Cloudflare R2 bucket: $R2_BUCKET_NAME/database/..."
-          rclone copyto "$BACKUP_FILE" "r2:${R2_BUCKET_NAME}/database/${BACKUP_FILE}" --s3-no-check-bucket -v
+          rclone copyto "$BACKUP_FILE" "r2:${R2_BUCKET_NAME}/database/${BACKUP_FILE}" --s3-no-check-bucket -vv
 
           echo "Upload complete! Verifying file in R2:"
           rclone lsf "r2:${R2_BUCKET_NAME}/database" --s3-no-check-bucket
