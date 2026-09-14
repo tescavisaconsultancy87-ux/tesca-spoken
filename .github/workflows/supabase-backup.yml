@@ -44,7 +44,59 @@ jobs:
           echo "BACKUP_FILE=$BACKUP_FILE" >> $GITHUB_ENV
           echo "TIMESTAMP=$TIMESTAMP" >> $GITHUB_ENV
 
-      - name: Upload Backup to Cloudflare R2
+      - name: Backup Supabase Storage Files (Blog Images)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          # Extract project ref from DB URL (postgres.<PROJECT_REF>:password@host)
+          PROJECT_REF=$(echo "$SUPABASE_DB_URL" | sed -E 's|.*postgres\.([^:]+):.*|\1|')
+          STORAGE_BASE="https://${PROJECT_REF}.supabase.co/storage/v1/object/public"
+
+          echo "Supabase project ref: $PROJECT_REF"
+          echo "Storage base URL: $STORAGE_BASE"
+
+          # Query the database for all storage objects
+          echo "Querying storage.objects for file list..."
+          FILE_LIST=$(docker run --rm \
+            postgres:17-alpine \
+            psql "$SUPABASE_DB_URL" -t -A -F '|' \
+              -c "SELECT bucket_id, name FROM storage.objects WHERE bucket_id IS NOT NULL AND name IS NOT NULL ORDER BY bucket_id, name;")
+
+          if [ -z "$FILE_LIST" ]; then
+            echo "No storage files found. Skipping storage backup."
+            exit 0
+          fi
+
+          mkdir -p storage-backup
+          DOWNLOADED=0
+          FAILED=0
+
+          echo "$FILE_LIST" | while IFS='|' read -r bucket_id file_name; do
+            # Skip empty lines
+            [ -z "$bucket_id" ] || [ -z "$file_name" ] && continue
+
+            # Skip .emptyFolderPlaceholder files
+            echo "$file_name" | grep -q '.emptyFolderPlaceholder' && continue
+
+            DOWNLOAD_URL="${STORAGE_BASE}/${bucket_id}/${file_name}"
+            LOCAL_PATH="storage-backup/${bucket_id}/${file_name}"
+            mkdir -p "$(dirname "$LOCAL_PATH")"
+
+            echo "Downloading: ${bucket_id}/${file_name}"
+            if curl -sS -f -L -o "$LOCAL_PATH" "$DOWNLOAD_URL" 2>/dev/null; then
+              DOWNLOADED=$((DOWNLOADED + 1))
+            else
+              echo "  WARNING: Failed to download ${bucket_id}/${file_name}"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          TOTAL_SIZE=$(du -sh storage-backup 2>/dev/null | cut -f1)
+          FILE_COUNT=$(find storage-backup -type f | wc -l)
+          echo ""
+          echo "Storage backup complete: ${FILE_COUNT} files downloaded (${TOTAL_SIZE})"
+
+      - name: Install Rclone and Configure R2
         env:
           RAW_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
           RAW_SECRET_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
@@ -67,8 +119,26 @@ jobs:
           mkdir -p ~/.config/rclone
           printf "[r2]\ntype = s3\nprovider = Cloudflare\naccess_key_id = %s\nsecret_access_key = %s\nregion = auto\nendpoint = https://%s.r2.cloudflarestorage.com\nno_check_bucket = true\n" "$R2_ACCESS_KEY" "$R2_SECRET_KEY" "$R2_ACCOUNT_ID" > ~/.config/rclone/rclone.conf
 
-          echo "Uploading $BACKUP_FILE to Cloudflare R2 bucket: $R2_BUCKET_NAME/database/..."
-          rclone copyto "$BACKUP_FILE" "r2:${R2_BUCKET_NAME}/database/${BACKUP_FILE}" --s3-no-check-bucket -vv
+          echo "R2_BUCKET_NAME=$R2_BUCKET_NAME" >> $GITHUB_ENV
 
-          echo "Upload complete! Verifying file in R2:"
+      - name: Upload Database Backup to R2
+        run: |
+          echo "Uploading $BACKUP_FILE to R2: ${R2_BUCKET_NAME}/database/..."
+          rclone copyto "$BACKUP_FILE" "r2:${R2_BUCKET_NAME}/database/${BACKUP_FILE}" --s3-no-check-bucket -v
+
+          echo "Database backup uploaded! Files in R2:"
           rclone lsf "r2:${R2_BUCKET_NAME}/database" --s3-no-check-bucket
+
+      - name: Upload Storage Files to R2
+        run: |
+          if [ ! -d "storage-backup" ] || [ -z "$(ls -A storage-backup 2>/dev/null)" ]; then
+            echo "No storage files to upload. Skipping."
+            exit 0
+          fi
+
+          echo "Syncing storage files to R2: ${R2_BUCKET_NAME}/storage/..."
+          rclone sync storage-backup/ "r2:${R2_BUCKET_NAME}/storage/" --s3-no-check-bucket -v
+
+          echo ""
+          echo "Storage files uploaded! Files in R2:"
+          rclone lsf "r2:${R2_BUCKET_NAME}/storage/" --s3-no-check-bucket -R | head -50
