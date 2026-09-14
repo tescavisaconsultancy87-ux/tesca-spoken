@@ -48,7 +48,7 @@ jobs:
         env:
           RAW_ACCESS_KEY: ${{ secrets.R2_ACCESS_KEY_ID }}
           RAW_SECRET_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          RAW_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          RAW_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
           RAW_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
         run: |
           echo "Installing latest stable rclone..."
@@ -56,13 +56,20 @@ jobs:
 
           R2_ACCESS_KEY=$(echo "$RAW_ACCESS_KEY" | tr -d '[:space:]')
           R2_SECRET_KEY=$(echo "$RAW_SECRET_KEY" | tr -d '[:space:]')
-          R2_ACCOUNT_ID=$(echo "$RAW_ACCOUNT_ID" | tr -d '[:space:]')
-          R2_BUCKET_NAME=$(echo "$RAW_BUCKET_NAME" | tr -d '[:space:]')
+          R2_ACCOUNT_ID=$(echo "$RAW_ACCOUNT_ID" | tr -d '[:space:]' | sed -E 's|^https?://||' | sed -E 's|\.r2\.cloudflarestorage\.com.*||' | sed -E 's|/.*$||')
+          R2_BUCKET_NAME=$(echo "$RAW_BUCKET_NAME" | tr -d '[:space:]' | sed -E 's|^r2://||' | sed -E 's|/$||')
 
           if [ -z "$R2_ACCESS_KEY" ] || [ -z "$R2_SECRET_KEY" ] || [ -z "$R2_ACCOUNT_ID" ] || [ -z "$R2_BUCKET_NAME" ]; then
             echo "::error::One or more R2 secrets are missing in GitHub repository settings!"
             exit 1
           fi
+
+          echo "Testing TLS connection to Cloudflare R2 endpoint..."
+          if ! curl -Is -m 10 "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" > /dev/null 2>&1; then
+            echo "::error::Cannot reach https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com. Please verify that R2_ACCOUNT_ID is exactly 15db73394ea37f262dde89e9be94071b!"
+            exit 1
+          fi
+          echo "Endpoint reachable and TLS handshake verified!"
 
           mkdir -p ~/.config/rclone
           printf "[r2]\ntype = s3\nprovider = Cloudflare\naccess_key_id = %s\nsecret_access_key = %s\nregion = auto\nendpoint = https://%s.r2.cloudflarestorage.com\nno_check_bucket = true\n" "$R2_ACCESS_KEY" "$R2_SECRET_KEY" "$R2_ACCOUNT_ID" > ~/.config/rclone/rclone.conf
