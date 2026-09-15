@@ -135,6 +135,22 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // ─── Fast-Drop Vulnerability Scanner & Exploit Probes ───
+  const EXPLOIT_PROBES = [
+    '.php',
+    '/wp-',
+    '/xmlrpc',
+    '/api/auth/signin',
+    '/cgi-bin/',
+    '/.env',
+    '/.git',
+    '/phpmyadmin',
+    '/actuator/',
+  ];
+  if (EXPLOIT_PROBES.some((p) => pathname.toLowerCase().includes(p))) {
+    return new NextResponse(null, { status: 404 });
+  }
+
   // ─── Automated Scraper & Scanner Labyrinth Trap ───
   const uaCheck = isKnownBot(ua);
   if (uaCheck === 'scraper' && !pathname.startsWith(LABYRINTH_BASE)) {

@@ -325,22 +325,33 @@ export default function AssessmentPage() {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 border-t border-black/5">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4 border-t border-black/5">
                   <a
-                    href="/?demo=true"
-                    className="btn-warm w-full sm:w-auto justify-center px-8 py-3.5"
+                    href={`https://wa.me/918488805888?text=${encodeURIComponent(
+                      `Hello TESCA! I just completed my English Skill Assessment on your website. My score was ${totalCorrect}/${questions.length} (${cefrLevel}). I would like to consult with a trainer regarding ${courseRecommendation}.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-warm w-full sm:w-auto justify-center px-6 py-3.5 text-xs font-bold shadow-soft hover:shadow-soft-lg transition-all"
                   >
                     <MessageCircle className="h-4 w-4" />
-                    Book Free Counseling
+                    Chat with Trainer on WhatsApp
+                  </a>
+
+                  <a
+                    href="/?demo=true"
+                    className="btn-primary w-full sm:w-auto justify-center px-6 py-3.5 text-xs font-bold"
+                  >
+                    Book Free Live Class
                   </a>
                   
                   <button
                     type="button"
                     onClick={handleRestart}
-                    className="btn-secondary w-full sm:w-auto justify-center px-8 py-3.5 cursor-pointer font-bold"
+                    className="btn-secondary w-full sm:w-auto justify-center px-5 py-3.5 cursor-pointer font-bold text-xs"
                   >
                     <RotateCcw className="h-4 w-4" />
-                    Restart Quiz
+                    Retake Quiz
                   </button>
                 </div>
               </motion.div>
@@ -356,16 +367,16 @@ export default function AssessmentPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
           <div className="relative w-full max-w-md bg-white rounded-[2rem] shadow-soft-xl p-8 sm:p-10 space-y-6 text-center animate-scale-up border border-black/5">
             
-            <div className="space-y-2">
-              <span className="text-[28px]" role="img" aria-label="party popper">🎉</span>
+            <div className="space-y-3">
+              <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3.5 py-1.5 rounded-full text-xs font-bold mx-auto">
+                <Award className="h-4 w-4" />
+                <span>Assessment Finished: {totalCorrect}/{questions.length} Correct</span>
+              </div>
               <h3 className="font-heading text-xl sm:text-2xl font-extrabold text-gray-800 tracking-tight leading-tight">
-                Your assessment is complete!
+                Your CEFR English Level Is Ready!
               </h3>
-              <p className="text-sm font-bold text-primary">
-                Your CEFR level is ready.
-              </p>
-              <p className="text-xs text-gray-450 font-semibold leading-relaxed">
-                Enter your details to view your result and receive personalized course recommendations.
+              <p className="text-xs text-gray-500 font-semibold leading-relaxed max-w-xs mx-auto">
+                Enter your details to unlock your verified CEFR level, Cambridge diagnostic report, and recommended course.
               </p>
             </div>
 
@@ -386,7 +397,7 @@ export default function AssessmentPage() {
                   required
                   value={leadForm.name}
                   onChange={(e) => setLeadForm(f => ({ ...f, name: e.target.value }))}
-                  placeholder="Enter your name"
+                  placeholder="Enter your full name"
                   className="w-full rounded-xl border border-black/10 bg-bg-soft px-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
                 />
               </div>
@@ -395,29 +406,36 @@ export default function AssessmentPage() {
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <label className="block text-xs font-bold text-gray-700">
-                    Mobile Number <span className="text-accent">*</span>
+                    WhatsApp / Mobile Number <span className="text-accent">*</span>
                   </label>
-                  <span className={`text-[10px] font-semibold transition-colors ${leadForm.phone.length === 10 ? 'text-green-600' : 'text-gray-400'}`}>
+                  <span className={`text-[10px] font-semibold transition-colors ${leadForm.phone.length === 10 ? 'text-green-600 font-bold' : 'text-gray-400'}`}>
                     {leadForm.phone.length} / 10 digits
                   </span>
                 </div>
-                <input
-                  type="tel"
-                  required
-                  value={leadForm.phone}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
-                    setLeadForm(f => ({ ...f, phone: val }));
-                  }}
-                  placeholder="Enter 10-digit number"
-                  className="w-full rounded-xl border border-black/10 bg-bg-soft px-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
-                />
+                <div className="relative flex items-center">
+                  <div className="absolute left-3 flex items-center gap-1 text-xs font-bold text-gray-600 pointer-events-none select-none border-r border-black/10 pr-2.5">
+                    <span>🇮🇳</span>
+                    <span>+91</span>
+                  </div>
+                  <input
+                    type="tel"
+                    required
+                    value={leadForm.phone}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setLeadForm(f => ({ ...f, phone: val }));
+                    }}
+                    placeholder="98765 43210"
+                    className="w-full rounded-xl border border-black/10 bg-bg-soft pl-20 pr-4 py-3 text-xs text-ink placeholder:text-ink-muted/50 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10 transition-colors"
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">Official diagnostic reports & class slots are delivered via WhatsApp.</p>
               </div>
 
               {/* Email */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5">
-                  Email (Optional)
+                  Email Address (Optional)
                 </label>
                 <input
                   type="email"
@@ -431,15 +449,15 @@ export default function AssessmentPage() {
               <button
                 type="submit"
                 disabled={submittingLead}
-                className="btn-primary w-full justify-center py-3.5 mt-6 cursor-pointer font-bold text-sm"
+                className="btn-primary w-full justify-center py-3.5 mt-6 cursor-pointer font-bold text-sm shadow-soft hover:shadow-soft-lg transition-all"
               >
                 {submittingLead ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-                    Loading...
+                    Verifying Result...
                   </>
                 ) : (
-                  'View My Result'
+                  'Unlock My CEFR Result →'
                 )}
               </button>
             </form>

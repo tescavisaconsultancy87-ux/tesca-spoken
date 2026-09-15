@@ -56,6 +56,21 @@ const nextConfig: NextConfig = {
         destination: '/courses',
         permanent: true,
       },
+      {
+        source: '/signup',
+        destination: '/assessment',
+        permanent: false,
+      },
+      {
+        source: '/register',
+        destination: '/assessment',
+        permanent: false,
+      },
+      {
+        source: '/join',
+        destination: '/assessment',
+        permanent: false,
+      },
     ];
   },
   async headers() {
@@ -78,6 +93,24 @@ const nextConfig: NextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
+          },
+        ],
+      },
+      {
+        source: '/:path(about|contact|courses|faq|terms|privacy|refund|blog)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=3600, stale-while-revalidate=86400',
+          },
+        ],
+      },
+      {
+        source: '/',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=1800, stale-while-revalidate=86400',
           },
         ],
       },
