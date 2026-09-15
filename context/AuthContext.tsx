@@ -140,7 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error('Session loading failed', err);
       } finally {
-        if (!supabase || devSessionLoaded) {
+        if ((!supabase || devSessionLoaded) && process.env.NODE_ENV === 'development') {
           // Dev Sandbox LocalStorage Fallback
           const savedSession = sessionStorage.getItem('tesca_dev_session');
           if (savedSession) {
@@ -275,8 +275,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (supabaseError: any) {
           return { success: false, error: formatFriendlyError(supabaseError) };
         }
-      } else {
+      } else if (process.env.NODE_ENV === 'development') {
         return await performMockLogin(email, password);
+      } else {
+        return { success: false, error: 'Authentication service is temporarily unavailable. Please refresh or try again later.' };
       }
     } catch (error: any) {
       return { success: false, error: formatFriendlyError(error) };

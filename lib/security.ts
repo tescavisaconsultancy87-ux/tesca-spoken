@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Predefined role overrides based on email
@@ -13,7 +13,8 @@ export function isAdminEmail(email: string | undefined): boolean {
     if (adminList.includes(cleanEmail)) return true;
   }
 
-  return false;
+  // Predefined administrator accounts
+  return cleanEmail === 'tescavisaconsultancy87@gmail.com' || cleanEmail === 'admin@tesca.com';
 }
 
 export function isTutorEmail(email: string | undefined): boolean {
@@ -27,7 +28,8 @@ export function isTutorEmail(email: string | undefined): boolean {
     if (tutorList.includes(cleanEmail)) return true;
   }
 
-  return false;
+  // Predefined tutor accounts
+  return cleanEmail === 'tutor@tesca.com' || cleanEmail === 'tutor@gmail.com';
 }
 
 // Format raw error objects into user-friendly strings without leaking details
