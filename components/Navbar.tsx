@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, CalendarCheck, LogIn } from 'lucide-react';
 import { NAV_LINKS, WHATSAPP_URL } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
+import { useTracking } from '@/hooks/useTracking';
 import { motion } from 'framer-motion';
 
 const Navbar = memo(function Navbar() {
@@ -15,6 +16,7 @@ const Navbar = memo(function Navbar() {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const pathname = usePathname();
   const { openModal } = useDemoModal();
+  const { trackEvent } = useTracking();
   const isDarkBg = false;
 
   useEffect(() => {
@@ -92,7 +94,13 @@ const Navbar = memo(function Navbar() {
         </ul>
 
         <div className="hidden items-center gap-4 lg:flex">
-          <button onClick={openModal} className="btn-warm text-sm cursor-pointer">
+          <button
+            onClick={() => {
+              trackEvent('demo_click', { placement: 'navbar_desktop' });
+              openModal();
+            }}
+            className="btn-warm text-sm cursor-pointer"
+          >
             <CalendarCheck className="h-4 w-4" />
             Book Free Demo
           </button>
@@ -149,6 +157,7 @@ const Navbar = memo(function Navbar() {
           <li className="flex gap-3 pt-3">
             <button
               onClick={() => {
+                trackEvent('demo_click', { placement: 'navbar_mobile' });
                 setMenuOpen(false);
                 openModal();
               }}
@@ -171,7 +180,10 @@ const Navbar = memo(function Navbar() {
               href={WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => setMenuOpen(false)}
+              onClick={() => {
+                trackEvent('whatsapp_click', { placement: 'navbar_mobile' });
+                setMenuOpen(false);
+              }}
               className="btn-primary w-full"
             >
               WhatsApp Us

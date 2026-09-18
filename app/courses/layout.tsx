@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'English Speaking Courses — Spoken English, IELTS & PTE | TESCA',
+  title: 'English Speaking Courses in Surat — Spoken English, IELTS & PTE | TESCA',
   description:
-    'Explore TESCA\'s expert-led English courses: Spoken English Basic & Advanced, IELTS Preparation, PTE Coaching, and Interview Training. Live classes since 2005.',
+    'Top-rated Spoken English, IELTS Band 7.5+ & PTE coaching with Cambridge certified trainers in Surat. View course syllabus, flexible timings & affordable fees. Free demo available!',
   alternates: {
     canonical: 'https://tesca.co/courses',
   },
   openGraph: {
-    title: 'English Speaking Courses — Spoken English, IELTS & PTE | TESCA',
+    title: 'English Speaking Courses in Surat — Spoken English, IELTS & PTE | TESCA',
     description:
-      'Explore TESCA\'s expert-led English courses: Spoken English Basic & Advanced, IELTS Preparation, PTE Coaching, and Interview Training.',
+      'Top-rated Spoken English, IELTS Band 7.5+ & PTE coaching with Cambridge certified trainers in Surat. View course syllabus, flexible timings & affordable fees.',
     url: 'https://tesca.co/courses',
     siteName: 'TESCA Spoken English',
     images: [
@@ -18,15 +18,15 @@ export const metadata: Metadata = {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'TESCA English Speaking Courses',
+        alt: 'TESCA English Speaking Courses Surat',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'English Speaking Courses — Spoken English, IELTS & PTE | TESCA',
+    title: 'English Speaking Courses in Surat — TESCA',
     description:
-      'Explore TESCA\'s expert-led English courses: Spoken English Basic & Advanced, IELTS Preparation, PTE Coaching, and Interview Training.',
+      'Top-rated Spoken English, IELTS Band 7.5+ & PTE coaching with Cambridge certified trainers in Surat.',
     images: ['/og-image.jpg'],
   },
 };

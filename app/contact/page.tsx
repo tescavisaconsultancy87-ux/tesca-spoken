@@ -163,6 +163,17 @@ export default function ContactPage() {
 
       setSubmitted(true);
       toast.success('Your inquiry has been submitted! Our counseling team will call you shortly.', 'Inquiry Received');
+      trackEvent('generate_lead', {
+        value: 1,
+        currency: 'INR',
+        lead_type: 'contact_inquiry',
+        course: form.course,
+        branch: form.branch,
+      });
+      trackEvent('contact_submit', {
+        course: form.course,
+        branch: form.branch,
+      });
       trackEvent('lead_form_submit', { formType: 'contact', course: form.course, branch: form.branch });
     } catch (err: any) {
       console.error('Contact submit error:', err);

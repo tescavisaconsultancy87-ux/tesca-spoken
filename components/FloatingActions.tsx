@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { ArrowUp, HelpCircle, X, ArrowRight, Phone, CalendarCheck } from 'lucide-react';
 import { WHATSAPP_URL } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
+import { useTracking } from '@/hooks/useTracking';
 
 export default function FloatingActions() {
   const [showTop, setShowTop] = useState(false);
   const [isConfusedPopupOpen, setIsConfusedPopupOpen] = useState(false);
   const { openModal } = useDemoModal();
+  const { trackEvent } = useTracking();
 
   useEffect(() => {
     const onScroll = () => setShowTop(window.scrollY > 600);
@@ -98,6 +100,7 @@ export default function FloatingActions() {
           href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent('whatsapp_click', { placement: 'floating_desktop' })}
           className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_4px_20px_rgba(37,211,102,0.4)] transition-all duration-300 hover:scale-110 hover:shadow-[0_6px_28px_rgba(37,211,102,0.55)] lg:h-[60px] lg:w-[60px]"
           aria-label="Contact us on WhatsApp"
         >
@@ -131,6 +134,7 @@ export default function FloatingActions() {
         {/* Call Us */}
         <a
           href="tel:+918488805888"
+          onClick={() => trackEvent('phone_click', { placement: 'sticky_mobile' })}
           className="flex flex-col items-center gap-1 text-[#334155] hover:text-slate-800 transition-colors"
         >
           <Phone className="h-5 w-5 stroke-[2] text-[#334155]" />
@@ -142,6 +146,7 @@ export default function FloatingActions() {
           href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackEvent('whatsapp_click', { placement: 'sticky_mobile' })}
           className="flex flex-col items-center gap-1 text-[#25D366] hover:text-green-600 transition-colors"
         >
           <svg
@@ -157,7 +162,10 @@ export default function FloatingActions() {
 
         {/* Book Call Button */}
         <button
-          onClick={openModal}
+          onClick={() => {
+            trackEvent('demo_click', { placement: 'sticky_mobile' });
+            openModal();
+          }}
           className="flex-grow flex items-center justify-center gap-2 bg-[#067779] text-white py-3 px-6 rounded-full text-xs font-bold uppercase tracking-wider cursor-pointer shadow-md active:scale-95 transition-all hover:bg-[#056365]"
         >
           <CalendarCheck className="h-4.5 w-4.5 text-white" />

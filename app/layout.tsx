@@ -39,24 +39,25 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://tesca.co'),
-  title: 'TESCA Spoken English — Master English Fluency | IELTS & PTE Coaching',
+  title: {
+    default: 'TESCA Spoken English Surat — Cambridge Certified Trainers | Free Demo Class',
+    template: '%s | TESCA Spoken English Surat',
+  },
   description:
-    'Join thousands of students and professionals who improved their communication skills through TESCA\'s Cambridge-certified trainers. Live online & offline classes, IELTS & PTE prep, Study Abroad visas. Trusted since 2005 in Surat, Gujarat.',
+    'Surat’s top-rated Spoken English, IELTS & PTE institute. Cambridge-certified trainers, interactive speaking batches & 4 branches across Surat (Sarthana, Varachha, Hirabaug, Yogi Chowk). Book your 100% Free Live Demo Class today!',
   keywords: [
-    'spoken english',
-    'english learning',
-    'IELTS preparation',
-    'PTE preparation',
-    'english classes online',
+    'spoken english classes in surat',
+    'best spoken english institute surat',
+    'IELTS coaching surat',
+    'PTE classes surat',
     'english speaking course',
-    'spoken english institute in Surat',
-    'IELTS coaching Surat',
-    'PTE classes Gujarat',
-    'Study abroad visa consultancy',
+    'english classes online',
+    'study abroad visa consultancy surat',
+    'TESCA spoken english',
     'TESCA',
   ],
-  authors: [{ name: 'TESCA Spoken English', url: 'https://tesca.co' }],
-  publisher: 'TESCA Spoken English',
+  authors: [{ name: 'TESCA Spoken English & Visa Consultancy', url: 'https://tesca.co' }],
+  publisher: 'TESCA Spoken English & Visa Consultancy',
   alternates: {
     canonical: 'https://tesca.co/',
   },
@@ -66,11 +67,11 @@ export const metadata: Metadata = {
     'ICBM': '21.2312, 72.8833',
   },
   openGraph: {
-    title: 'TESCA Spoken English — Master English Fluency',
+    title: 'TESCA Spoken English Surat — Cambridge Certified Trainers | Free Demo Class',
     description:
-      'Expert-led English learning: Live classes, recorded lessons, IELTS & PTE prep. Trusted since 2005.',
+      'Master English Fluency, IELTS & PTE in Surat with Cambridge-certified trainers. 4 offline branches & online live classes. Book your 100% Free Demo Class!',
     type: 'website',
-    locale: 'en_US',
+    locale: 'en_IN',
     url: 'https://tesca.co/',
     siteName: 'TESCA Spoken English',
     images: [
@@ -78,14 +79,14 @@ export const metadata: Metadata = {
         url: '/og-image.jpg', // Fallback OG Image
         width: 1200,
         height: 630,
-        alt: 'TESCA Spoken English',
+        alt: 'TESCA Spoken English Surat',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TESCA Spoken English',
-    description: 'Master English Fluency from Basic to Advanced — Anytime, Anywhere.',
+    title: 'TESCA Spoken English Surat — Free Demo Class',
+    description: 'Master English Fluency, IELTS & PTE in Surat with Cambridge-certified trainers. 4 offline branches & online live classes.',
     images: ['/og-image.jpg'],
   },
   robots: {
@@ -375,6 +376,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: `window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
             gtag('js', new Date());
             gtag('config', '${GA_ID}');`,
           }}

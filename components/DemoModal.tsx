@@ -142,6 +142,19 @@ export default function DemoModal({ onClose }: DemoModalProps) {
       }
 
       setSubmitted(true);
+      trackEvent('generate_lead', {
+        value: 1,
+        currency: 'INR',
+        lead_type: 'demo_booking',
+        course: courseValue,
+        learning_mode: modeValue,
+        time_slot: timeValue,
+      });
+      trackEvent('demo_booking', {
+        course: courseValue,
+        learning_mode: modeValue,
+        time_slot: timeValue,
+      });
       trackEvent('lead_form_submit', { formType: 'demo', course: courseValue });
       toast.success('Our support team will call you back in a while to schedule your free demo class.', 'Demo Request Sent! 🎉', 6000);
     } catch (err: any) {

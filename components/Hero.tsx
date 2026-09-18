@@ -72,6 +72,7 @@ const Hero = memo(function Hero() {
         }),
       });
       if (res.ok) {
+        trackEvent('generate_lead', { value: 1, currency: 'INR', lead_type: 'quick_call' });
         trackEvent('lead_form_submit', { formType: 'hero_quick_call' });
         toast.success('Our counselor will call you back in a while.', 'Request Received! 🎉', 6000);
         setQuickPhone('');

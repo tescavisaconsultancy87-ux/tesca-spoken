@@ -8,8 +8,10 @@ import FloatingActions from '@/components/FloatingActions';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ArrowRight, HelpCircle, Award, BookOpen, MessageCircle, RotateCcw, Loader2 } from 'lucide-react';
 import { Question, getRandomQuestions } from '@/lib/data/assessmentQuestions';
+import { useTracking } from '@/hooks/useTracking';
 
 export default function AssessmentPage() {
+  const { trackEvent } = useTracking();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [mounted, setMounted] = useState<boolean>(false);
   const [currentIdx, setCurrentIdx] = useState<number>(0);
@@ -94,6 +96,20 @@ export default function AssessmentPage() {
 
       setShowLeadModal(false);
       setQuizFinished(true);
+      trackEvent('generate_lead', {
+        value: 1,
+        currency: 'INR',
+        lead_type: 'cefr_assessment',
+        cefr_level: cefrLevel,
+        recommended_course: courseRecommendation,
+        score: totalCorrect,
+      });
+      trackEvent('assessment_complete', {
+        cefr_level: cefrLevel,
+        score: totalCorrect,
+        recommended_course: courseRecommendation,
+      });
+      trackEvent('lead_form_submit', { formType: 'assessment', cefr_level: cefrLevel });
       toast.success('Assessment submitted! View your calculated CEFR level below.', 'Assessment Complete');
     } catch (err: any) {
       console.error('Lead submit error:', err);
@@ -332,6 +348,7 @@ export default function AssessmentPage() {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => trackEvent('whatsapp_click', { placement: 'assessment_results', cefr_level: cefrLevel })}
                     className="btn-warm w-full sm:w-auto justify-center px-6 py-3.5 text-xs font-bold shadow-soft hover:shadow-soft-lg transition-all"
                   >
                     <MessageCircle className="h-4 w-4" />
@@ -340,6 +357,7 @@ export default function AssessmentPage() {
 
                   <a
                     href="/?demo=true"
+                    onClick={() => trackEvent('demo_click', { placement: 'assessment_results' })}
                     className="btn-primary w-full sm:w-auto justify-center px-6 py-3.5 text-xs font-bold"
                   >
                     Book Free Live Class

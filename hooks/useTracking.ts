@@ -48,11 +48,24 @@ export function useTracking() {
   };
 
   const trackEvent = (eventName: string, payload?: Record<string, unknown>) => {
-    if (typeof window !== 'undefined' && typeof (window as any).dataLayer !== 'undefined') {
-      (window as any).dataLayer.push({
-        event: eventName,
-        ...payload,
-      });
+    if (typeof window === 'undefined') return;
+
+    try {
+      // 1. Dispatch to Google Tag Manager dataLayer
+      if (typeof (window as any).dataLayer !== 'undefined' && Array.isArray((window as any).dataLayer)) {
+        (window as any).dataLayer.push({
+          event: eventName,
+          ...payload,
+        });
+      }
+
+      // 2. Dispatch directly to Google Analytics 4 (gtag)
+      if (typeof (window as any).gtag === 'function') {
+        (window as any).gtag('event', eventName, payload);
+      }
+    } catch (e) {
+      // Silently catch tracking errors to avoid disrupting user experience
+      console.warn('[Tracking] Event dispatch failed:', e);
     }
   };
 

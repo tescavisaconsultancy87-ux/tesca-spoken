@@ -1,16 +1,16 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Free English Assessment — Check Your Fluency Level | TESCA',
+  title: 'Free English Assessment Test — Check Fluency in 2 Mins | TESCA Surat',
   description:
-    'Take TESCA\'s free English assessment test to evaluate your speaking, listening, reading, and writing skills. Get instant results and course recommendations.',
+    'Take TESCA’s free 2-minute English fluency test. Evaluate your grammar and vocabulary level, receive instant CEFR score & course recommendation from certified trainers.',
   alternates: {
     canonical: 'https://tesca.co/assessment',
   },
   openGraph: {
-    title: 'Free English Assessment — Check Your Fluency Level | TESCA',
+    title: 'Free English Assessment Test — Check Fluency in 2 Mins | TESCA Surat',
     description:
-      'Take TESCA\'s free English assessment test to evaluate your speaking, listening, reading, and writing skills.',
+      'Take TESCA’s free 2-minute English fluency test. Evaluate your grammar and vocabulary level, receive instant CEFR score & course recommendation from certified trainers.',
     url: 'https://tesca.co/assessment',
     siteName: 'TESCA Spoken English',
     images: [
@@ -18,15 +18,15 @@ export const metadata: Metadata = {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Free English Assessment — TESCA Spoken English',
+        alt: 'Free English Assessment Test Surat — TESCA Spoken English',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Free English Assessment — Check Your Fluency Level | TESCA',
+    title: 'Free English Assessment Test — Check Fluency in 2 Mins | TESCA Surat',
     description:
-      'Take TESCA\'s free English assessment test to evaluate your speaking, listening, reading, and writing skills.',
+      'Take TESCA’s free 2-minute English fluency test. Evaluate your grammar and vocabulary level, receive instant CEFR score & course recommendation.',
     images: ['/og-image.jpg'],
   },
 };
