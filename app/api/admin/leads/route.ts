@@ -136,7 +136,7 @@ export async function DELETE(request: NextRequest) {
 
     const { error } = await adminClient
       .from('leads')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', id);
 
     if (error) {

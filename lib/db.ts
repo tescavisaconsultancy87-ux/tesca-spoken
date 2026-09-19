@@ -21,7 +21,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('courses').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('courses').select('*').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('courses', error);
         return [];
@@ -66,7 +66,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('courses').delete().eq('id', id);
+      const { error } = await supabase.from('courses').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('courses', error);
         return false;
@@ -111,7 +111,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('live_classes').select('*').order('created_at', { ascending: true });
+      const { data, error } = await supabase.from('live_classes').select('*').is('deleted_at', null).order('created_at', { ascending: true });
       if (error) {
         logError('live_classes', error);
         return [];
@@ -159,7 +159,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('live_classes').delete().eq('id', id);
+      const { error } = await supabase.from('live_classes').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('live_classes', error);
         return false;
@@ -176,7 +176,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('batches').select('*').order('created_at', { ascending: true });
+      const { data, error } = await supabase.from('batches').select('*').is('deleted_at', null).order('created_at', { ascending: true });
       if (error) {
         logError('batches', error);
         return [];
@@ -224,7 +224,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('batches').delete().eq('id', id);
+      const { error } = await supabase.from('batches').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('batches', error);
         return false;
@@ -241,7 +241,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('study_materials').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('study_materials').select('*').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('study_materials', error);
         return [];
@@ -289,7 +289,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('study_materials').delete().eq('id', id);
+      const { error } = await supabase.from('study_materials').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('study_materials', error);
         return false;
@@ -306,7 +306,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('payments').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('payments').select('*').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('payments', error);
         return [];
@@ -339,7 +339,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('leads').select('*').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('leads', error);
         return [];
@@ -433,7 +433,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('testimonials').select('*').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('testimonials', error);
         return [];
@@ -481,7 +481,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('testimonials').delete().eq('id', id);
+      const { error } = await supabase.from('testimonials').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('testimonials', error);
         return false;
@@ -499,7 +499,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'student').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'student').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('profiles', error);
         return [];
@@ -523,7 +523,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'admin').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'admin').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('profiles', error);
         return [];
@@ -546,7 +546,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'tutor').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('profiles').select('*').eq('role', 'tutor').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('profiles', error);
         return [];
@@ -592,7 +592,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('profiles').delete().eq('id', id);
+      const { error } = await supabase.from('profiles').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('profiles', error);
         return false;
@@ -609,7 +609,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return null;
     try {
-      const { data, error } = await supabase.from('profiles').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', id).is('deleted_at', null).maybeSingle();
       if (error) {
         logError('profiles', error);
         return null;
@@ -688,7 +688,8 @@ export const db = {
           )
         `)
         .eq('student_id', studentId)
-        .eq('status', 'active');
+        .eq('status', 'active')
+        .is('deleted_at', null);
 
       if (error) {
         logError('enrollments', error);
@@ -748,6 +749,7 @@ export const db = {
         .from('course_modules')
         .select('id, course_id, title, order_index')
         .eq('course_id', courseId)
+        .is('deleted_at', null)
         .order('order_index', { ascending: true });
 
       if (modError) {
@@ -765,6 +767,7 @@ export const db = {
         .from('lessons')
         .select('id, module_id, title, video_url, duration, is_preview, order_index')
         .in('module_id', moduleIds)
+        .is('deleted_at', null)
         .order('order_index', { ascending: true });
 
       if (lesError) {
@@ -942,7 +945,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('trainers').select('*').order('display_order', { ascending: true });
+      const { data, error } = await supabase.from('trainers').select('*').is('deleted_at', null).order('display_order', { ascending: true });
       if (error) {
         logError('trainers', error);
         return [];
@@ -1000,7 +1003,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('trainers').delete().eq('id', id);
+      const { error } = await supabase.from('trainers').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('trainers', error);
         return false;
@@ -1120,7 +1123,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return [];
     try {
-      const { data, error } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('blog_posts').select('*').is('deleted_at', null).order('created_at', { ascending: false });
       if (error) {
         logError('blog_posts', error);
         return [];
@@ -1136,7 +1139,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return null;
     try {
-      const { data, error } = await supabase.from('blog_posts').select('*').eq('slug', slug).eq('published', true).maybeSingle();
+      const { data, error } = await supabase.from('blog_posts').select('*').eq('slug', slug).eq('published', true).is('deleted_at', null).maybeSingle();
       if (error) {
         logError('blog_posts', error);
         return null;
@@ -1292,7 +1295,7 @@ export const db = {
     await ensureSupabaseClient();
     if (!supabase) return false;
     try {
-      const { error } = await supabase.from('blog_posts').delete().eq('id', id);
+      const { error } = await supabase.from('blog_posts').update({ deleted_at: new Date().toISOString() }).eq('id', id);
       if (error) {
         logError('blog_posts', error);
         throw new Error(error.message || 'Failed to delete blog post');

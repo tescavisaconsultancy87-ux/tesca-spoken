@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
       .from('popup_settings')
       .select('*')
       .eq('is_active', true)
+      .is('deleted_at', null)
       .order('id', { ascending: false });
 
     if (error) {

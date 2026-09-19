@@ -123,6 +123,7 @@ export async function GET(request: NextRequest) {
     const { data: posts, error } = await adminClient
       .from('blog_posts')
       .select('*')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -431,7 +432,7 @@ export async function DELETE(request: NextRequest) {
 
     const { error: deleteErr } = await adminClient
       .from('blog_posts')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', id);
 
     if (deleteErr) {

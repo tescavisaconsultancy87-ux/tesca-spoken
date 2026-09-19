@@ -115,9 +115,10 @@ export async function POST(request: NextRequest) {
             authUserId = existingUser.id;
             console.log(`[Create User] Found existing Auth user with ID: ${authUserId}. Updating user credentials...`);
             
-            // Update the user's password and metadata
+            // Update the user's password and metadata (and reset ban if previously soft-deleted)
             const { error: updateError } = await adminSupabase.auth.admin.updateUserById(authUserId, {
               password,
+              ban_duration: 'none',
               user_metadata: {
                 name,
                 role,
@@ -147,6 +148,7 @@ export async function POST(request: NextRequest) {
           phone,
           level: role === 'student' ? 'Intermediate (B1)' : 'Expert',
           needs_password_change: true,
+          deleted_at: null, // Reactivate profile if previously soft deleted
         });
 
         if (profileError) {

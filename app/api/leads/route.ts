@@ -155,6 +155,7 @@ export async function POST(request: NextRequest) {
           .from('leads')
           .select('id, phone, status')
           .neq('status', 'rejected')
+          .is('deleted_at', null)
           .or(`phone.eq.${phone},phone.ilike.%${target10}`);
 
         if (existingPhoneLeads && existingPhoneLeads.length > 0) {
@@ -171,6 +172,7 @@ export async function POST(request: NextRequest) {
           .from('leads')
           .select('id, email, status')
           .neq('status', 'rejected')
+          .is('deleted_at', null)
           .eq('email', cleanEmail);
 
         if (existingEmailLeads && existingEmailLeads.length > 0) {

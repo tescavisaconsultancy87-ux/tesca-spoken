@@ -73,22 +73,19 @@ export async function POST(request: NextRequest) {
     const userName = existingProfile?.name || 'Unknown Name';
     const userRole = existingProfile?.role || 'student';
 
-    // 6. Delete target user from Supabase Auth
-    const { error: authError } = await adminClient.auth.admin.deleteUser(userId);
+    // 6. Suspend / Ban target user in Supabase Auth (prevents login, preserves ID references without cascade drop)
+    const { error: authError } = await adminClient.auth.admin.updateUserById(userId, {
+      ban_duration: '876000h', // 100 years suspension
+    });
     
-    // Ignore "User not found" from Auth in case there's a discrepancy (orphaned DB profiles)
     if (authError && !authError.message.toLowerCase().includes('user not found')) {
-      console.error('[Delete User] Auth deletion failed:', authError.message);
-      return NextResponse.json(
-        { error: `Auth deletion failed: ${authError.message}` },
-        { status: 500 }
-      );
+      console.warn('[Delete User] Auth suspension warning:', authError.message);
     }
 
-    // 7. Explicitly delete from profiles table (cascade delete might handle this, but run explicitly to clean orphans)
+    // 7. Stealth soft delete from profiles table (preserves enrollments, progress, and history)
     const { error: profileError } = await adminClient
       .from('profiles')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', userId);
 
     if (profileError) {

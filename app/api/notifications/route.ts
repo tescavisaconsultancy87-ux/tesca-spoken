@@ -49,6 +49,7 @@ export async function GET(request: NextRequest) {
         .from('notifications')
         .select('*')
         .eq('user_id', id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -72,6 +73,7 @@ export async function GET(request: NextRequest) {
         const { data: leads } = await adminSupabase
           .from('leads')
           .select('id, name, course, created_at')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -94,6 +96,7 @@ export async function GET(request: NextRequest) {
         const { data: payments } = await adminSupabase
           .from('payments')
           .select('id, amount, user_name, user_email, created_at')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -118,6 +121,7 @@ export async function GET(request: NextRequest) {
           .from('profiles')
           .select('id, name, email, created_at')
           .eq('role', 'student')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -140,6 +144,7 @@ export async function GET(request: NextRequest) {
         const { data: liveClasses } = await adminSupabase
           .from('live_classes')
           .select('id, title, date_time, created_at')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -160,6 +165,7 @@ export async function GET(request: NextRequest) {
         const { data: materials } = await adminSupabase
           .from('study_materials')
           .select('id, title, created_at')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
           .limit(5);
 
@@ -272,12 +278,12 @@ export async function DELETE(request: NextRequest) {
         if (clearAll) {
           await adminSupabase
             .from('notifications')
-            .delete()
+            .update({ deleted_at: new Date().toISOString() })
             .eq('user_id', userId);
         } else if (notificationId) {
           await adminSupabase
             .from('notifications')
-            .delete()
+            .update({ deleted_at: new Date().toISOString() })
             .eq('id', notificationId)
             .eq('user_id', userId);
         }
