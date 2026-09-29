@@ -2,27 +2,29 @@ import { NextRequest, NextResponse } from 'next/server';
 
 // Legitimate search engines and AI engines that drive organic and generative discovery (AEO / GEO)
 const LEGITIMATE_BOTS = [
-  'Googlebot', 'Google', 'Google-Extended', 'Google-InspectionTool', 'Storebot-Google', 'AdsBot-Google', 'Mediapartners-Google',
-  'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot', 'Baiduspider', 'YandexBot',
+  'Googlebot', 'Google', 'Google-Extended', 'GoogleOther', 'Google-Safety', 'Google-InspectionTool', 'Storebot-Google', 'AdsBot-Google', 'Mediapartners-Google',
+  'Bingbot', 'BingPreview', 'Slurp', 'DuckDuckBot', 'Baiduspider', 'YandexBot', 'Seznambot', 'PetalBot', 'Daum',
   // AI Search Engines & Conversational Assistants (Crucial for AEO / citations)
-  'GPTBot', 'ChatGPT-User', 'Claude-Web', 'ClaudeBot', 'anthropic-ai',
-  'PerplexityBot', 'Perplexity', 'Applebot', 'Applebot-Extended',
-  'AmazonBot', 'Amazon-SearchBot', 'Amzn-SearchBot', 'cohere-ai', 'YouBot',
+  'OAI-SearchBot', 'GPTBot', 'ChatGPT-User', 'Claude-Web', 'ClaudeBot', 'anthropic-ai',
+  'PerplexityBot', 'Perplexity', 'Applebot', 'Applebot-Extended', 'Meta-ExternalAgent', 'Meta-ExternalFetcher',
+  'AmazonBot', 'Amazon-SearchBot', 'Amzn-SearchBot', 'cohere-ai', 'YouBot', 'Bytespider', 'CCBot', 'Diffbot',
   // Social media unfurlers & messaging previews
-  'facebookexternalhit', 'Twitterbot', 'LinkedInBot', 'WhatsApp', 'TelegramBot', 'Discordbot',
+  'facebookexternalhit', 'Twitterbot', 'LinkedInBot', 'WhatsApp', 'TelegramBot', 'Discordbot', 'Pinterestbot', 'Slackbot',
+  // SEO Audits & Monitoring (never trap in labyrinth)
+  'SemrushBot', 'AhrefsBot',
 ];
 
-// Vulnerability scanners, headless scrapers, and aggressive automated bots
+// Vulnerability scanners, headless exploiters, and aggressive automated bots
 const MALICIOUS_AND_SCRAPER_BOTS = [
   'jscrawler', 'zgrab', 'censys', 'shodan', 'nmap', 'nikto', 'sqlmap',
-  'ahrefsbot', 'petalbot', 'mj12bot', 'blexbot', 'headlesschrome',
+  'mj12bot', 'blexbot', 'headlesschrome',
   'phantomjs', 'selenium', 'puppeteer', 'scrapy', 'Go-http-client',
   'python-requests', 'aiohttp', 'httpx', 'curl', 'wget',
-  'CCBot', 'diffbot', 'ImagesiftBot', 'magpie-crawler', 'omgili', 'Omgilibot',
-  'peer39_crawler', 'peer39', 'SemrushBot', 'Seznambot', 'Timpibot',
+  'ImagesiftBot', 'magpie-crawler', 'omgili', 'Omgilibot',
+  'peer39_crawler', 'peer39', 'Timpibot',
   'VelenPublicWebCrawler', 'Webzio', 'ZoominfoBot', 'DataForSeoBot', 'Meltwater',
-  'Bytespider', 'Kangaroo Bot', 'AwarioSmartBot', 'AwarioBot', 'Barkrowler',
-  'BrightBot', 'Daum', 'DotBot', 'GeckoBot', 'IAScrawler', 'ichiro',
+  'Kangaroo Bot', 'AwarioSmartBot', 'AwarioBot', 'Barkrowler',
+  'BrightBot', 'DotBot', 'GeckoBot', 'IAScrawler', 'ichiro',
   'Israelsky', 'Laserlikebot', 'Netseercrawler', 'Pcore-HTTP', 'researchscan',
   'SeekrBot', 'seqbot', 'ShopBot', 'Sirdata', 'Screaming Frog', 'ScreenerBot',
   'SiteCheckerBot', 'TrafficBot', 'Trendsmap', 'UptimeRobot', 'VelenCrawler',
@@ -135,10 +137,52 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  // ─── 301 Permanent Legacy & WordPress Migration Redirects ───
+  // Preserves organic search rankings, backlinks, and eliminates 4xx spikes
+  const lowerPath = pathname.toLowerCase();
+
+  if (lowerPath === '/index.php' || lowerPath === '/home.php' || lowerPath === '/default.aspx') {
+    return NextResponse.redirect(new URL('/', request.url), 301);
+  }
+  if (lowerPath === '/dashboard') {
+    return NextResponse.redirect(new URL('/login', request.url), 301);
+  }
+  if (lowerPath === '/courses.php' || lowerPath === '/course.php' || lowerPath.startsWith('/course/')) {
+    return NextResponse.redirect(new URL('/courses', request.url), 301);
+  }
+  if (lowerPath === '/about.php' || lowerPath === '/about-us.php' || lowerPath === '/about-us') {
+    return NextResponse.redirect(new URL('/about', request.url), 301);
+  }
+  if (lowerPath === '/contact.php' || lowerPath === '/contact-us.php' || lowerPath === '/contact-us') {
+    return NextResponse.redirect(new URL('/contact', request.url), 301);
+  }
+  if (lowerPath === '/faq.php') {
+    return NextResponse.redirect(new URL('/faq', request.url), 301);
+  }
+  if (lowerPath === '/privacy-policy' || lowerPath === '/privacy-policy.php' || lowerPath === '/privacy.php') {
+    return NextResponse.redirect(new URL('/privacy', request.url), 301);
+  }
+  if (lowerPath === '/terms-and-conditions' || lowerPath === '/terms.php') {
+    return NextResponse.redirect(new URL('/terms', request.url), 301);
+  }
+  if (lowerPath === '/refund-policy' || lowerPath === '/refund.php') {
+    return NextResponse.redirect(new URL('/refund', request.url), 301);
+  }
+  if (lowerPath === '/demo.php' || lowerPath === '/demo-class' || lowerPath === '/free-demo') {
+    return NextResponse.redirect(new URL('/?demo=true', request.url), 301);
+  }
+  if (lowerPath === '/assessment.php' || lowerPath === '/quiz') {
+    return NextResponse.redirect(new URL('/assessment', request.url), 301);
+  }
+  if (lowerPath.startsWith('/wp-content/uploads/')) {
+    return NextResponse.redirect(new URL('/og-image.jpg', request.url), 301);
+  }
+
   // ─── Fast-Drop Vulnerability Scanner & Exploit Probes ───
   const EXPLOIT_PROBES = [
-    '.php',
-    '/wp-',
+    '/wp-admin',
+    '/wp-login',
+    '/wp-json/',
     '/xmlrpc',
     '/api/auth/signin',
     '/cgi-bin/',
@@ -146,8 +190,11 @@ export function middleware(request: NextRequest) {
     '/.git',
     '/phpmyadmin',
     '/actuator/',
+    'eval-stdin',
+    'setup-config',
+    'phpinfo',
   ];
-  if (EXPLOIT_PROBES.some((p) => pathname.toLowerCase().includes(p))) {
+  if (EXPLOIT_PROBES.some((p) => lowerPath.includes(p)) || (lowerPath.endsWith('.php') && lowerPath !== '/index.php')) {
     return new NextResponse(null, { status: 404 });
   }
 
@@ -266,11 +313,11 @@ export function middleware(request: NextRequest) {
 
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.supabase.co https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.googletagmanager.com https://*.google-analytics.com https://www.google-analytics.com https://*.clarity.ms https://www.clarity.ms;
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.supabase.co https://static.cloudflareinsights.com https://www.googletagmanager.com https://*.googletagmanager.com https://*.google-analytics.com https://www.google-analytics.com https://*.clarity.ms https://www.clarity.ms https://*.posthog.com;
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net;
-    img-src 'self' data: blob: https://images.pexels.com https://images.unsplash.com https://*.unsplash.com https://*.supabase.co https://*.supabase.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://c.bing.com https://*.bing.com;
+    img-src 'self' data: blob: https://images.pexels.com https://images.unsplash.com https://*.unsplash.com https://*.supabase.co https://*.supabase.in https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://*.clarity.ms https://c.bing.com https://*.bing.com https://*.posthog.com;
     font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.razorpay.com https://api.indexnow.org https://cdn.jsdelivr.net https://*.cloudflareinsights.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com https://*.bing.com;
+    connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co https://api.razorpay.com https://api.indexnow.org https://cdn.jsdelivr.net https://*.cloudflareinsights.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.clarity.ms https://c.bing.com https://*.bing.com https://*.posthog.com;
     frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com https://www.youtube.com https://player.vimeo.com https://www.google.com https://www.googletagmanager.com;
     media-src 'self' blob: https://*.supabase.co;
     object-src 'none';

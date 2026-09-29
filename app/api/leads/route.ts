@@ -134,7 +134,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2.5 Global Deduplication Check (for all lead types: demo, contact, assessment, popup)
+    // 2.5 Returning Lead & Re-inquiry Handling
+    let isReInquiry = false;
+    let existingLeadRecord: any = null;
+
     if (adminSupabase) {
       const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
       const cleanEmail = email ? String(email).trim().toLowerCase() : '';
@@ -148,43 +151,43 @@ export async function POST(request: NextRequest) {
         !cleanEmail.endsWith('@dummy.com') &&
         !cleanEmail.endsWith('@example.com');
 
-      // Check duplicate mobile number
+      // Check existing phone number
       if (cleanPhone && cleanPhone.length >= 10) {
         const target10 = cleanPhone.slice(-10);
         const { data: existingPhoneLeads } = await adminSupabase
           .from('leads')
-          .select('id, phone, status')
+          .select('id, name, phone, email, notes, status, created_at')
           .neq('status', 'rejected')
           .is('deleted_at', null)
-          .or(`phone.eq.${phone},phone.ilike.%${target10}`);
+          .or(`phone.eq.${phone},phone.ilike.%${target10}`)
+          .order('created_at', { ascending: false })
+          .limit(1);
 
         if (existingPhoneLeads && existingPhoneLeads.length > 0) {
-          return NextResponse.json(
-            { error: 'An inquiry with this mobile number already exists. Our team will contact you shortly!' },
-            { status: 409 }
-          );
+          existingLeadRecord = existingPhoneLeads[0];
+          isReInquiry = true;
         }
       }
 
-      // Check duplicate email address
-      if (isRealEmail) {
+      // Check existing email address if phone didn't match
+      if (!isReInquiry && isRealEmail) {
         const { data: existingEmailLeads } = await adminSupabase
           .from('leads')
-          .select('id, email, status')
+          .select('id, name, phone, email, notes, status, created_at')
           .neq('status', 'rejected')
           .is('deleted_at', null)
-          .eq('email', cleanEmail);
+          .eq('email', cleanEmail)
+          .order('created_at', { ascending: false })
+          .limit(1);
 
         if (existingEmailLeads && existingEmailLeads.length > 0) {
-          return NextResponse.json(
-            { error: 'An inquiry with this email address already exists. Our team will contact you shortly!' },
-            { status: 409 }
-          );
+          existingLeadRecord = existingEmailLeads[0];
+          isReInquiry = true;
         }
       }
     }
 
-    // 3. Format notes and insert lead
+    // 3. Format notes and insert/update lead
     let notes = '';
     if (type === 'contact') {
       notes = `Source: Contact Us Inquiry\nCourse: ${course || 'General'}\nPreferred Branch: ${branch || 'Any / Online'}\nTopic: ${topic || 'Admission Inquiry'}\nMessage: ${message || 'Interested in details'}`;
@@ -208,31 +211,58 @@ export async function POST(request: NextRequest) {
       year: 'numeric'
     });
 
-    const leadId = `lead-${Date.now()}`;
+    let leadId = `lead-${Date.now()}`;
     let databaseSaved = false;
 
     if (adminSupabase) {
-      const { error: dbError } = await adminSupabase.from('leads').insert({
-        id: leadId,
-        name,
-        phone: finalPhone || phone || 'N/A',
-        email: email || 'N/A',
-        notes: fullNotes,
-        status: 'new',
-        date_added: dateAdded,
-      });
+      if (isReInquiry && existingLeadRecord) {
+        leadId = existingLeadRecord.id;
+        const reInquiryEntry = `\n\n--- [RE-INQUIRY ON ${dateAdded} - ${type.toUpperCase()}] ---\n${fullNotes}`;
+        const updatedNotes = (existingLeadRecord.notes || '') + reInquiryEntry;
 
-      if (dbError) {
-        console.error('[Leads API] Database insertion failed:', dbError.message);
-        return NextResponse.json(
-          { error: `Database insertion failed: ${dbError.message}` },
-          { status: 500 }
-        );
+        const { error: updateError } = await adminSupabase
+          .from('leads')
+          .update({
+            name: name || existingLeadRecord.name,
+            phone: finalPhone || phone || existingLeadRecord.phone,
+            email: email || existingLeadRecord.email,
+            notes: updatedNotes,
+            status: 'new', // Flag as new so counselor immediately notices and follows up
+            date_added: dateAdded,
+          })
+          .eq('id', existingLeadRecord.id);
+
+        if (updateError) {
+          console.error('[Leads API] Re-inquiry update failed:', updateError.message);
+          return NextResponse.json(
+            { error: `Database update failed: ${updateError.message}` },
+            { status: 500 }
+          );
+        }
+        databaseSaved = true;
+      } else {
+        const { error: dbError } = await adminSupabase.from('leads').insert({
+          id: leadId,
+          name,
+          phone: finalPhone || phone || 'N/A',
+          email: email || 'N/A',
+          notes: fullNotes,
+          status: 'new',
+          date_added: dateAdded,
+        });
+
+        if (dbError) {
+          console.error('[Leads API] Database insertion failed:', dbError.message);
+          return NextResponse.json(
+            { error: `Database insertion failed: ${dbError.message}` },
+            { status: 500 }
+          );
+        }
+        databaseSaved = true;
       }
-      databaseSaved = true;
     } else {
       console.warn('[Leads API] SUPABASE_SERVICE_ROLE_KEY is missing in env. Running in Sandbox Mock Mode.');
-      databaseSaved = true; // In mock mode, we simulate database success
+      databaseSaved = true;
     }
 
     // 4. Send Emails using Gmail REST API
@@ -412,7 +442,9 @@ export async function POST(request: NextRequest) {
       }
 
       // ── Build Admin Alert Email HTML ──
-      const adminEmailSubject = `[NEW LEAD] ${type.toUpperCase()}: ${name}`;
+      const adminEmailSubject = isReInquiry
+        ? `[RE-INQUIRY LEAD] ${type.toUpperCase()}: ${name} (Returning Student)`
+        : `[NEW LEAD] ${type.toUpperCase()}: ${name}`;
       let detailSnippet = '';
       let badgeLabel = '';
 
@@ -525,7 +557,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       leadId,
+      isReInquiry,
       databaseSaved,
+      message: isReInquiry
+        ? 'Thank you! Your updated inquiry has been received and our team will contact you shortly.'
+        : 'Thank you! Your inquiry has been received.',
       emailsSent: {
         student: studentEmailSent,
         admin: adminEmailSent,

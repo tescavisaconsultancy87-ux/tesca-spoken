@@ -11,6 +11,7 @@ import { DemoModalProvider } from '@/context/DemoModalContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { ToastProvider } from '@/context/ToastContext';
 import ScrollToTop from '@/components/ScrollToTop';
+import PostHogProvider from '@/components/PostHogProvider';
 
 const GTM_ID = 'GTM-524RC24K';
 const GA_ID = 'G-XM5S1GJJXV';
@@ -405,21 +406,23 @@ export default function RootLayout({
             __html: JSON.stringify(globalSchema)
           }}
         />
-        <Suspense fallback={null}>
-          <NavigationProgressBar />
-        </Suspense>
-        <ScrollToTop />
-        <ToastProvider>
-          <AuthProvider>
-            <DemoModalProvider>
-              {/* Offer banner sits above everything, including the navbar */}
-              <OfferBanner />
-              <AlertOverlay />
-              <PromoPopup />
-              {children}
-            </DemoModalProvider>
-          </AuthProvider>
-        </ToastProvider>
+        <PostHogProvider>
+          <Suspense fallback={null}>
+            <NavigationProgressBar />
+          </Suspense>
+          <ScrollToTop />
+          <ToastProvider>
+            <AuthProvider>
+              <DemoModalProvider>
+                {/* Offer banner sits above everything, including the navbar */}
+                <OfferBanner />
+                <AlertOverlay />
+                <PromoPopup />
+                {children}
+              </DemoModalProvider>
+            </AuthProvider>
+          </ToastProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

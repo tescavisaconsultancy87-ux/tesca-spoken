@@ -1,5 +1,7 @@
 'use client';
 
+import { captureEvent } from '@/lib/posthog';
+
 export function useTracking() {
   const getUtmData = (): Record<string, string> => {
     if (typeof window === 'undefined') return {};
@@ -63,6 +65,9 @@ export function useTracking() {
       if (typeof (window as any).gtag === 'function') {
         (window as any).gtag('event', eventName, payload);
       }
+
+      // 3. Dispatch to PostHog
+      captureEvent(eventName, payload);
     } catch (e) {
       // Silently catch tracking errors to avoid disrupting user experience
       console.warn('[Tracking] Event dispatch failed:', e);

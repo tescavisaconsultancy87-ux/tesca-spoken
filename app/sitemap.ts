@@ -10,6 +10,8 @@ function slugify(text: string) {
     .replace(/(^-|-$)+/g, '');
 }
 
+export const revalidate = 86400; // Revalidate every 24 hours for instant Edge cache hits
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://tesca.co';
   const currentDate = new Date();

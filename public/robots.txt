@@ -1,5 +1,5 @@
 # robots.txt for TESCA Spoken English (tesca.co)
-# Production: Allow search engines, disallow private/API routes
+# Optimized for Web Search, Local SEO, and Generative AI Engines (AEO/GEO)
 
 User-agent: *
 Allow: /
@@ -14,10 +14,22 @@ Disallow: /change-password
 Disallow: /maintenance
 Disallow: /bot-labyrinth/
 
+# Google Search & Gemini AI
 User-agent: Googlebot
 Allow: /
 
+User-agent: GoogleOther
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Microsoft Bing & Copilot
 User-agent: Bingbot
+Allow: /
+
+# OpenAI / ChatGPT / SearchGPT
+User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: GPTBot
@@ -26,13 +38,52 @@ Allow: /
 User-agent: ChatGPT-User
 Allow: /
 
+# Perplexity AI
 User-agent: PerplexityBot
 Allow: /
 
+# Anthropic Claude
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot
+Allow: /
+
 User-agent: Applebot-Extended
+Allow: /
+
+# Meta AI
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: Meta-ExternalFetcher
+Allow: /
+
+# Common Crawl & Open AI Datasets
+User-agent: CCBot
+Allow: /
+
+# Regional & Alternative Search Engines
+User-agent: DuckDuckBot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+User-agent: Baiduspider
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+User-agent: PetalBot
 Allow: /
 
 Sitemap: https://tesca.co/sitemap.xml
