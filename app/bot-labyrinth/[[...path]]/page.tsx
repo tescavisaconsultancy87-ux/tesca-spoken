@@ -72,6 +72,27 @@ function generateLinks(seed: number, count: number): { href: string; label: stri
   return links;
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ path?: string[] }> }) {
+  const resolvedParams = await params;
+  const pathSegments = resolvedParams?.path || [];
+  const currentPath = Array.isArray(pathSegments) ? pathSegments.join('/') : '';
+  const seed = seededHash(currentPath || 'entry');
+  const title = currentPath ? pick(FAKE_TITLES, seed, 0) : 'Comprehensive English Learning Resources';
+  const p1 = pick(FAKE_PARAGRAPHS, seed, 1);
+
+  return {
+    title,
+    description: `${p1.slice(0, 155)}...`,
+    robots: {
+      index: false,
+      follow: false,
+    },
+    alternates: {
+      canonical: `https://tesca.co/bot-labyrinth/${currentPath}`,
+    },
+  };
+}
+
 export default async function LabyrinthPage({ params }: { params: Promise<{ path?: string[] }> }) {
   const resolvedParams = await params;
   const pathSegments = resolvedParams?.path || [];
@@ -87,110 +108,74 @@ export default async function LabyrinthPage({ params }: { params: Promise<{ path
   const dateDays = pickIndex(seed, 6, 30);
   const dateStr = new Date(Date.UTC(2026, 6, 16 - dateDays)).toISOString().split('T')[0];
   const links = generateLinks(seed, 12);
-  const tagSlice = pickIndex(seed, 7, TAGS.length);
   const shownTags = [...TAGS].sort((a, b) => pickIndex(seed, a.charCodeAt(0), 3) - pickIndex(seed, b.charCodeAt(0), 3)).slice(0, 5);
 
   return (
-    <html lang="en">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{title}</title>
-        <meta name="description" content={`${p1.slice(0, 155)}...`} />
-        <meta name="robots" content="noindex, nofollow" />
-        <meta name="googlebot" content="noindex, nofollow" />
-        <link rel="canonical" href={`https://tesca.co/bot-labyrinth/${currentPath}`} />
-        <meta property="og:title" content={title} />
-        <meta property="og:description" content={p1.slice(0, 155)} />
-        <style>{`
-          *{margin:0;padding:0;box-sizing:border-box}
-          body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#333;background:#f5f5f5}
-          .hdr{background:#0d4f4f;color:#fff;padding:16px 24px}
-          .hdr-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
-          .hdr a{color:#fff;text-decoration:none;font-size:14px}
-          .nav{display:flex;gap:20px}
-          .ctr{max-width:800px;margin:0 auto;padding:24px}
-          .bc{font-size:13px;color:#666;margin-bottom:20px}
-          .bc a{color:#0d4f4f}
-          .art{background:#fff;border-radius:8px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-          .art h1{font-size:28px;margin-bottom:8px;color:#0d4f4f}
-          .meta{font-size:13px;color:#888;margin-bottom:20px}
-          .art p{margin-bottom:16px;color:#444}
-          .sb{margin-top:24px;background:#fff;border-radius:8px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-          .sb h2{font-size:16px;margin-bottom:12px;color:#0d4f4f;border-bottom:2px solid #0d4f4f;padding-bottom:6px}
-          .sb ul{list-style:none}
-          .sb li{margin-bottom:8px}
-          .sb a{color:#2563eb;text-decoration:none;font-size:14px}
-          .sb a:hover{text-decoration:underline}
-          .ft{background:#0d4f4f;color:#999;text-align:center;padding:12px;font-size:12px;margin-top:32px}
-          .tags{margin-top:20px;display:flex;flex-wrap:wrap;gap:8px}
-          .tag{background:#e5e7eb;padding:4px 10px;border-radius:12px;font-size:12px;color:#555}
-        `}</style>
-      </head>
-      <body>
-        <header className="hdr">
-          <div className="hdr-inner">
-            <strong>TESCA Learning Hub</strong>
-            <nav className="nav">
-              <a href="/bot-labyrinth/home">Home</a>
-              <a href="/bot-labyrinth/courses">Courses</a>
-              <a href="/bot-labyrinth/blog">Blog</a>
-              <a href="/bot-labyrinth/resources">Resources</a>
-              <a href="/bot-labyrinth/about">About</a>
-            </nav>
-          </div>
-        </header>
+    <div className="min-h-screen bg-[#f5f5f5] text-[#333] font-sans antialiased">
+      <header className="bg-[#0d4f4f] text-white px-6 py-4">
+        <div className="max-w-[1100px] mx-auto flex justify-between items-center">
+          <strong className="text-base">TESCA Learning Hub</strong>
+          <nav className="flex gap-5 text-sm">
+            <a href="/bot-labyrinth/home" className="hover:underline">Home</a>
+            <a href="/bot-labyrinth/courses" className="hover:underline">Courses</a>
+            <a href="/bot-labyrinth/blog" className="hover:underline">Blog</a>
+            <a href="/bot-labyrinth/resources" className="hover:underline">Resources</a>
+            <a href="/bot-labyrinth/about" className="hover:underline">About</a>
+          </nav>
+        </div>
+      </header>
 
-        <div className="ctr">
-          <div className="bc">
-            <a href="/bot-labyrinth/home">Home</a> &raquo;
-            {currentPath ? (
-              <>
-                <a href={`/bot-labyrinth/${currentPath.split('/').slice(0, -1).join('/')}`}>Category</a> &raquo;
-                <span> {title.slice(0, 40)}</span>
-              </>
-            ) : (
-              <span> Learning Resources</span>
-            )}
-          </div>
-
-          <article className="art">
-            <h1>{title}</h1>
-            <div className="meta">
-              By {author} &middot; {dateStr} &middot; {views} views
-            </div>
-            <p>{p1}</p>
-            <p>{p2}</p>
-            <p>{p3}</p>
-            <div className="tags">
-              {shownTags.map(t => (
-                <span key={t} className="tag">{t}</span>
-              ))}
-            </div>
-          </article>
-
-          <div className="sb">
-            <h2>Related Articles</h2>
-            <ul>
-              {links.map((link, i) => (
-                <li key={i}><a href={link.href}>{link.label}</a></li>
-              ))}
-            </ul>
-            <h2 style={{ marginTop: 16 }}>Popular Resources</h2>
-            <ul>
-              {links.slice(0, 6).map((link, i) => (
-                <li key={`pop-${i}`}>
-                  <a href={`/bot-labyrinth/resource/${link.href.split('/').pop()}`}>{pick(FAKE_TITLES, seed, i + 100)}</a>
-                </li>
-              ))}
-            </ul>
-          </div>
+      <div className="max-w-[800px] mx-auto p-6">
+        <div className="text-[13px] text-gray-500 mb-5">
+          <a href="/bot-labyrinth/home" className="text-[#0d4f4f] hover:underline">Home</a> &raquo;
+          {currentPath ? (
+            <>
+              <a href={`/bot-labyrinth/${currentPath.split('/').slice(0, -1).join('/')}`} className="text-[#0d4f4f] hover:underline"> Category</a> &raquo;
+              <span> {title.slice(0, 40)}</span>
+            </>
+          ) : (
+            <span> Learning Resources</span>
+          )}
         </div>
 
-        <footer className="ft">
-          &copy; 2026 TESCA Learning Hub. All rights reserved.
-        </footer>
-      </body>
-    </html>
+        <article className="bg-white rounded-lg p-8 shadow-xs">
+          <h1 className="text-2xl font-bold text-[#0d4f4f] mb-2">{title}</h1>
+          <div className="text-[13px] text-gray-500 mb-5">
+            By {author} &middot; {dateStr} &middot; {views} views
+          </div>
+          <p className="text-gray-700 leading-relaxed mb-4">{p1}</p>
+          <p className="text-gray-700 leading-relaxed mb-4">{p2}</p>
+          <p className="text-gray-700 leading-relaxed mb-4">{p3}</p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {shownTags.map((t) => (
+              <span key={t} className="bg-gray-200 text-gray-700 text-xs px-2.5 py-1 rounded-full">{t}</span>
+            ))}
+          </div>
+        </article>
+
+        <div className="mt-6 bg-white rounded-lg p-5 shadow-xs">
+          <h2 className="text-base font-semibold text-[#0d4f4f] border-b-2 border-[#0d4f4f] pb-1.5 mb-3">Related Articles</h2>
+          <ul className="space-y-2">
+            {links.map((link, i) => (
+              <li key={i}><a href={link.href} className="text-blue-600 hover:underline text-sm">{link.label}</a></li>
+            ))}
+          </ul>
+          <h2 className="text-base font-semibold text-[#0d4f4f] border-b-2 border-[#0d4f4f] pb-1.5 mt-4 mb-3">Popular Resources</h2>
+          <ul className="space-y-2">
+            {links.slice(0, 6).map((link, i) => (
+              <li key={`pop-${i}`}>
+                <a href={`/bot-labyrinth/resource/${link.href.split('/').pop()}`} className="text-blue-600 hover:underline text-sm">
+                  {pick(FAKE_TITLES, seed, i + 100)}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <footer className="bg-[#0d4f4f] text-gray-300 text-center py-4 text-xs mt-8">
+        &copy; 2026 TESCA Learning Hub. All rights reserved.
+      </footer>
+    </div>
   );
 }

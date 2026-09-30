@@ -88,18 +88,48 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow standard SEO & system discovery files to bypass all checks directly
-  const PUBLIC_SYSTEM_FILES = ['/robots.txt', '/sitemap.xml', '/llms.txt', '/llms-full.txt', '/favicon.ico', '/favicon.png', '/manifest.json'];
-  if (PUBLIC_SYSTEM_FILES.includes(pathname)) {
-    return NextResponse.next();
-  }
-
   const host = request.headers.get('host') || '';
   const hostName = host.split(':')[0].toLowerCase();
   const xProto = request.headers.get('x-forwarded-proto') || '';
   const protocol = xProto || request.nextUrl.protocol.replace(':', '');
   const ua = request.headers.get('user-agent') || '';
   const isLocalhost = hostName.includes('localhost') || hostName.includes('127.0.0.1') || hostName.includes('[::1]');
+
+  // Clean trailing empty question mark
+  const cleanSearch = request.nextUrl.search === '?' ? '' : request.nextUrl.search;
+
+  // ─── 301 Permanent Canonical Domain Redirect: tescavisa.com -> tesca.co (ALWAYS, including sitemap/robots) ───
+  if (!isLocalhost && (hostName === 'tescavisa.com' || hostName === 'www.tescavisa.com')) {
+    return NextResponse.redirect(`https://tesca.co${pathname}${cleanSearch}`, 301);
+  }
+
+  // ─── 301 www.tesca.co -> tesca.co for root/standard routes ───
+  if (!isLocalhost && hostName === 'www.tesca.co') {
+    return NextResponse.redirect(`https://tesca.co${pathname}${cleanSearch}`, 301);
+  }
+
+  // Allow standard SEO & system discovery files on canonical domain to bypass checks directly
+  const PUBLIC_SYSTEM_FILES = ['/robots.txt', '/sitemap.xml', '/llms.txt', '/llms-full.txt', '/favicon.ico', '/favicon.png', '/manifest.json'];
+  if (PUBLIC_SYSTEM_FILES.includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  // ─── Fast-Drop Aggressive Automated Scrapers & CLI Tools (Prevents 5xx Edge Worker Exhaustion) ───
+  const lowerUa = ua.toLowerCase();
+  const AGGRESSIVE_CLI_SCRAPERS = [
+    'curl/', 'wget/', 'python-requests', 'aiohttp', 'httpx', 'scrapy', 'go-http-client',
+    'nikto', 'sqlmap', 'shodan', 'censys', 'zgrab', 'nmap', 'masscan'
+  ];
+  if (AGGRESSIVE_CLI_SCRAPERS.some((bot) => lowerUa.includes(bot))) {
+    return new NextResponse('Access Denied', {
+      status: 403,
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Robots-Tag': 'noindex, nofollow',
+        'Retry-After': '86400',
+      },
+    });
+  }
 
   // ─── 0. Early Block for Empty User-Agents & Security Vulnerability Probes ───
   if (!ua.trim()) {
@@ -114,11 +144,6 @@ export function middleware(request: NextRequest) {
       { error: 'Forbidden', message: 'Access to this resource is prohibited.' },
       { status: 403, headers: { 'Content-Type': 'application/json' } }
     );
-  }
-
-  // ─── 301 Permanent Canonical Domain Redirect: tescavisa.com -> tesca.co ───
-  if (!isLocalhost && (hostName === 'tescavisa.com' || hostName === 'www.tescavisa.com')) {
-    return NextResponse.redirect(`https://tesca.co${pathname}${request.nextUrl.search}`, 301);
   }
 
   // ─── UNKNOWN SUBDOMAIN → 404 ───

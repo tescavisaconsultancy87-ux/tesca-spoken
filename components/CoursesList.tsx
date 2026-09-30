@@ -2,16 +2,26 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { 
   CheckCircle, 
   Clock, 
   ArrowRight, 
   Star, 
-  Users 
+  Users,
+  MessageCircle
 } from 'lucide-react';
 import { db } from '@/lib/db';
 import { COURSES } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
+
+function slugify(text: string) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '');
+}
 
 interface ClientCourse {
   id: string;
@@ -206,6 +216,7 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
         const meta = getCourseMeta(course.id, course.title);
         const displayPrice = course.price ? `₹${course.price.toLocaleString('en-IN')}` : '';
         const displayOriginalPrice = course.originalPrice ? `₹${course.originalPrice.toLocaleString('en-IN')}` : '';
+        const courseSlug = course.id && !course.id.includes(' ') ? course.id : slugify(course.title);
 
         return (
           <article
@@ -258,7 +269,9 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
                 <div>
                   {/* Course title & Subtitle */}
                   <h3 className="font-heading text-lg font-bold text-[#0F172A] leading-snug group-hover:text-[#0F766E] transition-colors duration-250">
-                    {course.title}
+                    <Link href={`/courses/${courseSlug}`} className="hover:text-[#0F766E] transition-colors">
+                      {course.title}
+                    </Link>
                   </h3>
                   <p className="text-[13px] leading-relaxed text-[#64748B] mt-1.5 font-medium min-h-[40px]">
                     {meta.subtitle}
@@ -293,8 +306,8 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
                       ))}
                     </ul>
                     
-                    {/* View Full Curriculum Link */}
-                    <div className="mt-3.5">
+                    {/* View Full Curriculum & Course Page Links */}
+                    <div className="mt-3.5 flex items-center justify-between gap-2">
                       <a
                         href="/courses#curriculum"
                         onClick={(e) => {
@@ -317,9 +330,15 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
                         }}
                         className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0F766E] hover:text-[#0b544e] transition-colors cursor-pointer"
                       >
-                        View Full Curriculum
+                        Curriculum
                         <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
                       </a>
+                      <Link
+                        href={`/courses/${courseSlug}`}
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500 hover:text-[#0F766E] transition-colors"
+                      >
+                        Full Details &rarr;
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -360,12 +379,23 @@ export default function CoursesList({ courses: propCourses, loading: propLoading
                         <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
                       </button>
                     )}
-                    <button
-                      onClick={openModal}
-                      className="w-full py-3 px-4 rounded-xl text-xs font-bold text-[#0F172A] border border-[#E8EDF3] bg-white hover:bg-slate-50 transition-all duration-200 cursor-pointer"
-                    >
-                      Book Free Demo
-                    </button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={openModal}
+                        className="py-2.5 px-3 rounded-xl text-xs font-bold text-[#0F172A] border border-[#E8EDF3] bg-white hover:bg-slate-50 transition-all duration-200 cursor-pointer text-center"
+                      >
+                        Free Demo
+                      </button>
+                      <a
+                        href={`https://wa.me/918488805888?text=${encodeURIComponent(`Hi TESCA team, I am interested in the ${course.title} course. Please share the full syllabus and fee details.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-2.5 px-3 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5 text-emerald-600" />
+                        WhatsApp
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useRef, memo, ComponentType } from 'react';
-import { CalendarCheck, Users, GraduationCap, TrendingUp, ShieldCheck, Phone, PhoneCall, CheckCircle2 } from 'lucide-react';
+import { CalendarCheck, Users, GraduationCap, TrendingUp, ShieldCheck, Phone, PhoneCall, CheckCircle2, MessageCircle } from 'lucide-react';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { useToast } from '@/context/ToastContext';
 import { useCounter } from '@/hooks/useCounter';
@@ -168,14 +168,22 @@ const Hero = memo(function Hero() {
                   </button>
                 </form>
 
-                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-1.5 gap-y-1 text-xs font-semibold text-slate-200 lg:text-slate-700 pt-1">
-                  <span>Instant callback within 15 mins. Or</span>
+                <div className="flex items-center gap-2 pt-1 w-full">
+                  <a
+                    href="https://wa.me/918488805888?text=Hi%20TESCA%20team%2C%20I%20am%20interested%20in%20spoken%20English%20classes.%20Please%20share%20course%20details%20and%20fee%20structure."
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 shadow-xs transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    WhatsApp
+                  </a>
                   <button
                     type="button"
                     onClick={openModal}
-                    className="font-bold text-secondary lg:text-[#f97316] hover:underline cursor-pointer flex items-center gap-1 drop-shadow-xs"
+                    className="flex-1 rounded-xl bg-white/95 hover:bg-white text-slate-800 font-bold text-xs py-2.5 shadow-xs border border-slate-200 transition-all duration-200 flex items-center justify-center gap-1 cursor-pointer"
                   >
-                    Book Free Live Demo Class →
+                    Book Demo Class →
                   </button>
                 </div>
               </div>
