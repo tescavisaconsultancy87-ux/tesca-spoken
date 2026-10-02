@@ -2,19 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyAuthAndRole, checkRateLimit, formatFriendlyError } from '@/lib/security';
 
-// Initialize service role admin client
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-
 function getAdminClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   if (!supabaseUrl || !serviceRoleKey) return null;
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 }
 
-// 1. PATCH to update payment details
-export async function PATCH(request: NextRequest) {
+// Handler to update payment details
+async function handleUpdatePayment(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
     const rateCheck = checkRateLimit(ip, 30, 60000);
@@ -27,7 +25,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: auth.error || 'Access denied.' }, { status: auth.status || 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const { id, student_name, email, amount, method, status, date } = body;
 
     if (!id) {
@@ -40,7 +38,7 @@ export async function PATCH(request: NextRequest) {
         console.log(`[Dev Sandbox] PATCH payment: ${id}`);
         return NextResponse.json({ success: true, dev: true });
       }
-      return NextResponse.json({ error: 'Server configuration incomplete.' }, { status: 500 });
+      return NextResponse.json({ error: 'Service is temporarily unavailable. Please try again.' }, { status: 500 });
     }
 
     const updates: any = {};
@@ -60,7 +58,7 @@ export async function PATCH(request: NextRequest) {
 
     if (error) {
       console.error('[Edit Payment] DB update failed:', error.message);
-      return NextResponse.json({ error: `Update failed: ${error.message}` }, { status: 400 });
+      return NextResponse.json({ error: formatFriendlyError(error) }, { status: 400 });
     }
 
     console.log(`[Audit] Payment ${id} updated by admin ${auth.user?.email}`);
@@ -71,8 +69,8 @@ export async function PATCH(request: NextRequest) {
   }
 }
 
-// 2. DELETE to remove payment records
-export async function DELETE(request: NextRequest) {
+// Handler to remove payment records
+async function handleDeletePayment(request: NextRequest, bodyOverride?: any) {
   try {
     const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
     const rateCheck = checkRateLimit(ip, 30, 60000);
@@ -85,7 +83,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: auth.error || 'Access denied.' }, { status: auth.status || 401 });
     }
 
-    const body = await request.json();
+    const body = bodyOverride || (await request.json().catch(() => ({})));
     const { id } = body;
 
     if (!id) {
@@ -98,7 +96,7 @@ export async function DELETE(request: NextRequest) {
         console.log(`[Dev Sandbox] DELETE payment: ${id}`);
         return NextResponse.json({ success: true, dev: true });
       }
-      return NextResponse.json({ error: 'Server configuration incomplete.' }, { status: 500 });
+      return NextResponse.json({ error: 'Service is temporarily unavailable. Please try again.' }, { status: 500 });
     }
 
     const { error } = await adminClient
@@ -108,7 +106,7 @@ export async function DELETE(request: NextRequest) {
 
     if (error) {
       console.error('[Delete Payment] DB delete failed:', error.message);
-      return NextResponse.json({ error: `Deletion failed: ${error.message}` }, { status: 400 });
+      return NextResponse.json({ error: formatFriendlyError(error) }, { status: 400 });
     }
 
     console.log(`[Audit] Payment ${id} deleted by admin ${auth.user?.email}`);
@@ -117,4 +115,28 @@ export async function DELETE(request: NextRequest) {
     console.error('[Delete Payment] Error:', error);
     return NextResponse.json({ error: formatFriendlyError(error) }, { status: 500 });
   }
+}
+
+// 1. POST route (Supports both update and delete actions)
+export async function POST(request: NextRequest) {
+  try {
+    const cloned = request.clone();
+    const body = await cloned.json().catch(() => ({}));
+    if (body.action === 'delete') {
+      return handleDeletePayment(request, body);
+    }
+    return handleUpdatePayment(request);
+  } catch {
+    return handleUpdatePayment(request);
+  }
+}
+
+// 2. PATCH route
+export async function PATCH(request: NextRequest) {
+  return handleUpdatePayment(request);
+}
+
+// 3. DELETE route
+export async function DELETE(request: NextRequest) {
+  return handleDeletePayment(request);
 }

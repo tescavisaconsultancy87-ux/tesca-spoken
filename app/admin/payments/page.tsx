@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import toast from '@/lib/toast';
+import { safeFetchJson, formatUserError } from '@/lib/friendlyError';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -73,23 +74,32 @@ export default function AdminPaymentsPage() {
         }
       }
 
-      const response = await fetch('/api/admin/payments', {
-        method: 'PATCH',
+      const payload = {
+        id: editingPayment.id,
+        student_name: editingPayment.student,
+        email: editingPayment.email,
+        amount: editingPayment.amount,
+        date: editingPayment.date,
+        method: editingPayment.method,
+        status: editingPayment.status
+      };
+
+      let result = await safeFetchJson('/api/admin/payments', {
+        method: 'POST',
         headers,
-        body: JSON.stringify({
-          id: editingPayment.id,
-          student_name: editingPayment.student,
-          email: editingPayment.email,
-          amount: editingPayment.amount,
-          date: editingPayment.date,
-          method: editingPayment.method,
-          status: editingPayment.status
-        })
+        body: JSON.stringify(payload)
       });
 
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update payment record.');
+      if (!result.ok && (result.status === 405 || result.status === 404)) {
+        result = await safeFetchJson('/api/admin/payments', {
+          method: 'PATCH',
+          headers,
+          body: JSON.stringify(payload)
+        });
+      }
+
+      if (!result.ok) {
+        throw new Error(result.error || 'Unable to update payment record right now.');
       }
 
       // Update state locally
@@ -102,8 +112,9 @@ export default function AdminPaymentsPage() {
         setEditingPayment(null);
       }, 1000);
     } catch (err: any) {
-      setEditValidationError(err.message || 'An error occurred. Please try again.');
-      toast.error(err.message || 'Failed to update payment record', 'Update Failed');
+      const friendlyMsg = formatUserError(err, 'Unable to update payment record. Please try again.');
+      setEditValidationError(friendlyMsg);
+      toast.error(friendlyMsg, 'Update Failed');
       setSaveStatus('idle');
     } finally {
       setEditSubmitting(false);
@@ -125,15 +136,22 @@ export default function AdminPaymentsPage() {
         }
       }
 
-      const response = await fetch('/api/admin/payments', {
-        method: 'DELETE',
+      let result = await safeFetchJson('/api/admin/payments', {
+        method: 'POST',
         headers,
-        body: JSON.stringify({ id: deleteConfirmId })
+        body: JSON.stringify({ id: deleteConfirmId, action: 'delete' })
       });
 
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete payment record.');
+      if (!result.ok && (result.status === 405 || result.status === 404)) {
+        result = await safeFetchJson('/api/admin/payments', {
+          method: 'DELETE',
+          headers,
+          body: JSON.stringify({ id: deleteConfirmId })
+        });
+      }
+
+      if (!result.ok) {
+        throw new Error(result.error || 'Unable to delete payment record.');
       }
 
       // Update state locally
@@ -141,8 +159,9 @@ export default function AdminPaymentsPage() {
       setDeleteConfirmId(null);
       toast.success('Payment record deleted successfully', 'Payment Removed');
     } catch (err: any) {
-      setDeleteError(err.message || 'An error occurred. Please try again.');
-      toast.error(err.message || 'Failed to delete payment record', 'Delete Failed');
+      const friendlyMsg = formatUserError(err, 'Unable to delete payment record. Please try again.');
+      setDeleteError(friendlyMsg);
+      toast.error(friendlyMsg, 'Delete Failed');
     } finally {
       setIsDeleting(false);
     }

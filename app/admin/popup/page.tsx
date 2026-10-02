@@ -5,6 +5,7 @@ import { Sparkles, Trash2, Edit, CheckCircle, HelpCircle, Eye, Upload, X } from 
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import toast from '@/lib/toast';
+import { safeFetchJson, formatUserError } from '@/lib/friendlyError';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -161,24 +162,24 @@ export default function PromoPopupAdminPage() {
           headers['Authorization'] = `Bearer ${session.access_token}`;
         }
       }
-      const response = await fetch('/api/admin/popup', {
+      const result = await safeFetchJson('/api/admin/popup', {
         method: 'DELETE',
         headers,
         body: JSON.stringify({ id: deletePopupId }),
       });
 
-      if (response.ok) {
+      if (result.ok) {
         setPopups(popups.filter((p) => p.id !== deletePopupId));
         if (editingId === deletePopupId) resetForm();
         toast.success('Promo popup configuration deleted successfully', 'Popup Removed');
         setDeletePopupId(null);
       } else {
-        const err = await response.json();
-        toast.error(`Failed to delete popup: ${err.error || 'Unknown error'}`, 'Delete Failed');
+        const friendlyMsg = formatUserError(result.error, 'Unable to delete popup. Please try again.');
+        toast.error(friendlyMsg, 'Delete Failed');
       }
     } catch (e: any) {
       console.error('Delete error:', e);
-      toast.error('An error occurred during deletion.', 'Delete Error');
+      toast.error(formatUserError(e, 'Unable to delete popup.'), 'Delete Error');
     } finally {
       setIsDeleting(false);
     }
@@ -253,23 +254,21 @@ export default function PromoPopupAdminPage() {
         }
       }
 
-      const response = await fetch(url, {
+      const result = await safeFetchJson(url, {
         method,
         headers,
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to save settings.');
+      if (!result.ok) {
+        throw new Error(result.error || 'Unable to save popup settings.');
       }
 
       // 4. Update local list
       if (editingId) {
-        setPopups(popups.map((p) => (p.id === editingId ? result.data : p)));
+        setPopups(popups.map((p) => (p.id === editingId ? result.data?.data : p)));
       } else {
-        setPopups([result.data, ...popups]);
+        setPopups([result.data?.data, ...popups]);
       }
 
       setSaveSuccess(true);
@@ -281,7 +280,8 @@ export default function PromoPopupAdminPage() {
       }, 1000);
     } catch (err: any) {
       setSaveStatus('idle');
-      toast.error(err.message || 'An error occurred while saving.', 'Save Error');
+      const friendlyMsg = formatUserError(err, 'Unable to save popup settings. Please try again.');
+      toast.error(friendlyMsg, 'Save Failed');
     }
   };
 

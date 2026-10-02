@@ -25,6 +25,7 @@ import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import toast from '@/lib/toast';
+import { formatUserError } from '@/lib/friendlyError';
 import {
   AlertDialog,
   AlertDialogPortal,
@@ -350,36 +351,23 @@ export default function AdminLeadsPage() {
     setEditSubmitting(true);
 
     try {
-      await ensureSupabaseClient();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (supabase) {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
-      }
+      const formattedNotes = editingLead.source
+        ? `Source: ${editingLead.source}\n${editingLead.notes}`
+        : editingLead.notes;
 
-      const response = await fetch('/api/admin/leads', {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({
-          id: editingLead.id,
-          name: editingLead.name,
-          email: editingLead.email,
-          phone: editingLead.phone,
-          notes: editingLead.source ? `Source: ${editingLead.source}\n${editingLead.notes}` : editingLead.notes,
-          status: editingLead.status,
-          next_followup_date: editingLead.nextFollowUpDate || null,
-          status_reason: editingLead.statusReason || null,
-          follow_ups: editingLead.followUps || [],
-        }),
+      const result = await db.updateLead(editingLead.id, {
+        name: editingLead.name.trim(),
+        email: editingLead.email.trim(),
+        phone: editingLead.phone.trim(),
+        notes: formattedNotes,
+        status: editingLead.status,
+        next_followup_date: editingLead.nextFollowUpDate || null,
+        status_reason: editingLead.statusReason || null,
+        follow_ups: editingLead.followUps || [],
       });
 
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update lead details.');
+      if (!result.success) {
+        throw new Error(result.error || 'Unable to update lead details right now.');
       }
 
       setLeads((prev) => prev.map((l) => (l.id === editingLead.id ? { ...editingLead } : l)));
@@ -394,8 +382,9 @@ export default function AdminLeadsPage() {
         setEditingLead(null);
       }, 1000);
     } catch (err: any) {
-      setEditValidationError(err.message || 'An error occurred. Please try again.');
-      toast.error(err.message || 'Failed to update lead details', 'Update Failed');
+      const friendlyMsg = formatUserError(err, 'Unable to update lead details. Please try again.');
+      setEditValidationError(friendlyMsg);
+      toast.error(friendlyMsg, 'Update Failed');
       setSaveStatus('idle');
     } finally {
       setEditSubmitting(false);
@@ -408,26 +397,9 @@ export default function AdminLeadsPage() {
     setIsDeleting(true);
 
     try {
-      await ensureSupabaseClient();
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (supabase) {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        if (session?.access_token) {
-          headers['Authorization'] = `Bearer ${session.access_token}`;
-        }
-      }
-
-      const response = await fetch('/api/admin/leads', {
-        method: 'DELETE',
-        headers,
-        body: JSON.stringify({ id: deleteConfirmId }),
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to delete lead record.');
+      const result = await db.deleteLead(deleteConfirmId);
+      if (!result.success) {
+        throw new Error(result.error || 'Unable to delete lead record right now.');
       }
 
       setLeads((prev) => prev.filter((l) => l.id !== deleteConfirmId));
@@ -437,8 +409,9 @@ export default function AdminLeadsPage() {
       setDeleteConfirmId(null);
       toast.success('Lead record deleted successfully', 'Lead Removed');
     } catch (err: any) {
-      setDeleteError(err.message || 'An error occurred. Please try again.');
-      toast.error(err.message || 'Failed to delete lead', 'Delete Failed');
+      const friendlyMsg = formatUserError(err, 'Unable to delete lead record. Please try again.');
+      setDeleteError(friendlyMsg);
+      toast.error(friendlyMsg, 'Delete Failed');
     } finally {
       setIsDeleting(false);
     }
@@ -560,7 +533,7 @@ export default function AdminLeadsPage() {
       });
 
       if (!success) {
-        throw new Error('Failed to save follow-up details to database.');
+        throw new Error('Unable to save call discussion.');
       }
 
       setLeads((prev) => prev.map((l) => (l.id === targetLead.id ? updatedLead : l)));
@@ -575,8 +548,9 @@ export default function AdminLeadsPage() {
       );
       setFollowUpModalLead(null);
     } catch (err: any) {
-      setFollowUpError(err.message || 'Failed to save follow-up.');
-      toast.error(err.message || 'Failed to save follow-up.', 'Error');
+      const friendlyMsg = formatUserError(err, 'Unable to save follow-up discussion. Please try again.');
+      setFollowUpError(friendlyMsg);
+      toast.error(friendlyMsg, 'Update Failed');
     } finally {
       setFollowUpSubmitting(false);
     }
@@ -633,7 +607,7 @@ export default function AdminLeadsPage() {
       });
 
       if (!success) {
-        throw new Error('Failed to update lead status in database.');
+        throw new Error('Unable to update lead status.');
       }
 
       setLeads((prev) => prev.map((l) => (l.id === targetLead.id ? updatedLead : l)));
@@ -648,8 +622,9 @@ export default function AdminLeadsPage() {
       );
       setStatusReasonModalLead(null);
     } catch (err: any) {
-      setStatusReasonError(err.message || 'Failed to update status.');
-      toast.error(err.message || 'Failed to update status.', 'Error');
+      const friendlyMsg = formatUserError(err, 'Unable to update status. Please try again.');
+      setStatusReasonError(friendlyMsg);
+      toast.error(friendlyMsg, 'Update Failed');
     } finally {
       setStatusReasonSubmitting(false);
     }
@@ -690,14 +665,14 @@ export default function AdminLeadsPage() {
         status_reason: historyModalLead.statusReason,
       });
 
-      if (!success) throw new Error('Failed to update call history.');
+      if (!success) throw new Error('Unable to update call discussion.');
 
       setLeads((prev) => prev.map((l) => (l.id === leadId ? updatedLead : l)));
       setHistoryModalLead(updatedLead);
       setEditingHistoryEntry(null);
       toast.success('Call log updated successfully.', 'History Updated');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to update history.', 'Error');
+      toast.error(formatUserError(err, 'Unable to update call log. Please try again.'), 'Update Failed');
     } finally {
       setHistorySubmitting(false);
     }
@@ -722,13 +697,13 @@ export default function AdminLeadsPage() {
         status_reason: historyModalLead.statusReason,
       });
 
-      if (!success) throw new Error('Failed to remove call log.');
+      if (!success) throw new Error('Unable to remove call log.');
 
       setLeads((prev) => prev.map((l) => (l.id === historyModalLead.id ? updatedLead : l)));
       setHistoryModalLead(updatedLead);
       toast.success('Call discussion entry removed.', 'Deleted');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to remove call log.', 'Error');
+      toast.error(formatUserError(err, 'Unable to remove call log. Please try again.'), 'Delete Failed');
     }
   };
 
@@ -752,7 +727,7 @@ export default function AdminLeadsPage() {
         status_reason: targetLead.statusReason,
       });
 
-      if (!success) throw new Error('Failed to delete call log.');
+      if (!success) throw new Error('Unable to delete call log.');
 
       setLeads((prev) => prev.map((l) => (l.id === targetLead.id ? updatedLead : l)));
       setFollowUpModalLead({
@@ -764,7 +739,7 @@ export default function AdminLeadsPage() {
       }
       toast.success('Call log deleted successfully.', 'Deleted');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to delete call log.', 'Error');
+      toast.error(formatUserError(err, 'Unable to delete call log. Please try again.'), 'Delete Failed');
     }
   };
 
@@ -784,7 +759,7 @@ export default function AdminLeadsPage() {
         status_reason: null,
       });
 
-      if (!success) throw new Error('Failed to clear status reason.');
+      if (!success) throw new Error('Unable to clear status reason.');
 
       setLeads((prev) => prev.map((l) => (l.id === lead.id ? updatedLead : l)));
       if (historyModalLead?.id === lead.id) {
@@ -792,7 +767,7 @@ export default function AdminLeadsPage() {
       }
       toast.success('Status reason cleared.', 'Cleared');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to clear status reason.', 'Error');
+      toast.error(formatUserError(err, 'Unable to clear status reason. Please try again.'), 'Action Failed');
     }
   };
 
@@ -812,7 +787,7 @@ export default function AdminLeadsPage() {
         status_reason: lead.statusReason,
       });
 
-      if (!success) throw new Error('Failed to clear follow-up date.');
+      if (!success) throw new Error('Unable to clear follow-up date.');
 
       setLeads((prev) => prev.map((l) => (l.id === lead.id ? updatedLead : l)));
       if (historyModalLead?.id === lead.id) {
@@ -820,7 +795,7 @@ export default function AdminLeadsPage() {
       }
       toast.success('Scheduled follow-up date cleared.', 'Cleared');
     } catch (err: any) {
-      toast.error(err.message || 'Failed to clear follow-up date.', 'Error');
+      toast.error(formatUserError(err, 'Unable to clear follow-up date. Please try again.'), 'Action Failed');
     }
   };
 

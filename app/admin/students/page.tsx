@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { supabase, ensureSupabaseClient } from '@/lib/supabaseClient';
 import { SaveToggle, ButtonStatus } from '@/components/ui/SaveToggle';
 import toast from '@/lib/toast';
+import { safeFetchJson, formatUserError } from '@/lib/friendlyError';
 import { useAuth } from '@/context/AuthContext';
 import { CopyButton } from '@/components/animate-ui/components/buttons/copy';
 import {
@@ -150,7 +151,7 @@ export default function AdminStudentsPage() {
         }
       }
 
-      const response = await fetch('/api/admin/edit-user', {
+      const result = await safeFetchJson('/api/admin/edit-user', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -163,9 +164,8 @@ export default function AdminStudentsPage() {
         })
       });
 
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to update user account.');
+      if (!result.ok) {
+        throw new Error(result.error || 'Unable to update user account right now.');
       }
 
       // Update locally
@@ -199,7 +199,9 @@ export default function AdminStudentsPage() {
         setEditingUser(null);
       }, 1000);
     } catch (err: any) {
-      setEditValidationError(err.message || 'An error occurred. Please try again.');
+      const friendlyMsg = formatUserError(err, 'Unable to update user account. Please try again.');
+      setEditValidationError(friendlyMsg);
+      toast.error(friendlyMsg, 'Update Failed');
       setEditStatus('idle');
     } finally {
       setEditSubmitting(false);
@@ -261,7 +263,7 @@ export default function AdminStudentsPage() {
         }
       }
 
-      const response = await fetch('/api/admin/create-user', {
+      const result = await safeFetchJson('/api/admin/create-user', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -273,17 +275,17 @@ export default function AdminStudentsPage() {
         })
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to create user account.');
+      if (!result.ok) {
+        throw new Error(result.error || 'Unable to create user account right now.');
       }
+
+      const resData = result.data;
 
       // Add locally to the state
       const dateString = new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
       if (newForm.role === 'student') {
         const newStudentObj: Student = {
-          id: result.userId || `stud-${Date.now()}`,
+          id: resData?.userId || `stud-${Date.now()}`,
           name: newForm.name,
           email: newForm.email,
           phone: newForm.phone,
@@ -294,7 +296,7 @@ export default function AdminStudentsPage() {
         setStudents([newStudentObj, ...students]);
       } else if (newForm.role === 'tutor') {
         const newTutorObj: TutorUser = {
-          id: result.userId || `tutor-${Date.now()}`,
+          id: resData?.userId || `tutor-${Date.now()}`,
           name: newForm.name,
           email: newForm.email,
           phone: newForm.phone,
@@ -304,7 +306,7 @@ export default function AdminStudentsPage() {
         setTutors([newTutorObj, ...tutors]);
       } else {
         const newAdminObj: AdminUser = {
-          id: result.userId || `admin-${Date.now()}`,
+          id: resData?.userId || `admin-${Date.now()}`,
           name: newForm.name,
           email: newForm.email,
           phone: newForm.phone,
@@ -322,8 +324,8 @@ export default function AdminStudentsPage() {
         // Show success popup with the generated password
         setSuccessCredentials({
           email: newForm.email,
-          password: result.password,
-          warning: result.warning
+          password: resData?.password,
+          warning: resData?.warning
         });
 
         // Clear Form and close addition modal
@@ -337,8 +339,9 @@ export default function AdminStudentsPage() {
         setIsAdding(false);
       }, 1000);
     } catch (err: any) {
-      setValidationError(err.message || 'An error occurred. Please try again.');
-      toast.error(err.message || 'Failed to create user account', 'Creation Error');
+      const friendlyMsg = formatUserError(err, 'Unable to create user account. Please try again.');
+      setValidationError(friendlyMsg);
+      toast.error(friendlyMsg, 'Creation Error');
       setCreateStatus('idle');
     } finally {
       setSubmitting(false);
@@ -386,15 +389,14 @@ export default function AdminStudentsPage() {
         }
       }
 
-      const response = await fetch('/api/admin/update-role', {
+      const result = await safeFetchJson('/api/admin/update-role', {
         method: 'POST',
         headers,
         body: JSON.stringify({ userId: roleChange.id, newRole: selectedNewRole })
       });
 
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to change role.');
+      if (!result.ok) {
+        throw new Error(result.error || 'Unable to update role right now.');
       }
 
       // Move the user between the role arrays in local state
@@ -425,8 +427,9 @@ export default function AdminStudentsPage() {
       setRoleChange(null);
       toast.success(`User role updated to ${selectedNewRole}`, 'Role Updated');
     } catch (err: any) {
-      setRoleChangeError(err.message || 'An error occurred. Please try again.');
-      toast.error(err.message || 'Failed to change user role', 'Role Change Failed');
+      const friendlyMsg = formatUserError(err, 'Unable to change user role. Please try again.');
+      setRoleChangeError(friendlyMsg);
+      toast.error(friendlyMsg, 'Role Change Failed');
     } finally {
       setChangingRole(false);
     }
@@ -1008,16 +1011,14 @@ export default function AdminStudentsPage() {
                         }
                       }
 
-                      const response = await fetch('/api/admin/delete-user', {
+                      const result = await safeFetchJson('/api/admin/delete-user', {
                         method: 'POST',
                         headers,
                         body: JSON.stringify({ userId: deleteConfirm.id })
                       });
 
-                      const result = await response.json();
-
-                      if (!response.ok) {
-                        throw new Error(result.error || 'Failed to delete account.');
+                      if (!result.ok) {
+                        throw new Error(result.error || 'Unable to delete user account right now.');
                       }
 
                       if (deleteConfirm.role === 'student') {
@@ -1030,7 +1031,7 @@ export default function AdminStudentsPage() {
                       setDeleteConfirm(null);
                     } catch (err: any) {
                       console.error('Delete error:', err);
-                      setDeleteError(err.message || 'An error occurred. Please try again.');
+                      setDeleteError(formatUserError(err, 'Unable to delete user account. Please try again.'));
                     } finally {
                       setIsDeleting(false);
                     }

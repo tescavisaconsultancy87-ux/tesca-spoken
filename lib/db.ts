@@ -1,5 +1,6 @@
 import { supabase, ensureSupabaseClient } from './supabaseClient';
 import { invalidateBlogCache } from './blogCache';
+import { safeFetchJson, formatUserError } from './friendlyError';
 
 // Helper to determine if a Supabase error is a 'relation does not exist' error (Postgres code 42P01)
 const isTableMissingError = (error: any) => {
@@ -387,15 +388,23 @@ export const db = {
             headers['Authorization'] = `Bearer ${session.access_token}`;
           }
         }
-        const res = await fetch('/api/admin/leads', {
-          method: 'PATCH',
+        const res = await safeFetchJson('/api/admin/leads', {
+          method: 'POST',
           headers,
           body: JSON.stringify({ id, status, ...extras }),
         });
-        const json = await res.json();
-        if (res.ok && json.success) return true;
+        if (res.ok && res.data?.success) return true;
+
+        if (!res.ok && (res.status === 405 || res.status === 404)) {
+          const patchRes = await safeFetchJson('/api/admin/leads', {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({ id, status, ...extras }),
+          });
+          if (patchRes.ok && patchRes.data?.success) return true;
+        }
       } catch (e) {
-        console.error('updateLeadStatus via API failed, attempting direct DB:', e);
+        console.warn('updateLeadStatus via API failed, attempting direct DB:', e);
       }
     }
 
@@ -425,6 +434,176 @@ export const db = {
     } catch (err) {
       console.error('updateLeadStatus failed:', err);
       return false;
+    }
+  },
+
+  updateLead: async (
+    id: string,
+    leadData: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      notes?: string;
+      status?: string;
+      next_followup_date?: string | null;
+      follow_ups?: any[];
+      status_reason?: string | null;
+    }
+  ): Promise<{ success: boolean; error?: string; data?: any }> => {
+    // 1. Try API first
+    if (typeof window !== 'undefined') {
+      try {
+        await ensureSupabaseClient();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+        }
+        const res = await safeFetchJson('/api/admin/leads', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id, ...leadData }),
+        });
+        if (res.ok && res.data?.success) {
+          return { success: true, data: res.data.data };
+        }
+        if (!res.ok && (res.status === 405 || res.status === 404)) {
+          const patchRes = await safeFetchJson('/api/admin/leads', {
+            method: 'PATCH',
+            headers,
+            body: JSON.stringify({ id, ...leadData }),
+          });
+          if (patchRes.ok && patchRes.data?.success) {
+            return { success: true, data: patchRes.data.data };
+          }
+        }
+      } catch (e) {
+        console.warn('updateLead via API failed, attempting direct DB:', e);
+      }
+    }
+
+    // 2. Direct DB fallback
+    await ensureSupabaseClient();
+    if (!supabase) {
+      return { success: false, error: 'Database service is currently unavailable.' };
+    }
+
+    try {
+      const updates: any = {};
+      if (leadData.name !== undefined) updates.name = leadData.name;
+      if (leadData.email !== undefined) updates.email = leadData.email;
+      if (leadData.phone !== undefined) updates.phone = leadData.phone;
+      if (leadData.notes !== undefined) updates.notes = leadData.notes;
+      if (leadData.status !== undefined) updates.status = leadData.status;
+      if (leadData.next_followup_date !== undefined) updates.next_followup_date = leadData.next_followup_date;
+      if (leadData.follow_ups !== undefined) updates.follow_ups = leadData.follow_ups;
+      if (leadData.status_reason !== undefined) updates.status_reason = leadData.status_reason;
+
+      const { data, error } = await supabase
+        .from('leads')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error && (error.message?.includes('column') || error.code === '42703')) {
+        const fallbackUpdates = { ...updates };
+        delete fallbackUpdates.next_followup_date;
+        delete fallbackUpdates.follow_ups;
+        delete fallbackUpdates.status_reason;
+
+        const metadataPayload = {
+          next_followup_date: leadData.next_followup_date ?? null,
+          follow_ups: leadData.follow_ups ?? [],
+          status_reason: leadData.status_reason ?? null,
+        };
+
+        let baseNotes = (leadData.notes !== undefined ? leadData.notes : '');
+        if (baseNotes.includes('<!-- LEAD_FOLLOWUP_DATA:')) {
+          baseNotes = baseNotes.split('<!-- LEAD_FOLLOWUP_DATA:')[0].trim();
+        }
+        fallbackUpdates.notes = `${baseNotes}\n\n<!-- LEAD_FOLLOWUP_DATA:${JSON.stringify(metadataPayload)} -->`;
+
+        const { data: fbData, error: fbError } = await supabase
+          .from('leads')
+          .update(fallbackUpdates)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (fbError) {
+          logError('leads', fbError);
+          return { success: false, error: formatUserError(fbError) };
+        }
+        return { success: true, data: fbData };
+      }
+
+      if (error) {
+        logError('leads', error);
+        return { success: false, error: formatUserError(error) };
+      }
+
+      return { success: true, data };
+    } catch (err: any) {
+      console.error('updateLead failed:', err);
+      return { success: false, error: formatUserError(err) };
+    }
+  },
+
+  deleteLead: async (id: string): Promise<{ success: boolean; error?: string }> => {
+    // 1. Try API first
+    if (typeof window !== 'undefined') {
+      try {
+        await ensureSupabaseClient();
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (supabase) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            headers['Authorization'] = `Bearer ${session.access_token}`;
+          }
+        }
+        const res = await safeFetchJson('/api/admin/leads', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ id, action: 'delete' }),
+        });
+        if (res.ok && res.data?.success) {
+          return { success: true };
+        }
+        if (!res.ok && (res.status === 405 || res.status === 404)) {
+          const delRes = await safeFetchJson('/api/admin/leads', {
+            method: 'DELETE',
+            headers,
+            body: JSON.stringify({ id }),
+          });
+          if (delRes.ok && delRes.data?.success) {
+            return { success: true };
+          }
+        }
+      } catch (e) {
+        console.warn('deleteLead via API failed, attempting direct DB:', e);
+      }
+    }
+
+    // 2. Direct DB fallback
+    await ensureSupabaseClient();
+    if (!supabase) return { success: false, error: 'Database service is currently unavailable.' };
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', id);
+
+      if (error) {
+        logError('leads', error);
+        return { success: false, error: formatUserError(error) };
+      }
+      return { success: true };
+    } catch (err: any) {
+      console.error('deleteLead failed:', err);
+      return { success: false, error: formatUserError(err) };
     }
   },
 

@@ -36,28 +36,12 @@ export function isTutorEmail(email: string | undefined): boolean {
 export function formatFriendlyError(err: any): string {
   if (!err) return 'An unexpected error occurred. Please try again.';
 
-  const lowerMsg = (err.message || '').toLowerCase();
-  if (!lowerMsg.includes('invalid login credentials')) {
-    console.error('[Security] Raw error encountered:', err);
-  } else {
-    console.warn('[Security] Authentication attempt failed:', err.message || err);
-  }
-  if (typeof err === 'string') return err;
-
-  // Intercept network/connectivity errors
-  if (
-    err.name === 'AuthRetryableFetchError' ||
-    err.message?.includes('fetch') ||
-    err.message?.includes('NetworkError') ||
-    err.status === 0
-  ) {
-    return 'Connection to the authentication server failed. Please check your internet connection or try again later.';
-  }
-
   let msg = '';
-  if (err.message) {
+  if (typeof err === 'string') {
+    msg = err;
+  } else if (err.message && typeof err.message === 'string') {
     msg = err.message;
-  } else if (err.error_description) {
+  } else if (err.error_description && typeof err.error_description === 'string') {
     msg = err.error_description;
   } else if (err.error && typeof err.error === 'string') {
     msg = err.error;
@@ -70,11 +54,42 @@ export function formatFriendlyError(err: any): string {
   }
 
   if (!msg || msg === '{}') {
-    msg = 'An unexpected error occurred.';
+    return 'An unexpected error occurred. Please try again.';
+  }
+
+  const lower = msg.toLowerCase();
+
+  if (!lower.includes('invalid login credentials')) {
+    console.error('[Security] Raw error sanitized:', msg);
+  } else {
+    console.warn('[Security] Authentication attempt failed:', msg);
+  }
+
+  // Intercept network/connectivity errors
+  if (
+    err?.name === 'AuthRetryableFetchError' ||
+    lower.includes('fetch') ||
+    lower.includes('networkerror') ||
+    lower.includes('connection refused') ||
+    lower.includes('timeout') ||
+    err?.status === 0
+  ) {
+    return 'Connection issue encountered. Please check your internet connection or try again later.';
+  }
+
+  // Intercept JSON parsing & HTML DOCTYPE errors (e.g. Unexpected token '<', "<!DOCTYPE "...)
+  if (
+    lower.includes('unexpected token') ||
+    lower.includes('<!doctype') ||
+    lower.includes('is not valid json') ||
+    lower.includes('json.parse') ||
+    lower.includes('syntaxerror') ||
+    lower.includes('<html')
+  ) {
+    return 'Unable to process server response. Please refresh the page and try again.';
   }
 
   // Security filters: hide internal postgres / supabase / schema structures
-  const lower = msg.toLowerCase();
   if (
     lower.includes('relation') ||
     lower.includes('table') ||
@@ -84,9 +99,28 @@ export function formatFriendlyError(err: any): string {
     lower.includes('uuid') ||
     lower.includes('violates') ||
     lower.includes('foreign key') ||
-    lower.includes('42p01')
+    lower.includes('42p01') ||
+    lower.includes('42703') ||
+    lower.includes('23505') ||
+    lower.includes('pgrst') ||
+    lower.includes('sql') ||
+    lower.includes('schema') ||
+    lower.includes('constraint') ||
+    lower.includes('trigger')
   ) {
-    return 'A database connection or query error occurred. Please contact the administrator.';
+    return 'Unable to process your request right now. Please try again in a few moments.';
+  }
+
+  // Handle server config or 5xx issues
+  if (
+    lower.includes('server configuration') ||
+    lower.includes('internal server error') ||
+    lower.includes('500') ||
+    lower.includes('502') ||
+    lower.includes('503') ||
+    lower.includes('bad gateway')
+  ) {
+    return 'Service is temporarily busy. Please try again in a moment.';
   }
 
   // Handle specific Supabase Auth errors gracefully
