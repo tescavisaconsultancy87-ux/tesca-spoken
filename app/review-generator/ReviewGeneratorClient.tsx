@@ -391,18 +391,15 @@ export default function ReviewGeneratorClient() {
     }
 
     copyTextToClipboard(text);
-    setCopyStatus('Copied! Redirecting...');
+    setCopyStatus('Copied! Opening Google Reviews...');
     setIsCopied(true);
 
     const targetUrl = currentBranchObj.reviewUrl;
 
     if (typeof window !== 'undefined') {
-      window.alert(
-        `Review copied to clipboard! Opening Google Reviews for TESCA ${currentBranchObj.name} Branch...`,
-      );
       setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 300);
+        window.open(targetUrl, '_blank') || (window.location.href = targetUrl);
+      }, 400);
     }
   };
 
@@ -696,6 +693,19 @@ export default function ReviewGeneratorClient() {
                 </span>
                 <span>Paste on Google</span>
               </div>
+            </div>
+
+            {/* ── WhatsApp Referral / Batchmate Share ── */}
+            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+              <span className="text-slate-500 font-medium">Want to invite classmates to leave feedback?</span>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent('Hey, leave your Google review for TESCA using this instant 15-second generator: https://tesca.co/review-generator')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-xl hover:bg-emerald-100 transition-all cursor-pointer"
+              >
+                <span>Share with Batchmates on WhatsApp</span>
+              </a>
             </div>
 
           </div>

@@ -48,6 +48,7 @@ const QUICK_LINKS: { label: string; href: string; external?: boolean }[] = [
   { label: 'Home', href: '/' },
   { label: 'About Us', href: '/about' },
   { label: 'Courses', href: '/courses' },
+  { label: 'Our Branches', href: '/branches' },
   { label: 'Success Stories', href: '/#success' },
   { label: 'Free English Test', href: '/assessment' },
   { label: 'Study Abroad (Visa)', href: '/contact' },
@@ -70,22 +71,26 @@ const SOCIAL_LINKS = [
 
 const BRANCHES = [
   {
-    name: 'Sarthana',
+    name: 'Sarthana (Head Office)',
+    slug: 'sarthana',
     address: '110,111,112 Royal Arcade, Opp. Deep Kamal Mall, Sarthana Jakatnaka, Surat.',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=110,111,112+Royal+Arcade,+Opp.+Deep+Kamal+Mall,+Sarthana+Jakatnaka,+Surat',
   },
   {
     name: 'Mota Varachha',
+    slug: 'mota-varachha',
     address: '106-107, Ambika Pinnacle, Lajamani Chowk, Mota Varachha, Surat.',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=106-107,+Ambika+Pinnacle,+Lajamani+Chowk,+Mota+Varachha,+Surat',
   },
   {
     name: 'Hirabaug',
+    slug: 'hirabaug',
     address: '39, Ambika Vijay Soc., 2nd Floor, Near Surat Super Store, Hirabaug, Surat.',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=39,+Ambika+Vijay+Soc.,+2nd+Floor,+Near+Surat+Super+Store,+Hirabaug,+Surat',
   },
   {
     name: 'Yogichowk',
+    slug: 'yogichowk',
     address: '2nd Floor, Bhavna Park Soc., Opp. Paladium Mall, Above Prasang Fashion, Yogichowk, Surat.',
     mapUrl: 'https://www.google.com/maps/search/?api=1&query=2nd+Floor,+Bhavna+Park+Soc.,+Opp.+Paladium+Mall,+Above+Prasang+Fashion,+Yogichowk,+Surat',
   },
@@ -322,20 +327,23 @@ const Footer = memo(function Footer() {
             <div className="mb-4 flex flex-col justify-between gap-1 sm:flex-row sm:items-center">
               <h4 className="flex items-center gap-2 font-heading text-xs font-bold uppercase tracking-wider text-white">
                 <MapPin className="h-4 w-4 text-secondary" />
-                <span>Our Branches</span>
+                <Link href="/branches" className="transition-colors hover:text-secondary">
+                  Our Surat Branches
+                </Link>
               </h4>
-              <span className="text-[11px] font-medium text-primary-300">
-                4 Locations Across Surat
-              </span>
+              <Link
+                href="/branches"
+                className="text-[11px] font-medium text-primary-300 transition-colors hover:text-white"
+              >
+                Explore All 4 Campuses &rarr;
+              </Link>
             </div>
 
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
               {BRANCHES.map((branch) => (
-                <a
+                <Link
                   key={branch.name}
-                  href={branch.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={`/branches/${branch.slug}`}
                   className="group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-sm transition-all duration-300 hover:border-secondary/40 hover:bg-white/10 hover:shadow-lg hover:shadow-secondary/5"
                 >
                   <div>
@@ -351,7 +359,7 @@ const Footer = memo(function Footer() {
                       {branch.address}
                     </p>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           </div>

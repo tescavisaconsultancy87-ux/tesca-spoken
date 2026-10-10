@@ -15,6 +15,16 @@ interface PostHogInternal {
 export function initPostHog() {
   if (typeof window === 'undefined') return;
 
+  if (typeof window !== 'undefined') {
+    const isDevHost =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname.endsWith('.local');
+    if (isDevHost) {
+      return;
+    }
+  }
+
   const phInternal = posthog as unknown as PostHogInternal;
   if (isInitialized || phInternal.__loaded) {
     return;

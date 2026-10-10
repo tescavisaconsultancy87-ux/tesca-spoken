@@ -31,3 +31,16 @@
 - Assembled `components/landing/SpokenEnglishLandingPage.tsx` with JSON-LD Course schema.
 - Mounted routes: `app/spoken-english-course/page.tsx` & `app/spoken-english/page.tsx`.
 - Excluded landing page from distracting global popups in `components/PromoPopup.tsx`.
+
+## Iteration 3 - Local GEO SEO, Infrastructure & CRO Growth Engine
+- Implemented `lib/data/branches.ts` with complete NAP, GeoCoordinates, landmarks, and FAQs for 4 Surat campuses (Sarthana, Mota Varachha, Hirabaug, Yogichowk).
+- Implemented `app/branches/page.tsx` (Surat campuses directory).
+- Implemented `app/branches/[slug]/page.tsx` & `layout.tsx` (Local SEO landing pages with LocalBusiness/EducationalOrganization JSON-LD, Google Maps embeds, directions, and direct WhatsApp booking).
+- Upgraded `app/contact/page.tsx` with high-converting 1-click Free Demo Class booking toggle, branch links to dedicated landing pages, and direct WhatsApp lead flows.
+- Optimized `components/FloatingActions.tsx` with session-scoped passive dwell detection (25s timer) linking directly to Free Demo, WhatsApp counselor chat, and 2-minute English level assessment.
+- Upgraded `app/review-generator/ReviewGeneratorClient.tsx` with direct Google Business review triggers and WhatsApp referral share loop.
+- Enriched `public/llms.txt` and `public/llms-full.txt` with canonical branch URLs, detailed course fees, and mobile Class Plus course specs for AI search engine citations (GEO/AEO).
+- Upgraded `components/Footer.tsx` with internal `<Link>` connections passing sitewide PageRank to all 4 branch pages and the `/branches` index.
+- Added `/branches` and all `/branches/[slug]` entries to `app/sitemap.ts` and configured Cloudflare edge cache headers (`s-maxage=3600`) in `next.config.ts`.
+- Verified production build: `next build --webpack && opennextjs-cloudflare build` compiled with 0 TypeScript/ESLint errors across all 74 routes.
+

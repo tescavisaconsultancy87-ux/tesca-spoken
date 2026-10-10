@@ -71,6 +71,11 @@ const nextConfig: NextConfig = {
         destination: '/assessment',
         permanent: false,
       },
+      {
+        source: '/spoken-english',
+        destination: '/spoken-english-course',
+        permanent: true,
+      },
     ];
   },
   async headers() {
@@ -97,7 +102,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: '/:path(about|contact|courses|faq|terms|privacy|refund|blog)',
+        source: '/:path(about|contact|courses|faq|terms|privacy|refund|blog|spoken-english-course|branches|branches/:slug*)',
         headers: [
           {
             key: 'Cache-Control',

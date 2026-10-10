@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Image from 'next/image';
+import Link from 'next/link';
 import Footer from '@/components/Footer';
 import FloatingActions from '@/components/FloatingActions';
 import WaveDivider from '@/components/WaveDivider';
@@ -26,6 +27,9 @@ import {
   BookOpen,
   GraduationCap,
   CalendarCheck,
+  Sparkles,
+  ExternalLink,
+  Navigation,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -80,21 +84,25 @@ const CONTACT_ITEMS = [
 
 const BRANCHES = [
   {
-    title: 'Branch 1 - Sarthana',
+    slug: 'sarthana',
+    title: 'Branch 1 - Sarthana (Head Office)',
     address: '110,111,112 Royal Arcade, Opp. Deep Kamal Mall, Sarthana Jakatnaka, Surat.',
     embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29754.938162078433!2d72.8858624!3d21.21728!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f8647b359b3%3A0x11f64af5f5637cfe!2sTESCA%20VISA%20CONSULTANCY!5e0!3m2!1sen!2sin!4v1783070611318!5m2!1sen!2sin',
   },
   {
+    slug: 'mota-varachha',
     title: 'Branch 2 - Mota Varachha',
     address: '106-107, Ambika Pinnacle, Lajamani Chowk, Mota Varachha, Surat.',
     embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3718.8386097921198!2d72.88554337597363!3d21.238247480549106!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04fffa7abe0fb%3A0xd7c140b507f0e691!2sTESCA%20SPOKEN%20ENGLISH%20AND%20VISA%20COUNSULTANCY!5e0!3m2!1sen!2sin!4v1783070684461!5m2!1sen!2sin',
   },
   {
+    slug: 'hirabaug',
     title: 'Branch 3 - Hirabaug',
     address: '39, Ambika Vijay Soc., 2nd Floor, Near Surat Super Store, Hirabaug, Surat.',
     embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1859.7143171918644!2d72.85818739660405!3d21.214844924916058!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f003b425e37%3A0xbe2c90ec8201665e!2sTESCA%20ENGLISH%20SPOKEN!5e0!3m2!1sen!2sin!4v1783072796797!5m2!1sen!2sin',
   },
   {
+    slug: 'yogichowk',
     title: 'Branch 4 - Yogichowk',
     address: '2nd Floor, Bhavna Park Soc., Opp. Paladium Mall, Above Prasang Fashion, Yogichowk, Surat.',
     embedMap: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3719.4620727097463!2d72.88151159678955!3d21.21351790000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be04f00099b1a45%3A0x790d12f6f9c10d20!2sTESCA%20SPOKEN%20ENGLISH%20%26%20COMPUTER%20EDUCATION!5e0!3m2!1sen!2sin!4v1783070752116!5m2!1sen!2sin',
@@ -103,6 +111,7 @@ const BRANCHES = [
 
 export default function ContactPage() {
   const [mapsLoaded, setMapsLoaded] = useState<Record<string, boolean>>({});
+  const [inquiryType, setInquiryType] = useState<'demo' | 'general'>('demo');
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -150,7 +159,8 @@ export default function ContactPage() {
           course: form.course,
           branch: form.branch,
           topic: form.course,
-          message: form.message.trim() || `Course inquiry for ${form.course} (${form.branch})`,
+          inquiry_type: inquiryType,
+          message: form.message.trim() || `${inquiryType === 'demo' ? '100% FREE DEMO CLASS BOOKING' : 'Course Inquiry'} for ${form.course} (${form.branch})`,
           ...enrichment,
         }),
       });
@@ -162,11 +172,16 @@ export default function ContactPage() {
       }
 
       setSubmitted(true);
-      toast.success('Your inquiry has been submitted! Our counseling team will call you shortly.', 'Inquiry Received');
+      toast.success(
+        inquiryType === 'demo'
+          ? 'Your Free Demo Class is reserved! Our counselor will call you within 15 minutes.'
+          : 'Your inquiry has been submitted! Our counseling team will call you shortly.',
+        inquiryType === 'demo' ? 'Demo Reserved 🎉' : 'Inquiry Received'
+      );
       trackEvent('generate_lead', {
         value: 1,
         currency: 'INR',
-        lead_type: 'contact_inquiry',
+        lead_type: inquiryType === 'demo' ? 'free_demo_booking' : 'contact_inquiry',
         course: form.course,
         branch: form.branch,
       });
@@ -337,12 +352,17 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <p className="font-bold text-ink text-xs mb-3">Our Branches</p>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-bold text-ink text-xs">Our Surat Campuses</p>
+                      <Link href="/branches" className="text-[11px] font-bold text-primary hover:underline">
+                        View All Campuses →
+                      </Link>
+                    </div>
                     <div className="space-y-3">
                       {BRANCHES.map((branch) => (
                         <div
                           key={branch.title}
-                          className="flex gap-3 rounded-2xl border border-black/5 bg-bg-soft p-3 transition-all"
+                          className="flex gap-3 rounded-2xl border border-black/5 bg-bg-soft p-3 transition-all hover:border-primary/20 hover:bg-white"
                         >
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary">
                             <MapPin className="h-4 w-4" />
@@ -350,6 +370,12 @@ export default function ContactPage() {
                           <div className="min-w-0">
                             <p className="font-semibold text-ink text-[11px]">{branch.title}</p>
                             <p className="text-[11px] text-ink-muted leading-snug mt-0.5">{branch.address}</p>
+                            <Link
+                              href={`/branches/${branch.slug}`}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline mt-1"
+                            >
+                              Campus Details & Directions →
+                            </Link>
                           </div>
                         </div>
                       ))}
@@ -420,12 +446,42 @@ export default function ContactPage() {
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-4">
+                      {/* Mode Toggle */}
+                      <div className="flex rounded-xl bg-black/15 p-1 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => setInquiryType('demo')}
+                          className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all cursor-pointer ${
+                            inquiryType === 'demo'
+                              ? 'bg-secondary text-primary shadow-sm'
+                              : 'text-primary-100 hover:text-white'
+                          }`}
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Book Free Live Demo
+                          <span className="ml-1 rounded bg-black/25 px-1.5 py-0.5 text-[10px] font-extrabold text-white">FREE</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setInquiryType('general')}
+                          className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition-all cursor-pointer ${
+                            inquiryType === 'general'
+                              ? 'bg-white text-primary shadow-sm'
+                              : 'text-primary-100 hover:text-white'
+                          }`}
+                        >
+                          General Inquiry
+                        </button>
+                      </div>
+
                       <div>
                         <h2 className="font-heading text-2xl font-bold">
-                          Course Inquiry & Free Counseling
+                          {inquiryType === 'demo' ? 'Reserve Your 100% Free Demo Class' : 'Course Inquiry & Counseling'}
                         </h2>
                         <p className="mt-1 text-sm text-primary-100">
-                          Get batch timings, fee structures, and reserve your 100% free demo class.
+                          {inquiryType === 'demo'
+                            ? 'Meet Cambridge-certified trainers, attend a live session, and test your English level with zero upfront payment.'
+                            : 'Get batch timings, fee structures, and personalized study abroad counseling.'}
                         </p>
                       </div>
 
@@ -570,7 +626,7 @@ export default function ContactPage() {
                         ) : (
                           <>
                             <CalendarCheck className="h-4 w-4" />
-                            Submit Inquiry & Request Call Back
+                            {inquiryType === 'demo' ? 'Reserve My Free Live Demo Class 🚀' : 'Submit Inquiry & Request Call Back'}
                           </>
                         )}
                       </button>
@@ -631,14 +687,23 @@ export default function ContactPage() {
                   <div className="p-5">
                     <h3 className="font-heading font-bold text-ink text-sm mb-1">{branch.title}</h3>
                     <p className="text-xs text-ink-muted leading-relaxed min-h-[32px]">{branch.address}</p>
-                    <a
-                      href={`https://www.google.com/maps/search/${encodeURIComponent(branch.address)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary mt-3 inline-flex text-xs"
-                    >
-                      Open in Google Maps
-                    </a>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Link
+                        href={`/branches/${branch.slug}`}
+                        className="btn-primary inline-flex text-xs"
+                      >
+                        Campus Details & Directions →
+                      </Link>
+                      <a
+                        href={`https://www.google.com/maps/search/${encodeURIComponent(branch.address)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-xl border border-black/10 bg-bg-soft px-3.5 py-2 text-xs font-medium text-ink hover:bg-black/5 inline-flex items-center gap-1.5"
+                      >
+                        <Navigation className="h-3 w-3 text-secondary" />
+                        Directions
+                      </a>
+                    </div>
                   </div>
                 </div>
               ))}

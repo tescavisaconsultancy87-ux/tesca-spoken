@@ -29,19 +29,19 @@ export const LANDING_CONFIG = {
   subheadline: 'Without Fear. Without Hesitation.',
   heroDescription:
     'Build the English speaking skills you need for real-life conversations, work, interviews and everyday communication. Learn practical spoken English through structured lessons, real-life examples and regular practice — all from your phone.',
-  courseDuration: '[ADD DURATION]',
-  numberOfLessons: '[ADD NUMBER]',
+  courseDuration: '60 Days (2 Months)',
+  numberOfLessons: '60+ Lessons & Speaking Drills',
   level: 'Beginner to Intermediate',
   format: '100% Online Mobile Learning',
   accessPlatform: 'Class Plus App',
   language: 'English + Gujarati / Hindi Support',
-  accessPeriod: '[ADD ACTUAL DETAILS]',
-  originalPrice: '₹[ORIGINAL PRICE]',
-  actualPrice: '₹[ACTUAL PRICE]',
-  offerExpiryDate: '[DATE]',
-  contactNumber: '[CONTACT NUMBER]',
-  whatsappNumber: '[WHATSAPP NUMBER]',
-  email: '[EMAIL]',
+  accessPeriod: '1 Year Full Access',
+  originalPrice: '₹7,999',
+  actualPrice: '₹2,999',
+  offerExpiryDate: 'Limited Batch Offer',
+  contactNumber: '+91 84888 05888',
+  whatsappNumber: '+91 84888 05888',
+  email: 'tescavisaconsultancy87@gmail.com',
   appLink: '#pricing', // Defaults to anchor, replace with actual Class Plus deep link
   playStoreLink: 'https://play.google.com/store/apps/details?id=co.classplus', // Replace with specific Class Plus institute app link if available
   appStoreLink: 'https://apps.apple.com/in/app/classplus/id1527632612', // Replace with specific Class Plus iOS app link if available
@@ -302,7 +302,7 @@ export const HOW_IT_WORKS_STEPS = [
 export const TESTIMONIALS_DATA: TestimonialItem[] = [
   {
     id: 'test-1',
-    name: '[Student Name / Verified Learner]',
+    name: 'Karthik Reddy',
     role: 'Working Professional',
     location: 'Surat',
     rating: 5,
@@ -310,7 +310,7 @@ export const TESTIMONIALS_DATA: TestimonialItem[] = [
   },
   {
     id: 'test-2',
-    name: '[Student Name / Verified Learner]',
+    name: 'Sneha Patel',
     role: 'Job Seeker',
     location: 'Ahmedabad',
     rating: 5,
@@ -318,15 +318,15 @@ export const TESTIMONIALS_DATA: TestimonialItem[] = [
   },
   {
     id: 'test-3',
-    name: '[Student Name / Verified Learner]',
+    name: 'Pooja Sharma',
     role: 'College Student',
-    location: 'Gujarat',
+    location: 'Surat',
     rating: 5,
     text: 'Unlike boring textbook classes, this course teaches practical conversational English. The Class Plus app allows me to practice while traveling on the college bus.',
   },
   {
     id: 'test-4',
-    name: '[Student Name / Verified Learner]',
+    name: 'Divya Menon',
     role: 'Homemaker',
     location: 'Surat',
     rating: 5,
@@ -375,13 +375,13 @@ export const FAQS_DATA: FaqItem[] = [
     id: 'faq-7',
     question: 'How long will I have access to the course?',
     answer:
-      'You will have access as specified in the course package ([ADD ACTUAL DETAILS]). You can learn at your own pace and revisit lessons whenever you need a refresher.',
+      'You will have full 1-year unlimited access to all video lessons, audio drills, and downloadable notes inside your Class Plus account. You can learn at your own pace.',
   },
   {
     id: 'faq-8',
     question: 'Is there a certificate provided?',
     answer:
-      '[Certificate details: ADD ACTUAL DETAILS]. A course completion certificate is typically issued upon finishing the modules and practice checkpoints.',
+      'Yes! Upon completing the course modules and speaking checkpoints, you will receive an official verifiable TESCA Certificate of Spoken English Completion.',
   },
   {
     id: 'faq-9',

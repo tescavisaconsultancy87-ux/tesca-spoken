@@ -1,7 +1,8 @@
 export const NAV_LINKS = [
   { label: 'Home', href: '/' },
-  { label: 'Assessment', href: '/assessment' },
   { label: 'Courses', href: '/courses' },
+  { label: 'Branches', href: '/branches' },
+  { label: 'Assessment', href: '/assessment' },
   { label: 'Study Abroad', href: '/contact?topic=study-abroad' },
   { label: 'Blog', href: '/blog' },
   { label: 'About Us', href: '/about' },

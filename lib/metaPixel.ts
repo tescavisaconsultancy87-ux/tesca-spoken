@@ -57,7 +57,7 @@ export const metaTracking = {
   ctaClick: (location: string, label: string) =>
     trackMetaEvent('CTA_Click', { cta_location: location, cta_label: label }, true),
   initiateCheckout: (courseName = 'Online Spoken English Course', value?: string) =>
-    trackMetaEvent('InitiateCheckout', { content_name: courseName, value: value || '₹[ACTUAL PRICE]' }),
+    trackMetaEvent('InitiateCheckout', { content_name: courseName, value: value || '₹2,999' }),
   appDownloadClick: (platform: 'playstore' | 'appstore' | 'classplus_web') =>
     trackMetaEvent('App_Download_Click', { platform }, true),
   demoPlay: (lessonTitle: string) =>

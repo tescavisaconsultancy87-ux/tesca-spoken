@@ -14,23 +14,28 @@ TESCA (Technical & Educational Services Consultancy Academy) is Gujarat's premie
 ---
 
 ## Campus Locations & Branch Contact Info
+- **All Campuses Directory:** https://tesca.co/branches
 
 ### 1. Sarthana Branch (Head Office)
+- **URL:** https://tesca.co/branches/sarthana
 - **Address:** 110, 111, 112 Royal Arcade, Opposite Deep Kamal Mall, Sarthana Jakatnaka, Surat, Gujarat 395006, India.
 - **Coordinates:** 21.21728 N, 72.88586 E
 - **Services:** Spoken English, IELTS, PTE, Study Abroad Visa Documentation & Filing.
 
 ### 2. Mota Varachha Branch
+- **URL:** https://tesca.co/branches/mota-varachha
 - **Address:** 106-107, Ambika Pinnacle, Near Lajamani Chowk, Mota Varachha, Surat, Gujarat 395006, India.
 - **Coordinates:** 21.238247 N, 72.885543 E
 - **Services:** Spoken English (Basic & Advanced), IELTS Coaching, Interview Prep.
 
 ### 3. Hirabaug Branch
+- **URL:** https://tesca.co/branches/hirabaug
 - **Address:** 39, Ambika Vijay Society, 2nd Floor, Near Surat Super Store, Hirabaug, Varachha Road, Surat, Gujarat 395006, India.
 - **Coordinates:** 21.2148449 N, 72.8581873 E
 - **Services:** Basic Spoken English, Public Speaking, School & College Batches.
 
 ### 4. Yogichowk Branch
+- **URL:** https://tesca.co/branches/yogichowk
 - **Address:** 2nd Floor, Bhavna Park Society, Opposite Paladium Mall, Above Prasang Fashion, Yogichowk, Surat, Gujarat 395006, India.
 - **Coordinates:** 21.2135179 N, 72.8815115 E
 - **Services:** Spoken English, IELTS Academic, Personality Development.
@@ -89,6 +94,13 @@ TESCA (Technical & Educational Services Consultancy Academy) is Gujarat's premie
   - Behavioral Interview Coaching: The STAR technique (Situation, Task, Action, Result).
   - Resume & LinkedIn Optimization: ATS-friendly resume formatting, professional elevator pitches.
   - Mock Interviews: Video recorded simulations with multi-point performance evaluations.
+
+### 6. Online Spoken English Mobile Course (via Class Plus App)
+- **URL:** https://tesca.co/spoken-english-course
+- **Format:** Self-paced high-definition video modules, daily practice assignments, interactive quiz assessments, lifetime mobile app access.
+- **Duration:** 60 Days Structured Curriculum
+- **Pricing:** ₹2,999 (Special limited-time launch offer, original ₹7,999)
+- **Key Modules:** Daily speaking tasks, conversational English hacks, vocabulary builder, instant AI and faculty support.
 
 ---
 

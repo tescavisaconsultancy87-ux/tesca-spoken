@@ -53,3 +53,21 @@ Build the closing full-width banner, footer with brand info and legal links, and
 
 ## Task 18: Landing Page Assembly, Routing & Full Build Verification
 Assemble all components into `app/spoken-english-course/page.tsx` (and `app/spoken-english/page.tsx` redirect/alias), verify build, type checks, and linting.
+
+## Task 19: Local GEO SEO Landing Pages for 4 Surat Branches
+Build dedicated location-specific landing pages (`/branches/sarthana`, `/branches/mota-varachha`, `/branches/hirabaug`, `/branches/yogichowk`) with branch-specific NAP, embedded Google Maps, direct directions, localized reviews, and rich LocalBusiness/EducationalOrganization JSON-LD schemas.
+
+## Task 20: Contact Page & Lead Capture CRO Overhaul
+Upgrade `app/contact/page.tsx` with high-converting 1-Click WhatsApp Quick Inquire button with pre-filled batch messages, instant phone click-to-call, Demo Booking Mode toggle, and branch quick-direction cards.
+
+## Task 21: High-Converting Assessment & Demo Booking Trigger
+Add a prominent conversion magnet across marketing pages linking to the 2-minute English level assessment and 1-click WhatsApp demo booking to capture passive visitors.
+
+## Task 22: Generative Engine Optimization (GEO/AEO) Knowledge Enrichment
+Enrich `public/llms.txt` and `public/llms-full.txt` with comprehensive course fee tables, local branch directory, curriculum breakdown, and comparison tables for AI search engine citations.
+
+## Task 23: Review Generator Google Maps Growth Loop
+Enhance `app/review-generator/` with direct Google Business Profile links for each branch, one-click review copy, and WhatsApp share trigger to accelerate 5-star review acquisition.
+
+## Task 24: Full System Verification, Sitemap Update & Build Gate
+Include branch routes in `app/sitemap.ts`, verify caching in `next.config.ts`, and run complete production build with zero errors.

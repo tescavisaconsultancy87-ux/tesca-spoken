@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowUp, HelpCircle, X, ArrowRight, Phone, CalendarCheck } from 'lucide-react';
+import { ArrowUp, HelpCircle, X, ArrowRight, Phone, CalendarCheck, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 import { WHATSAPP_URL } from '@/lib/data/content';
 import { useDemoModal } from '@/context/DemoModalContext';
 import { useTracking } from '@/hooks/useTracking';
@@ -36,26 +37,26 @@ export default function FloatingActions() {
   }, []);
 
   useEffect(() => {
-    // Check if popup was already shown or user interacted in this/past sessions
-    const isShown = localStorage.getItem('tesca_popup_shown') === 'true';
-    const hasInteracted = localStorage.getItem('tesca_interacted') === 'true';
+    // Check if popup was already shown or user interacted in this session
+    const isShown = sessionStorage.getItem('tesca_popup_shown') === 'true';
+    const hasInteracted = sessionStorage.getItem('tesca_interacted') === 'true';
 
     if (isShown || hasInteracted) return;
 
-    // Start 30 seconds timer
+    // Start 25 seconds timer for passive dwell visitors
     const timer = setTimeout(() => {
-      const stillInteracted = localStorage.getItem('tesca_interacted') === 'true';
+      const stillInteracted = sessionStorage.getItem('tesca_interacted') === 'true';
       if (!stillInteracted) {
         setIsConfusedPopupOpen(true);
-        localStorage.setItem('tesca_popup_shown', 'true');
+        sessionStorage.setItem('tesca_popup_shown', 'true');
       }
-    }, 30000);
+    }, 25000);
 
     // Global listener for interactions
     const handleGlobalClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       const text = target.innerText?.toLowerCase() || '';
-      
+
       // Determine if they clicked demo booking or course selection buttons
       const isInteraction =
         text.includes('demo') ||
@@ -64,10 +65,11 @@ export default function FloatingActions() {
         text.includes('counselling') ||
         target.closest('a[href*="demo"]') ||
         target.closest('button[onClick*="openModal"]') ||
-        target.closest('a[href*="courses"]');
+        target.closest('a[href*="courses"]') ||
+        target.closest('a[href*="assessment"]');
 
       if (isInteraction) {
-        localStorage.setItem('tesca_interacted', 'true');
+        sessionStorage.setItem('tesca_interacted', 'true');
         clearTimeout(timer);
       }
     };
@@ -218,28 +220,38 @@ export default function FloatingActions() {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-3 pt-2">
+            <div className="flex flex-col gap-2.5 pt-2">
               <button
                 onClick={() => {
+                  trackEvent('demo_click', { placement: 'popup_confused' });
                   setIsConfusedPopupOpen(false);
                   openModal();
                 }}
                 className="w-full btn-warm justify-center py-3 text-xs font-bold shadow-soft transition-transform hover:scale-[1.02] cursor-pointer"
               >
-                Book My Free Demo
+                Book My Free Demo (Zero Cost)
                 <ArrowRight className="h-4 w-4" />
               </button>
-              <button
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={() => {
+                  trackEvent('whatsapp_click', { placement: 'popup_confused' });
                   setIsConfusedPopupOpen(false);
-                  const el = document.getElementById('courses');
-                  if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  else window.location.href = '/courses';
                 }}
-                className="w-full py-3 rounded-xl border border-gray-200 text-xs font-bold text-gray-500 hover:bg-gray-50 transition-all cursor-pointer"
+                className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold hover:bg-emerald-100 transition-all cursor-pointer"
               >
-                Choose English Course
-              </button>
+                <MessageCircle className="h-4 w-4 text-emerald-600" />
+                Ask Counselor on WhatsApp
+              </a>
+              <Link
+                href="/assessment"
+                onClick={() => setIsConfusedPopupOpen(false)}
+                className="w-full py-2.5 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
+              >
+                Take 2-Min Free Level Quiz
+              </Link>
             </div>
           </div>
         </div>

@@ -293,6 +293,27 @@ export function middleware(request: NextRequest) {
   );
 
   if (isSubdomain && !isRewritten) {
+    // ─── Redirect public marketing routes on subdomains to canonical tesca.co ───
+    const PUBLIC_MARKETING_ROUTES = [
+      '/about',
+      '/courses',
+      '/blog',
+      '/contact',
+      '/faq',
+      '/terms',
+      '/privacy',
+      '/refund',
+      '/spoken-english-course',
+      '/spoken-english',
+      '/review-generator',
+      '/assessment',
+      '/branches',
+    ];
+    if (PUBLIC_MARKETING_ROUTES.some((route) => pathname === route || pathname.startsWith(route + '/'))) {
+      const targetHost = isLocalhost ? `localhost:${host.split(':')[1] || '3000'}` : 'tesca.co';
+      return NextResponse.redirect(`https://${targetHost}${pathname}${cleanSearch}`, 301);
+    }
+
     // If they request '/login', '/maintenance', '/forgot-password', '/reset-password', or '/change-password', let them access the shared pages
     const PUBLIC_AUTH_PATHS = ['/login', '/maintenance', '/forgot-password', '/reset-password', '/change-password'];
     if (PUBLIC_AUTH_PATHS.some((path) => pathname === path || pathname.startsWith(path + '/'))) {
