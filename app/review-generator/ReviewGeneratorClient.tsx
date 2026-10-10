@@ -269,9 +269,9 @@ function getLocalFallback(branchName: string): string {
 }
 
 export default function ReviewGeneratorClient() {
-  const [selectedBranch, setSelectedBranch] = useState<string>('hirabaug');
-  const [selectedCourse, setSelectedCourse] = useState<string>('PTE Academic');
-  const [selectedHighlight, setSelectedHighlight] = useState<string>('Fluency & Speaking');
+  const [selectedBranch, setSelectedBranch] = useState<string>('sarthana');
+  const [selectedCourse, setSelectedCourse] = useState<string>('');
+  const [selectedHighlight, setSelectedHighlight] = useState<string>('');
   const [reviewText, setReviewText] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [copyStatus, setCopyStatus] = useState<string>('Ready to copy');
@@ -337,7 +337,7 @@ export default function ReviewGeneratorClient() {
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      generateReview('hirabaug', 'PTE Academic', 'Fluency & Speaking');
+      generateReview('sarthana', '', '');
     }
   }, [generateReview]);
 
