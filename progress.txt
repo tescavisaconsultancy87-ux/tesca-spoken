@@ -1,0 +1,33 @@
+# Progress Log: Spoken English Landing Page
+
+## Iteration 1 - Planning & Standards Setup
+- Initialized .planning/PROJECT.md, .planning/REQUIREMENTS.md, .planning/ROADMAP.md
+- Created .planning/DESIGN_PLAN.md with conversion psychology, color tokens, and GSAP animation strategy
+- Installed gsap package
+- Initialized PRD.md with 18 discrete, testable tasks
+- Updated AGENTS.md with tech stack standards
+
+## Iteration 2 - Component Scaffolding & Conversion Architecture Implementation
+- Implemented `lib/metaPixel.ts` for comprehensive Meta Pixel tracking (PageView, ViewContent, CTA_Click, InitiateCheckout, DemoPlay, AppDownloadClick, ScrollDepth).
+- Created `lib/data/spokenEnglishLanding.ts` housing central editable configurations, module syllabi, FAQ items, testimonials, and clean placeholders.
+- Created `components/landing/LandingHeader.tsx` (distraction-free sticky navigation with mobile drawer).
+- Created `components/landing/LandingHero.tsx` (GSAP staggered entrance, value proposition, realistic Class Plus smartphone mockup with animated floating badge).
+- Created `components/landing/ProblemSection.tsx` (4 interactive struggle cards + mindset shift resolution).
+- Created `components/landing/SolutionSection.tsx` (4-pillar framework + linear journey ribbon).
+- Created `components/landing/CourseOverviewSection.tsx` (key specifications grid with editable placeholders).
+- Created `components/landing/CurriculumSection.tsx` (6 modules with interactive expand/collapse topics).
+- Created `components/landing/DemoLessonSection.tsx` (simulated video player, ripple play trigger, animated waveform, dialogue snippet, key takeaways).
+- Created `components/landing/WhyUsSection.tsx` (6 feature cards).
+- Created `components/landing/AudienceSection.tsx` (6 persona cards).
+- Created `components/landing/BeforeAfterSection.tsx` (before vs after transformation comparison).
+- Created `components/landing/HowItWorksSection.tsx` (3 steps + visual flow).
+- Created `components/landing/AppShowcaseSection.tsx` (Class Plus features & App Store / Google Play buttons).
+- Created `components/landing/TestimonialsSection.tsx` (verified learner reviews with transparent placeholder handling).
+- Created `components/landing/PricingOfferSection.tsx` (honest urgency offer, pricing card, inclusions, secure payment badges, checkout CTA).
+- Created `components/landing/FaqSection.tsx` (12 accessible accordion questions).
+- Created `components/landing/FinalCtaSection.tsx` (high-contrast full-width CTA).
+- Created `components/landing/LandingFooter.tsx` (legal links, brand copyright, contact info).
+- Created `components/landing/MobileStickyBar.tsx` (persistent sticky bottom bar for mobile viewports).
+- Assembled `components/landing/SpokenEnglishLandingPage.tsx` with JSON-LD Course schema.
+- Mounted routes: `app/spoken-english-course/page.tsx` & `app/spoken-english/page.tsx`.
+- Excluded landing page from distracting global popups in `components/PromoPopup.tsx`.

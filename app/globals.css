@@ -52,6 +52,9 @@
   --color-bg: #FFFFFF;
   --color-bg-soft: #F8F9FA;
 
+  /* ─── Breakpoints ─── */
+  --breakpoint-xs: 480px;
+
   /* ─── Border radius ─── */
   --radius-4xl: 2rem;
 

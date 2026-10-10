@@ -27,12 +27,14 @@ export default function PromoPopup() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Disable popup on all dashboard user routes (/admin, /student, /tutor) and dashboard subdomains
+  // Disable popup on all dashboard user routes (/admin, /student, /tutor), landing pages (/spoken-english*), review generator (/review-generator), and dashboard subdomains
   const isDashboard = Boolean(
     (pathname && (
       pathname.startsWith('/admin') ||
       pathname.startsWith('/student') ||
-      pathname.startsWith('/tutor')
+      pathname.startsWith('/tutor') ||
+      pathname.startsWith('/spoken-english') ||
+      pathname.startsWith('/review-generator')
     )) ||
     (typeof window !== 'undefined' && (() => {
       const host = window.location.hostname.toLowerCase();

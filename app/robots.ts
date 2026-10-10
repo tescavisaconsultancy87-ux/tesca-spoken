@@ -17,6 +17,7 @@ export default function robots(): MetadataRoute.Robots {
     '/*.php',
     '/wp-admin/',
     '/wp-content/',
+    '/review-generator',
   ];
 
   const allowedBots = [
