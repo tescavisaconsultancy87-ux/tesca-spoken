@@ -44,3 +44,13 @@
 - Added `/branches` and all `/branches/[slug]` entries to `app/sitemap.ts` and configured Cloudflare edge cache headers (`s-maxage=3600`) in `next.config.ts`.
 - Verified production build: `next build --webpack && opennextjs-cloudflare build` compiled with 0 TypeScript/ESLint errors across all 74 routes.
 
+## Iteration 4 - Conversion Optimization, Mobile-First CRO & 301 Pathway Rescues
+- Diagnosed Cloudflare and PostHog traffic bottlenecks: ~95% bot/crawler skew, 3k 4xx errors, and mobile intent loss.
+- Upgraded `app/contact/page.tsx` with dynamic URL parameter parser (`useSearchParams` with `<Suspense>`) auto-filling branch, course, topic, and demo mode.
+- Re-ordered contact page layout with `order-1 lg:order-2` so the lead capture form and 1-click WhatsApp buttons appear first on mobile viewports.
+- Integrated dynamic WhatsApp 1-click inquiry link pre-populating student name, course, and selected Surat branch.
+- Added 301 permanent redirects in `middleware.ts` for visa, immigration, document, and study abroad pathways (`/germany-opportunity-card`, `/uk-graduate-route`, `/document/*`, `/study-abroad/*`, `/study-in-spain`, `/eligibility`).
+- Expanded exploit probes filter in `middleware.ts` to fast-drop `/_ignition`, `/.env`, and `/userfiles` scans.
+- Verified build and pushed changes to GitHub `origin/main` (`commit e50cac8`).
+
+
