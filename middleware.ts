@@ -203,6 +203,29 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/og-image.jpg', request.url), 301);
   }
 
+  // ─── 301 Permanent Redirects for Study Abroad, Visa & Document Pathways ───
+  // Rescues ad & social visitors from dead 404s and routes them to personalized counseling
+  if (lowerPath === '/germany-opportunity-card' || lowerPath.startsWith('/germany-opportunity-card')) {
+    return NextResponse.redirect(new URL('/contact?topic=study-abroad&service=Germany+Opportunity+Card', request.url), 301);
+  }
+  if (lowerPath === '/uk-graduate-route' || lowerPath.startsWith('/uk-graduate-route')) {
+    return NextResponse.redirect(new URL('/contact?topic=study-abroad&service=UK+Graduate+Route', request.url), 301);
+  }
+  if (lowerPath.startsWith('/document/') || lowerPath === '/document') {
+    const docSlug = lowerPath.replace('/document/', '').replace(/\//g, ' ');
+    return NextResponse.redirect(new URL(`/contact?topic=study-abroad&service=${encodeURIComponent(docSlug || 'Visa Document Pathway')}`, request.url), 301);
+  }
+  if (lowerPath.startsWith('/study-abroad/') || lowerPath === '/study-abroad') {
+    const countrySlug = lowerPath.replace('/study-abroad/', '').replace(/\//g, ' ');
+    return NextResponse.redirect(new URL(`/contact?topic=study-abroad&country=${encodeURIComponent(countrySlug || 'Study Abroad')}`, request.url), 301);
+  }
+  if (lowerPath === '/study-in-spain' || lowerPath.startsWith('/study-in-spain')) {
+    return NextResponse.redirect(new URL('/contact?topic=study-abroad&country=Spain', request.url), 301);
+  }
+  if (lowerPath === '/eligibility' || lowerPath === '/eligibility-check') {
+    return NextResponse.redirect(new URL('/assessment', request.url), 301);
+  }
+
   // ─── Fast-Drop Vulnerability Scanner & Exploit Probes ───
   const EXPLOIT_PROBES = [
     '/wp-admin',
@@ -213,6 +236,9 @@ export function middleware(request: NextRequest) {
     '/cgi-bin/',
     '/.env',
     '/.git',
+    '/.vscode',
+    '/_ignition',
+    '/userfiles',
     '/phpmyadmin',
     '/actuator/',
     'eval-stdin',
